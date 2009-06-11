@@ -1,0 +1,12 @@
+<use name=FWCore/Framework>
+<use name=FWCore/ParameterSet>
+<use name=root>
+<use name=rootroofit>
+
+<export>
+  <lib name=TauAnalysisBgEstimationTools>
+  <use name=FWCore/Framework>
+  <use name=FWCore/ParameterSet>
+  <use name=root>
+  <use name=rootroofit>
+</export>
