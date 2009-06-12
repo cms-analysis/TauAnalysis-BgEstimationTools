@@ -40,6 +40,8 @@ class BinGridHistManager : public HistManagerBase
 //--- histograms managers
   typedef std::list<HistManagerBase*> vHistManager;
   std::map<unsigned, vHistManager> histManagers_;
+
+  int dqmError_;
 };
 
 #endif  

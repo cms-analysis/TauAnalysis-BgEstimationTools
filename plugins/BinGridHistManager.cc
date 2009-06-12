@@ -10,6 +10,7 @@
 #include <iomanip>
 
 BinGridHistManager::BinGridHistManager(const edm::ParameterSet& cfg)
+  : dqmError_(0)
 {
   //std::cout << "<BinGridHistManager::BinGridHistManager>:" << std::endl;
 
@@ -40,6 +41,12 @@ BinGridHistManager::~BinGridHistManager()
 void BinGridHistManager::bookHistograms()
 {
   //std::cout << "<BinGridHistManager::bookHistograms>:" << std::endl;
+
+  if ( !edm::Service<DQMStore>().isAvailable() ) {
+    edm::LogError ("bookHistograms") << " Failed to access dqmStore --> histograms will NOT be booked !!";
+    dqmError_ = 1;
+    return;
+  }
 
   unsigned numRegions = binGrid_->numBins();
   for ( unsigned iRegion = 0; iRegion < numRegions; ++iRegion ) {
@@ -73,6 +80,11 @@ void BinGridHistManager::fillHistograms(const edm::Event& evt, const edm::EventS
 {  
   //std::cout << "<BinGridHistManager::fillHistograms>:" << std::endl; 
 
+  if ( dqmError_ ) {
+    edm::LogError ("fillHistograms") << " Failed to access dqmStore --> histograms will NOT be filled !!";
+    return;
+  }
+
   std::vector<double> x = (*objValExtractor_)(evt);
   unsigned iRegion = binGrid_->binNumber(x);
 
@@ -97,7 +109,7 @@ void BinGridHistManager::fillHistograms(const edm::Event& evt, const edm::EventS
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 
-DEFINE_EDM_PLUGIN(HistManagerPluginFactory, BinGridHistManager, "BinGridHistManager");
+DEFINE_EDM_PLUGIN(AnalyzerPluginFactory, BinGridHistManager, "BinGridHistManager");
 
 #include "TauAnalysis/Core/interface/HistManagerAdapter.h"
 
