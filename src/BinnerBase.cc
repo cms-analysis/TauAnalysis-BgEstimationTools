@@ -34,3 +34,4 @@ void BinnerBase::bin(const edm::Event& evt, const edm::EventSetup& es)
 
 EDM_REGISTER_PLUGINFACTORY(BinnerPluginFactory, "BinnerPluginFactory");
 
+
