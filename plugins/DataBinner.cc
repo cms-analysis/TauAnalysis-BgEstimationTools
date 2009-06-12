@@ -16,3 +16,8 @@ DataBinner::~DataBinner()
 {
 //--- nothing to be done yet...
 }
+
+#include "FWCore/Framework/interface/MakerMacros.h"
+
+DEFINE_EDM_PLUGIN(AnalyzerPluginFactory, DataBinner, "DataBinner");
+DEFINE_EDM_PLUGIN(BinnerPluginFactory, DataBinner, "DataBinner");
