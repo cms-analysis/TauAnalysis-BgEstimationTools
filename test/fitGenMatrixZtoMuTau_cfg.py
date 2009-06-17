@@ -93,16 +93,16 @@ process.bgEstFitZtoMuTau = cms.EDAnalyzer("GenMatrixBgEstFit",
     treeName = cms.string("ntupleProducer/bgEstEvents"),
     treeSelection = cms.string("muonComp > 1. && muonTrkIP < 0.05"),                      
                           
-    branches = bgEstBinGridZtoMuTau,
+    branches = genMatrixBinningZtoMuTau,
     #branchNameEventWeight = cms.string('eventWeight'),                                          
 
     output = cms.PSet(
         scaleFactors = cms.PSet(
-          fileName = cms.string("bgEstFitProcessScaleFactors.py"),
-          signalRegion = cms.vdouble(0., 0., 0.)
+            fileName = cms.string("bgEstFitProcessScaleFactors.py"),
+            signalRegion = cms.vdouble(0., 0., 0.)
         ),
         controlPlots = cms.PSet(
-          fileName = cms.string("fitGenMatrixZtoMuTau.png")
+            fileName = cms.string("fitGenMatrixZtoMuTau.png")
         )
     )
 )                          
@@ -113,7 +113,7 @@ process.p = cms.Path( process.compObjValCorrelationZtoMuTau
                      +process.fitZtoMuTau )
 
 # print-out all python configuration parameter information
-print process.dumpPython()
+#print process.dumpPython()
 
 
   
