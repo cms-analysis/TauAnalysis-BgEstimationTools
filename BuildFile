@@ -1,5 +1,6 @@
 <use name=FWCore/Framework>
 <use name=FWCore/ParameterSet>
+<use name=DQMServices/Core>
 <use name=root>
 <use name=rootroofit>
 
@@ -7,6 +8,7 @@
   <lib name=TauAnalysisBgEstimationTools>
   <use name=FWCore/Framework>
   <use name=FWCore/ParameterSet>
+  <use name=DQMServices/Core>
   <use name=root>
   <use name=rootroofit>
 </export>
