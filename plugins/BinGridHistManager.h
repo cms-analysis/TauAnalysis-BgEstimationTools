@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <list>
 
 class BinGridHistManager : public HistManagerBase 
 {
@@ -38,7 +37,7 @@ class BinGridHistManager : public HistManagerBase
   BinGrid* binGrid_;
 
 //--- histograms managers
-  typedef std::list<HistManagerBase*> vHistManager;
+  typedef std::vector<HistManagerBase*> vHistManager;
   std::map<unsigned, vHistManager> histManagers_;
 
   int dqmError_;
