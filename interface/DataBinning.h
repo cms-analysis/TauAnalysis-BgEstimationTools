@@ -14,7 +14,7 @@
  *
  * \version $Revision: 1.1 $
  *
- * $Id: DataBinning.h,v 1.1 2009/02/04 15:53:56 veelken Exp $
+ * $Id: DataBinning.h,v 1.1 2009/06/11 07:23:28 veelken Exp $
  *
  */
 
@@ -23,11 +23,13 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include <vector>
+#include <string>
 
 class DataBinning : public BinningBase
 {
  public:
-  explicit DataBinning(const edm::ParameterSet&);
+  DataBinning();
+  DataBinning(const edm::ParameterSet&);
   ~DataBinning();
 
   const std::string& name() const { return name_; }
@@ -39,6 +41,9 @@ class DataBinning : public BinningBase
   void print(std::ostream&) const;
 
  protected:
+  virtual std::vector<std::string> encodeStringRep() const;
+  virtual void decodeStringRep(std::vector<std::string>&);
+
   typedef std::vector<double> vdouble;
   vdouble binContents_;
   vdouble binSumw2_;

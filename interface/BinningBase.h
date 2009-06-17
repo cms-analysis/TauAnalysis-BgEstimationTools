@@ -10,7 +10,7 @@
  *
  * \version $Revision: 1.1 $
  *
- * $Id: BinningBase.h,v 1.1 2009/02/04 15:53:56 veelken Exp $
+ * $Id: BinningBase.h,v 1.1 2009/06/11 07:23:28 veelken Exp $
  *
  */
 
@@ -23,7 +23,8 @@
 class BinningBase
 {
  public:
-  explicit BinningBase(const edm::ParameterSet&);
+  BinningBase();
+  BinningBase(const edm::ParameterSet&);
   virtual ~BinningBase();
 
   const std::string& name() const { return name_; }
@@ -34,11 +35,20 @@ class BinningBase
 
   virtual void print(std::ostream&) const = 0;
 
+  friend std::vector<std::string>& operator<<(std::vector<std::string>&, const BinningBase&);
+  friend std::vector<std::string>& operator>>(std::vector<std::string>&, BinningBase&);
+
  protected:
+  virtual std::vector<std::string> encodeStringRep() const;
+  virtual void decodeStringRep(std::vector<std::string>&);
+
   std::string name_;
 
   const BinGrid* binGrid_;
 };
+
+std::vector<std::string>& operator<<(std::vector<std::string>&, const BinningBase&);
+std::vector<std::string>& operator>>(std::vector<std::string>&, BinningBase&);
 
 #endif  
 
