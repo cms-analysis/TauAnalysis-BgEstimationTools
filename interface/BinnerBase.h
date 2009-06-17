@@ -12,7 +12,7 @@
  *
  * \version $Revision: 1.1 $
  *
- * $Id: BinnerBase.h,v 1.1 2009/02/04 15:53:56 veelken Exp $
+ * $Id: BinnerBase.h,v 1.1 2009/06/11 07:23:28 veelken Exp $
  *
  */
 
@@ -25,7 +25,7 @@
 #include "TauAnalysis/BgEstimationTools/interface/BinningBase.h"
 
 #include <vector>
-#include <iostream>
+#include <string>
 
 class BinnerBase : public AnalyzerPluginBase
 {
@@ -36,15 +36,18 @@ class BinnerBase : public AnalyzerPluginBase
   const BinningBase* getBinning() const { return binning_; }
 
   virtual void beginJob() {}
-  virtual void analyze(const edm::Event& evt, const edm::EventSetup& es) { bin(evt, es); }
-  virtual void endJob() { if ( binning_ ) binning_->print(std::cout); }
+  virtual void analyze(const edm::Event&, const edm::EventSetup&);
+  virtual void endJob();
 
  protected:
   virtual void bin(const edm::Event&, const edm::EventSetup&);
+  virtual void saveBinning() const;
 
   ObjValVectorExtractorBase* objValExtractor_;
 
   BinningBase* binning_;
+
+  std::string dqmDirectory_store_;
 };
 
 #include "FWCore/PluginManager/interface/PluginFactory.h"
