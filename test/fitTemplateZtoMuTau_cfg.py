@@ -28,7 +28,7 @@ process.source = cms.Source("EmptySource")
 #--------------------------------------------------------------------------------
 # produce template histograms of visible muon + tau-jet mass distribution
 #--------------------------------------------------------------------------------
-process.prodTemplateHistZtoMuTau_Ztautau_pure = copy.deepcopy(process.prodTemplateHist)
+process.prodTemplateHistZtoMuTau_Ztautau_pure = copy.deepcopy(prodTemplateHist)
 process.prodTemplateHistZtoMuTau_Ztautau_pure.fileNames = fileNames_Ztautau
 process.prodTemplateHistZtoMuTau_Ztautau_pure.meName = cms.string("fitTemplateZtoMuTau/Ztautau_pure/diTauMvis12")
 process.prodTemplateHistZtoMuTau_Ztautau_real = copy.deepcopy(process.prodTemplateHistZtoMuTau_Ztautau_pure)
@@ -96,7 +96,7 @@ process.drawJob_WplusJets.plots.processes = cms.vstring('WplusJets_pure', 'Wplus
 process.drawJob_qcdSum = copy.deepcopy(process.drawJob_Ztautau)
 process.drawJob_qcdSum.plots.processes = cms.vstring('qcdSum_pure', 'qcdSum_real')
 
-process.plotTemplateHistZtoMuTau = plotTemplateHist = cms.EDAnalyzer("DQMHistPlotter",
+process.plotTemplateHistZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
     processes = cms.PSet(
         Ztautau_pure = cms.PSet(
             dqmDirectory = cms.string('Ztautau_pure'),
