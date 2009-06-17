@@ -41,7 +41,8 @@ process.maxEvents = cms.untracked.PSet(
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'rfio:/castor/cern.ch/user/v/veelken/CMSSW_2_2_3/muTauSkim.root'
+        #'rfio:/castor/cern.ch/user/v/veelken/CMSSW_2_2_3/muTauSkim.root'
+        'file:/afs/cern.ch/user/v/veelken/scratch0/CMSSW_2_2_10/src/TauAnalysis/Configuration/test/muTauSkim.root'
     )
 )
 
@@ -49,18 +50,6 @@ process.DQMStore = cms.Service("DQMStore")
 
 process.saveZtoMuTauPlots = cms.EDAnalyzer("DQMSimpleFileSaver",
     outputFileName = cms.string('plotsZtoMuTau.root')
-)
-
-process.muonEcalIsoCutLooseIsolation = cms.EDFilter("BoolEventSelFlagProducer",
-    selectors = cms.VPSet(
-        cms.PSet(
-            pluginName = cms.string("muonEcalIsoCutLooseIsolation"),
-            pluginType = cms.string("PATCandViewMinEventSelector"),
-            src = cms.InputTag('selectedLayer1MuonsEcalIsoLooseIsolationCumulative'),
-            minNumber = cms.uint32(1),
-            instanceName = cms.string('prodNtupleZtoMuTau')
-        )
-    )
 )
 
 #--------------------------------------------------------------------------------
@@ -89,7 +78,7 @@ process.muTauPairsLooseSelection = cms.EDProducer("PATMuTauPairProducer",
     verbosity = cms.untracked.int32(0)
 )
 
-process.muTauPairCutLooseSelection = cms.EDFilter("BoolEventSelFlagProducer",
+process.muTauPairCutLooseSelection = cms.EDProducer("BoolEventSelFlagProducer",
     selectors = cms.VPSet(
         cms.PSet(
             pluginName = cms.string("muTauPairCutLooseSelection"),
@@ -99,7 +88,10 @@ process.muTauPairCutLooseSelection = cms.EDFilter("BoolEventSelFlagProducer",
             instanceName = cms.string('prodNtupleZtoMuTau')
         )
     )
-)                    
+)                                                                             
+
+process.produceBoolEventSelFlags = cms.Sequence( process.muonEcalIsoCutLooseIsolation
+                                                +process.muTauPairsLooseSelection + process.muTauPairCutLooseSelection )
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -108,11 +100,11 @@ process.muTauPairCutLooseSelection = cms.EDFilter("BoolEventSelFlagProducer",
 from TauAnalysis.BgEstimationTools.bgEstBinGridZtoMuTau_cfi import *
 from TauAnalysis.Configuration.analyzeZtoMuTau_cfi import *
 
-prodGenMatrixControlPlotsZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
+process.prodGenMatrixControlPlotsZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
   
     name = cms.string('zMuTauGenMatrixControlPlots'), 
                             
-    eventSelection = cms.VPSet(
+    filters = cms.VPSet(
         # generator level phase-space selection
         # (NOTE: to be used in case of Monte Carlo samples
         #        overlapping in simulated phase-space only !!)
@@ -125,7 +117,7 @@ prodGenMatrixControlPlotsZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
         
         # reconstruction level event selection
         cms.PSet(
-            pluginName = cms.string('bgEstEventSelection'),
+            pluginName = cms.string('genMatrixEventSelection'),
             pluginType = cms.string('MultiBoolEventSelFlagSelector'),
             flags = cms.VInputTag(
                 cms.InputTag('Trigger'),
@@ -143,21 +135,20 @@ prodGenMatrixControlPlotsZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
         cms.PSet(
             pluginName = cms.string('muTauDataBinner'),
             pluginType = cms.string('DataBinner'),
-            binGrid = bgEstBinGridZtoMuTau
+            binning = genMatrixBinningZtoMuTau,
+            dqmDirectory_store = cms.string('genMatrixBinningResults')
         ),
         cms.PSet(
             pluginName = cms.string('muTauBinGridHistManager'),
             pluginType = cms.string('BinGridHistManager'),
+            binning = genMatrixBinningZtoMuTau,
             histManagers = cms.VPSet(
-                genPhaseSpaceEventInfoHistManager,
                 muonHistManager,
                 tauHistManager,
                 diTauCandidateHistManagerForMuTau,
-                metHistManager,
-                jetHistManager,
-                vertexHistManager,
-                triggerHistManager
-            )
+                metHistManager
+            ),
+            dqmDirectory_store = cms.string('genMatrixBinningHistograms')
         )
     ),
 
@@ -173,7 +164,7 @@ prodGenMatrixControlPlotsZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
             saveRunEventNumbers = cms.vstring('')
         ),
         cms.PSet(
-            filter = cms.string('muTauGenMatrixEventSelection'),
+            filter = cms.string('genMatrixEventSelection'),
             title = cms.string('event selection'),
             saveRunEventNumbers = cms.vstring('')
         ),
@@ -217,10 +208,9 @@ switchToPFTauFixedCone(process)
 process.p = cms.Path( process.producePatTuple
 #                    +process.printEventContent    # uncomment to enable dump of event content after PAT-tuple production
                      +process.selectZtoMuTauEvents
-                     +process.genPhaseSpaceFilter
                      +process.produceBoolEventSelFlags
-                     +process.selectEventsByBoolEventSelFlags
-                     +process.ntupleProducer )
+                     +process.prodGenMatrixControlPlotsZtoMuTau
+                     +process.saveZtoMuTauPlots )
 
 # print-out all python configuration parameter information
 #print process.dumpPython()
