@@ -9,7 +9,8 @@ DataBinner::DataBinner(const edm::ParameterSet& cfg)
 {
   //std::cout << "<DataBinner::DataBinner>:" << std::endl; 
 
-  binning_ = new DataBinning(cfg);
+  edm::ParameterSet cfgBinning = cfg.getParameter<edm::ParameterSet>("binning");
+  binning_ = new DataBinning(cfgBinning);
 }
 
 DataBinner::~DataBinner()
