@@ -3,14 +3,32 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 
+#include "TauAnalysis/BgEstimationTools/interface/binningAuxFunctions.h"
+
+#include <TPRegexp.h>
+#include <TString.h>
+#include <TObjArray.h>
+#include <TObjString.h>
+
+BinGrid::BinGrid()
+{
+  numDimensions_ = 0;
+  numBinsTotal_ = 0;
+}
+
 BinGrid::BinGrid(const edm::ParameterSet& cfg)
 {
+  //std::cout << "<BinGrid::BinGrid>:" << std::endl;
+
   numDimensions_ = 0;
   
   typedef std::vector<edm::ParameterSet> vParameterSet;
   vParameterSet cfgBinning = cfg.getParameter<vParameterSet>("config");
   for ( vParameterSet::const_iterator cfg1dObjVar = cfgBinning.begin(); 
 	cfg1dObjVar != cfgBinning.end(); ++cfg1dObjVar ) {
+    std::string objVarName = cfg1dObjVar->getParameter<std::string>("branchName");
+    objVarNames_.push_back(objVarName);
+
     edm::ParameterSet cfg1dBinning = cfg1dObjVar->getParameter<edm::ParameterSet>("binning");
     
     double xMin = cfg1dBinning.getParameter<double>("min");
@@ -20,13 +38,13 @@ BinGrid::BinGrid(const edm::ParameterSet& cfg)
     vdouble binBoundaries = cfg1dBinning.getParameter<vdouble>("boundaries");
 
     unsigned numBinBoundaries = binBoundaries.size();
-    unsigned numBins_i = numBinBoundaries + 2;
-    vdouble binEdges_i(numBins_i);
+    unsigned numBins_i = numBinBoundaries + 1;
+    vdouble binEdges_i(numBins_i + 1);
     binEdges_i[0] = xMin;
     for ( unsigned iBin = 0; iBin < numBinBoundaries; ++iBin ) {
       binEdges_i[iBin + 1] = binBoundaries[iBin];
     }
-    binEdges_i[numBins_i - 1] = xMax;
+    binEdges_i[numBins_i] = xMax;
 
     binEdges_.push_back(binEdges_i);
     numBinsPerDimension_.push_back(numBins_i);
@@ -45,8 +63,11 @@ BinGrid::BinGrid(const edm::ParameterSet& cfg)
 //--- compute total number of bins in multi-dimensional grid
   numBinsTotal_ = 1;
   for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
+    //std::cout << "iDimension = " << iDimension << ": numBinsPerDimension = " << numBinsPerDimension_[iDimension] << std::endl;
     numBinsTotal_ *= numBinsPerDimension_[iDimension];
   }
+
+  //print(std::cout);
 }
 
 BinGrid::~BinGrid()
@@ -72,21 +93,17 @@ unsigned BinGrid::encodeTotBin(const vunsigned& binIndices) const
 
 std::vector<unsigned> BinGrid::decodeTotBin(unsigned totBin) const
 {
-  std::cout << " totBin = " << totBin << std::endl;
-
   assert(totBin >= 0 && totBin < numBinsTotal_);
 
   vunsigned binIndices(numDimensions_);
 
   unsigned totBin_undecoded = totBin;
-  for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
+  for ( int iDimension = (numDimensions_ - 1); iDimension >= 0; --iDimension ) {
     unsigned dimValue_i = dimValues_[iDimension];
-    unsigned binIndex = totBin_undecoded / dimValue_i;
+    unsigned binIndex = (totBin_undecoded / dimValue_i);
     binIndices[iDimension] = binIndex;
     totBin_undecoded -= (dimValue_i * binIndex);
   }
-
-  std::cout << "totBin_undecoded = " << totBin_undecoded << std::endl;
 
   assert(totBin_undecoded == 0);
 
@@ -98,7 +115,7 @@ unsigned BinGrid::getDimValue(unsigned i) const
   assert(i >= 0 && i < numDimensions_);
 
   unsigned dimValue = 1;
-  for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
+  for ( unsigned iDimension = 0; iDimension < i; ++iDimension ) {
     dimValue *= numBinsPerDimension_[iDimension];
   }
 
@@ -196,4 +213,197 @@ double BinGrid::binVolume(unsigned totBin) const
     return 0.;
   }
 }
+
+//
+//-----------------------------------------------------------------------------------------------------------------------
+//
+
+void BinGrid::print(std::ostream& stream) const
+{
+  stream << "<BinGrid::print>:" << std::endl;
+
+  stream << "numDimensions = " << numDimensions_ << std::endl;
+  for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
+    stream << " dimension = " << iDimension << ": " << objVarNames_[iDimension] << std::endl;
+    stream << "  numBins = " << numBinsPerDimension_[iDimension] << std::endl;
+    stream << "  binEdges = { ";
+    for ( unsigned iBin = 0; iBin < numBinsPerDimension_[iDimension]; ++iBin ) {
+      stream << binEdges_[iDimension][iBin] << ", ";
+    }
+    stream << binEdges_[iDimension][numBinsPerDimension_[iDimension]] << " }" << std::endl;
+  }
+}
+
+//
+//-----------------------------------------------------------------------------------------------------------------------
+//
+
+std::vector<std::string> BinGrid::encodeStringRep() const
+{
+//--- save all data-members of BinGrid object as strings, 
+//    so that data-members of BinGrids associated to different Binning objects 
+//    do not get summed when adding MonitorElements during DQM harvesting
+
+  std::vector<std::string> buffer;
+  
+  std::ostringstream meValue_dimensions;
+  meValue_dimensions << "dimensions = " << numDimensions_;
+  std::string entry_dimensions = encodeBinningStringRep("dimensions", "string",  meValue_dimensions.str());
+  buffer.push_back(entry_dimensions);
+
+  for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
+    std::ostringstream meName_binEdges;
+    meName_binEdges << "binEdges" << (iDimension + 1);
+    std::string meValue_binEdges = encodeVDoubleStringRep(binEdges_[iDimension]);
+    std::string entry_binEdges = encodeBinningStringRep(meName_binEdges.str(), "string", meValue_binEdges);
+    buffer.push_back(entry_binEdges);
+
+    std::ostringstream meName_objVarName;
+    meName_objVarName << "objVarName" << (iDimension + 1);
+    std::string meValue_objVarName = objVarNames_[iDimension];
+    std::string entry_objVarName = encodeBinningStringRep(meName_objVarName.str(), "string", meValue_objVarName);
+    buffer.push_back(entry_objVarName);
+  }
+
+  std::ostringstream meValue_numBins;
+  meValue_numBins << "numBins = " << numBinsTotal_;
+  std::string entry_numBins = encodeBinningStringRep("numBins", "string",  meValue_numBins.str());
+  buffer.push_back(entry_numBins);
+
+  return buffer;
+}
+
+void BinGrid::decodeStringRep(std::vector<std::string>& buffer)
+{
+  TPRegexp regexpParser_numDimensions("numDimensions");
+  TPRegexp regexpParser_binEdges_entry("binEdges[[:digit:]]+");
+  TPRegexp regexpParser_binEdges_binNumber("binEdges([[:digit:]]+)");
+  TPRegexp regexpParser_objVarNames_entry("objVarName[[:digit:]]+");
+  TPRegexp regexpParser_objVarNames_binNumber("objVarName([[:digit:]]+)");
+
+  bool numDimensions_initialized = false;
+  std::vector<bool> binEdges_initialized;
+  std::vector<bool> objVarNames_initialized;
+  
+  for ( std::vector<std::string>::const_iterator entry = buffer.begin();
+	entry != buffer.end(); ++entry ) {
+    std::string meName, meType, meValue;
+    int error = 0;
+    decodeBinningStringRep(*entry, meName, meType, meValue, error);
+
+    if ( error ) {
+      edm::LogError ("decodeStringRep") << " Error in parsing string = " << (*entry) << " --> skipping !!";
+      continue;
+    }
+
+    TString meName_tstring = meName.data();
+    
+    bool binNumber_error = false;
+
+    if ( regexpParser_numDimensions.Match(meName_tstring) == 1 ) {
+      unsigned numDimensions = (unsigned)atoi(meValue.data());
+      numDimensions_ = numDimensions;
+      binEdges_.resize(numDimensions_);
+      objVarNames_.resize(numDimensions_);
+      binEdges_initialized.resize(numDimensions_);
+      objVarNames_initialized.resize(numDimensions_);
+      numDimensions_initialized = true;
+    } else if ( regexpParser_binEdges_entry.Match(meName_tstring) == 1 ) {
+      if ( !numDimensions_initialized ) {
+	edm::LogError ("decodeStringRep") << " Need to initialize numDimensions before setting binEdges !!";
+	continue;
+      }
+      
+      TObjArray* subStrings = regexpParser_binEdges_binNumber.MatchS(meName_tstring);
+      if ( subStrings->GetEntries() == 2 ) {
+	unsigned dimension = (unsigned)atoi(((TObjString*)subStrings->At(1))->GetString().Data());
+
+	if ( dimension >= numDimensions_ ) {
+	  edm::LogError ("decodeStringRep") << " Dimension = " << dimension << " decoded from meName = " << meName
+					    << " not within numDimensions = " << numDimensions_ << " range of binGrid object !!";
+	  continue;
+	}
+
+	int error = 0;
+	std::vector<double> binEdges = decodeVDoubleStringRep(meValue, error);
+
+	if ( !error ) {
+	  binEdges_[dimension] = binEdges;
+	  binEdges_initialized[dimension] = true;
+	} else {
+	  edm::LogError ("decodeStringRep") << " Failed to decode meValue = " << meValue << " !!";
+	  continue;
+	}
+      } else {
+	binNumber_error = true;
+      }
+    } else if ( regexpParser_objVarNames_entry.Match(meName_tstring) == 1 ) {
+      if ( !numDimensions_initialized ) {
+	edm::LogError ("decodeStringRep") << " Need to initialize numDimensions before setting objVarNames !!";
+	continue;
+      }
+
+      TObjArray* subStrings = regexpParser_objVarNames_binNumber.MatchS(meName_tstring);
+      if ( subStrings->GetEntries() == 2 ) {
+	unsigned dimension = (unsigned)atoi(((TObjString*)subStrings->At(1))->GetString().Data());
+
+	if ( dimension < numDimensions_ ) {
+	  objVarNames_[dimension] = meValue;
+	  objVarNames_initialized[dimension] = true;
+	} else {
+          edm::LogError ("decodeStringRep") << " Dimension = " << dimension << " decoded from meName = " << meName
+					    << " not within numDimensions = " << numDimensions_ << " range of binGrid object !!";
+	  continue;
+	}
+      } else {
+	binNumber_error = true;
+      }
+    }
+
+    if ( binNumber_error ) {
+      edm::LogError ("decodeStringRep") << " Failed to decode bin number from meName = " << meName << " !!";
+      continue;
+    }
+  }
+
+//--- check that all data-members of BinGrid object 
+//    have been initialized
+  if ( numDimensions_initialized ) {
+    for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
+      if ( !binEdges_initialized[iDimension] ) {
+	edm::LogError ("decodeStringRep") << " Failed to decode binEdges[" << iDimension << "] !!";
+      }
+
+      if ( !objVarNames_initialized[iDimension] ) {
+	edm::LogError ("decodeStringRep") << " Failed to decode objVarNames[" << iDimension << "] !!";
+      }
+    }
+  } else {
+    edm::LogError ("operator>>") << " Failed to decode numDimensions !!";
+  }
+}
+
+//
+//-----------------------------------------------------------------------------------------------------------------------
+//
+
+std::vector<std::string>& operator<<(std::vector<std::string>& buffer, const BinGrid& binGrid)
+{
+  std::vector<std::string> buffer_ext = binGrid.encodeStringRep();
+
+  unsigned numEntries = buffer_ext.size();
+  for ( unsigned iEntry = 0; iEntry < numEntries; ++iEntry ) {
+    buffer.push_back(buffer_ext[iEntry]);
+  }
+
+  return buffer;
+}
+
+std::vector<std::string>& operator>>(std::vector<std::string>& buffer, BinGrid& binGrid)
+{
+  binGrid.decodeStringRep(buffer);
+
+  return buffer;
+}
+
 

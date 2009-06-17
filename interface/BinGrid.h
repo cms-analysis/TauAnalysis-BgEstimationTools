@@ -12,7 +12,7 @@
  *
  * \version $Revision: 1.1 $
  *
- * $Id: Binning.h,v 1.1 2009/02/04 15:53:56 veelken Exp $
+ * $Id: BinGrid.h,v 1.1 2009/06/11 07:23:28 veelken Exp $
  *
  */
 
@@ -27,7 +27,8 @@
 class BinGrid 
 {
  public: 
-  explicit BinGrid(const edm::ParameterSet&);
+  BinGrid();
+  BinGrid(const edm::ParameterSet&);
   virtual ~BinGrid();
   
   unsigned dimensions() const { return numDimensions_; }
@@ -40,6 +41,11 @@ class BinGrid
   virtual std::vector<double> binCenter(unsigned) const;
   virtual double binVolume(unsigned) const;
 
+  virtual void print(std::ostream&) const;
+
+  friend std::vector<std::string>& operator<<(std::vector<std::string>&, const BinGrid&);
+  friend std::vector<std::string>& operator>>(std::vector<std::string>&, BinGrid&);
+
  private:
 //--- auxiliary functions
 //    (for encoding/decoding of bin numbers)
@@ -47,6 +53,9 @@ class BinGrid
   unsigned encodeTotBin(const vunsigned&) const;
   vunsigned decodeTotBin(unsigned) const;
   unsigned getDimValue(unsigned) const;
+
+  virtual std::vector<std::string> encodeStringRep() const;
+  virtual void decodeStringRep(std::vector<std::string>&);
 
 //--- data-members
   unsigned numDimensions_;
@@ -67,6 +76,9 @@ class BinGrid
   // of bin numbers
   vunsigned dimValues_;
 };
+
+std::vector<std::string>& operator<<(std::vector<std::string>&, const BinGrid&);
+std::vector<std::string>& operator>>(std::vector<std::string>&, BinGrid&);
 
 #endif  
 
