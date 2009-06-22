@@ -30,6 +30,7 @@ process.source = cms.Source("EmptySource")
 #--------------------------------------------------------------------------------
 process.prodTemplateHistZtoMuTau_Ztautau_pure = copy.deepcopy(prodTemplateHist)
 process.prodTemplateHistZtoMuTau_Ztautau_pure.fileNames = fileNames_Ztautau
+process.prodTemplateHistZtoMuTau_Ztautau_pure.treeSelection = cms.string("")
 process.prodTemplateHistZtoMuTau_Ztautau_pure.meName = cms.string("fitTemplateZtoMuTau/Ztautau_pure/diTauMvis12")
 process.prodTemplateHistZtoMuTau_Ztautau_real = copy.deepcopy(process.prodTemplateHistZtoMuTau_Ztautau_pure)
 process.prodTemplateHistZtoMuTau_Ztautau_real.fileNames = fileNames_pseudoData
@@ -40,6 +41,7 @@ process.prodTemplateHistZtoMuTau_Ztautau = cms.Sequence( process.prodTemplateHis
 
 process.prodTemplateHistZtoMuTau_Zmumu_pure = copy.deepcopy(process.prodTemplateHistZtoMuTau_Ztautau_pure)
 process.prodTemplateHistZtoMuTau_Zmumu_pure.fileNames = fileNames_Zmumu
+process.prodTemplateHistZtoMuTau_Zmumu_pure.treeSelection = cms.string("")
 process.prodTemplateHistZtoMuTau_Zmumu_pure.meName = cms.string("fitTemplateZtoMuTau/Zmumu_pure/diTauMvis12")
 process.prodTemplateHistZtoMuTau_Zmumu_real = copy.deepcopy(process.prodTemplateHistZtoMuTau_Zmumu_pure)
 process.prodTemplateHistZtoMuTau_Zmumu_real.fileNames = fileNames_pseudoData
@@ -50,6 +52,7 @@ process.prodTemplateHistZtoMuTau_Zmumu = cms.Sequence( process.prodTemplateHistZ
 
 process.prodTemplateHistZtoMuTau_WplusJets_pure = copy.deepcopy(process.prodTemplateHistZtoMuTau_Ztautau_pure)
 process.prodTemplateHistZtoMuTau_WplusJets_pure.fileNames = fileNames_WplusJets
+process.prodTemplateHistZtoMuTau_WplusJets_pure.treeSelection = cms.string("")
 process.prodTemplateHistZtoMuTau_WplusJets_pure.meName = cms.string("fitTemplateZtoMuTau/WplusJets_pure/diTauMvis12")
 process.prodTemplateHistZtoMuTau_WplusJets_real = copy.deepcopy(process.prodTemplateHistZtoMuTau_WplusJets_pure)
 process.prodTemplateHistZtoMuTau_WplusJets_real.fileNames = fileNames_pseudoData
@@ -60,6 +63,7 @@ process.prodTemplateHistZtoMuTau_WplusJets = cms.Sequence( process.prodTemplateH
 
 process.prodTemplateHistZtoMuTau_qcdSum_pure = copy.deepcopy(process.prodTemplateHistZtoMuTau_Ztautau_pure)
 process.prodTemplateHistZtoMuTau_qcdSum_pure.fileNames = fileNames_qcdSum
+process.prodTemplateHistZtoMuTau_qcdSum_pure.treeSelection = cms.string("")
 process.prodTemplateHistZtoMuTau_qcdSum_pure.meName = cms.string("fitTemplateZtoMuTau/qcdSum_pure/diTauMvis12")
 process.prodTemplateHistZtoMuTau_qcdSum_real = copy.deepcopy(process.prodTemplateHistZtoMuTau_qcdSum_pure)
 process.prodTemplateHistZtoMuTau_qcdSum_real.fileNames = fileNames_pseudoData
@@ -70,6 +74,7 @@ process.prodTemplateHistZtoMuTau_qcdSum = cms.Sequence( process.prodTemplateHist
 
 process.prodTemplateHistZtoMuTau_pseudoData = copy.deepcopy(process.prodTemplateHistZtoMuTau_Ztautau_pure)
 process.prodTemplateHistZtoMuTau_pseudoData.fileNames = fileNames_pseudoData
+process.prodTemplateHistZtoMuTau_pseudoData.treeSelection = cms.string("")
 process.prodTemplateHistZtoMuTau_pseudoData.meName = cms.string("fitTemplateZtoMuTau/pseudoData/diTauMvis12")
 
 process.prodTemplateHistZtoMuTau = cms.Sequence( process.prodTemplateHistZtoMuTau_Ztautau
