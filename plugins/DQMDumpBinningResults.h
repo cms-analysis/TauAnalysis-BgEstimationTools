@@ -5,7 +5,7 @@
  *  
  *  Class to print-out binning results information contained in objects inheriting from BinningBase class
  *
- *  $Date: 2009/04/17 18:59:54 $
+ *  $Date: 2009/06/17 12:52:30 $
  *  $Revision: 1.1 $
  *  \author Christian Veelken, UC Davis
  */
@@ -16,6 +16,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "TauAnalysis/BgEstimationTools/interface/BinningBase.h"
+#include "TauAnalysis/BgEstimationTools/interface/BinningServiceBase.h"
 
 #include <string>
 #include <vector>
@@ -30,12 +31,14 @@ class DQMDumpBinningResults : public edm::EDAnalyzer
   virtual void endJob();  
 
 private:
-  BinningBase* loadBinning(const std::string&);
+  BinningBase* loadBinningResults(const std::string&);
 
   typedef std::vector<std::string> vstring;
   vstring processes_;
 
   std::map<std::string, std::string> dqmDirectories_;
+
+  BinningServiceBase* binningService_;
 
   std::map<std::string, BinningBase*> binningResults_;
 
