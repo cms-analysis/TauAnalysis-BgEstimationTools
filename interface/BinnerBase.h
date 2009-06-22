@@ -10,9 +10,9 @@
  * \author Christian Veelken, UC Davis
  *         (inspired by code written for H1 by Paul Laycock, University of Liverpool)
  *
- * \version $Revision: 1.1 $
+ * \version $Revision: 1.2 $
  *
- * $Id: BinnerBase.h,v 1.1 2009/06/11 07:23:28 veelken Exp $
+ * $Id: BinnerBase.h,v 1.2 2009/06/17 12:39:10 veelken Exp $
  *
  */
 
@@ -23,6 +23,7 @@
 #include "TauAnalysis/Core/interface/AnalyzerPluginBase.h"
 #include "TauAnalysis/BgEstimationTools/interface/ObjValVectorExtractorBase.h"
 #include "TauAnalysis/BgEstimationTools/interface/BinningBase.h"
+#include "TauAnalysis/BgEstimationTools/interface/BinningServiceBase.h"
 
 #include <vector>
 #include <string>
@@ -41,13 +42,14 @@ class BinnerBase : public AnalyzerPluginBase
 
  protected:
   virtual void bin(const edm::Event&, const edm::EventSetup&);
-  virtual void saveBinning() const;
 
   ObjValVectorExtractorBase* objValExtractor_;
 
   BinningBase* binning_;
 
   std::string dqmDirectory_store_;
+
+  BinningServiceBase* binningService_;
 };
 
 #include "FWCore/PluginManager/interface/PluginFactory.h"
