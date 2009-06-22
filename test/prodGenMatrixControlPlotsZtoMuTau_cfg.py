@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("prodNtupleZtoMuTau")
+process = cms.Process("prodGenMatrixControlPlotsZtoMuTau")
 
 # import of standard configurations for RECOnstruction
 # of electrons, muons and tau-jets with non-standard isolation cones
@@ -136,6 +136,9 @@ process.prodGenMatrixControlPlotsZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
             pluginName = cms.string('muTauDataBinner'),
             pluginType = cms.string('DataBinner'),
             binning = genMatrixBinningZtoMuTau,
+            binningService = cms.PSet(
+                pluginType = cms.string("DataBinningService")
+            ),
             dqmDirectory_store = cms.string('genMatrixBinningResults')
         ),
         cms.PSet(
