@@ -87,7 +87,7 @@ process.prodTemplateHistZtoMuTau = cms.Sequence( process.prodTemplateHistZtoMuTa
 # plot template histograms of "pure" Monte Carlo processes
 # compared to the shapes determined by background "enriched" regions in (pseudo)Data
 #--------------------------------------------------------------------------------
-process.drawJob_Ztautau = copy.deepcopy(process.drawJobTemplateHist)
+process.drawJob_Ztautau = copy.deepcopy(drawJobTemplateHist)
 process.drawJob_Ztautau.plots.dqmMonitorElements = cms.vstring('fitTemplateZtoMuTau/#PROCESSDIR#/diTauMvis12')
 process.drawJob_Ztautau.plots.processes = cms.vstring('Ztautau_pure', 'Ztautau_real')
 process.drawJob_Ztautau.title = cms.string("M_{vis}(Mu + Tau)")
@@ -254,7 +254,7 @@ process.p = cms.Path( process.prodTemplateHistZtoMuTau
                      +process.fitZtoMuTau )
 
 # print-out all python configuration parameter information
-print process.dumpPython()
+#print process.dumpPython()
 
 
   
