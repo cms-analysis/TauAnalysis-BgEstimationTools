@@ -8,11 +8,17 @@
 #include "TauAnalysis/DQMTools/interface/dqmAuxFunctions.h"
 #include "TauAnalysis/BgEstimationTools/interface/binningAuxFunctions.h"
 
+#include <TPRegexp.h>
+#include <TString.h>
+#include <TObjArray.h>
+#include <TObjString.h>
+
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
 
 const std::string meNameSeparator = ". :";
+const std::string meNameOrder = "meNameOrder";
 
 BinningServiceBase::BinningServiceBase(const edm::ParameterSet&)
 {}
@@ -32,7 +38,7 @@ BinningBase* BinningServiceBase::loadBinningResults(const std::string& dqmDirect
 //--- check if DQMStore is available;
 //    print an error message and return if not
   if ( !edm::Service<DQMStore>().isAvailable() ) {
-    edm::LogError ("loadBinningResults") << " Failed to access dqmStore !!";
+    edm::LogError ("BinningServiceBase::loadBinningResults") << " Failed to access dqmStore !!";
     return 0;
   }
 
@@ -41,62 +47,89 @@ BinningBase* BinningServiceBase::loadBinningResults(const std::string& dqmDirect
 
   std::vector<meEntry> meEntries;
 
-  std::vector<std::string> meNames = dqmStore.getMEs();
-  for ( std::vector<std::string>::const_iterator meName = meNames.begin();
-	meName != meNames.end(); ++meName ) {
-    std::string meName_full = dqmDirectoryName(dqmDirectory).append(*meName);
-    std::cout << " meName_full = " <<  meName_full << std::endl;
+//--- load from DQMStore auxiliary MonitorElement 
+//    in which order of MonitorElements is encoded,
+//    so that MonitorElements can be loaded from DQMStore
+//    in the order in which they have been saved
+  std::string meNameOrder_full = dqmDirectoryName(dqmDirectory).append(meNameOrder);
+  //std::cout << " meNameOrder_full = " <<  meNameOrder_full << std::endl;
+
+  MonitorElement* meOrder = dqmStore.get(meNameOrder_full);
+  //std::cout << " meOrder = " << meOrder << std::endl;
+  if ( !meOrder ) {
+    edm::LogError ("BinningServiceBase::loadBinningResults") << " Failed to access meName = " << meNameOrder << " in DQMStore" 
+					                     << " --> skipping !!";
+    return 0;
+  }
+
+//--- decode order of MonitorElements from auxiliary MonitorElement 
+  TString pattern_entry = "[[:alnum:]]+[,[[:space:]]*[[:alnum:]]+]*";
+  TPRegexp regexpParser_entry(pattern_entry);
+
+  TString meValueOrder_tstring = meOrder->getStringValue();
+  //std::cout << "meValueOrder_tstring = " << meValueOrder_tstring.Data() << std::endl;
+
+  if ( regexpParser_entry.Match(meValueOrder_tstring) != 1 ) {
+    edm::LogError ("BinningServiceBase::loadBinningResults") << " Failed to decode meName order = " 
+							     << meValueOrder_tstring.Data() << " !!";
+    return 0;
+  }
+  
+  TObjArray* subStrings = meValueOrder_tstring.Tokenize(",");
+  //std::cout << "subStrings->GetEntries() = " << subStrings->GetEntries() << std::endl;
+
+  unsigned numEntries = subStrings->GetEntries();
+  for ( unsigned iEntry = 0; iEntry < numEntries; ++iEntry ) {
+    std::string meName = ((TObjString*)subStrings->At(iEntry))->GetString().ReplaceAll(" ", "").Data();
+
+    std::string meName_full = dqmDirectoryName(dqmDirectory).append(meName);
+    //std::cout << " meName_full = " <<  meName_full << std::endl;
 
     dqmStore.setCurrentFolder(dqmDirectory);
     MonitorElement* me = dqmStore.get(meName_full);
-    std::cout << " me = " << me << std::endl;
+    //std::cout << " me = " << me << std::endl;
     if ( !me ) {
-      edm::LogError ("loadBinningResults") << " Failed to access meName = " << (*meName) << " in DQMStore" 
-					   << " --> skipping !!";
+      edm::LogError ("BinningServiceBase::loadBinningResults") << " Failed to access meName = " << meName << " in DQMStore" 
+							       << " --> skipping !!";
       continue;
     }
 
 //--- skip "invalid" MonitorElements
     if ( me->kind() == MonitorElement::DQM_KIND_INVALID ) {
-      edm::LogWarning ("loadBinningResults") << " MonitorElement meName = " << (*meName) << " marked as invalid" 
+      edm::LogWarning ("loadBinningResults") << " MonitorElement meName = " << meName << " marked as invalid" 
 					     << " --> skipping !!";
       continue;
     }
-
-//--- decode id of MonitorElement,
-//    so that MonitorElements loaded from DQMStore
-//    can be sorted in the order in which they have been saved
-    size_t posSeparator = meName->find(meNameSeparator);
-    int meId = atoi(std::string(*meName, 0, posSeparator).data());
-    std::string meName_decoded = std::string(*meName, posSeparator + meNameSeparator.length());
-    std::cout << "meName_decoded = " << meName_decoded << std::endl;
 
     std::string meType, meValue;
 
     if ( me->kind() == MonitorElement::DQM_KIND_STRING ) {
       meType = "string";
       meValue = me->getStringValue();
-      std::cout << "meValue(string) = " << meValue << std::endl;
+      //std::cout << "meValue(string) = " << meValue << std::endl;
     } else if ( me->kind() == MonitorElement::DQM_KIND_REAL ) {
       meType = "float";
       std::ostringstream meValue_ostringstream;
       meValue_ostringstream << std::setprecision(3) << std::fixed << me->getFloatValue();
       meValue = meValue_ostringstream.str();
-      std::cout << "meValue(float) = " << meValue << std::endl;
+      //std::cout << "meValue(float) = " << meValue << std::endl;
     } else if ( me->kind() == MonitorElement::DQM_KIND_INT ) {
       meType = "int";
       std::ostringstream meValue_ostringstream;
       meValue_ostringstream << me->getIntValue();
       meValue = meValue_ostringstream.str();
-      std::cout << "meValue(int) = " << meValue << std::endl;
+      //std::cout << "meValue(int) = " << meValue << std::endl;
     } else {
-      edm::LogError ("loadBinningResults") << " MonitorElement meName = " << (*meName) << " of unsupported type" 
-					   << " --> skipping !!";
+      edm::LogError ("BinningServiceBase::loadBinningResults") << " MonitorElement meName = " << meName << " of unsupported type" 
+							       << " --> skipping !!";
       continue;
     } 
 
-    meEntries.push_back(meEntry(meId, meName_decoded, meType, meValue));
+    int meId = iEntry;
+    meEntries.push_back(meEntry(meId, meName, meType, meValue));
   }
+
+  delete subStrings;
 
 //--- sort meEntry objects representing MonitorElements
 //    in the order by which MonitorElements have been saved
@@ -107,7 +140,7 @@ BinningBase* BinningServiceBase::loadBinningResults(const std::string& dqmDirect
   for ( std::vector<meEntry>::const_iterator meEntry_i = meEntries.begin();
 	meEntry_i != meEntries.end(); ++meEntry_i ) {
     std::string entry = encodeBinningStringRep(meEntry_i->name_, meEntry_i->type_, meEntry_i->value_);
-    std::cout << "entry = " << entry << std::endl;
+    //std::cout << "entry = " << entry << std::endl;
     buffer.push_back(entry);
   }
 
@@ -123,7 +156,8 @@ void BinningServiceBase::saveBinningResults(const std::string& dqmDirectory, con
 //--- check if DQMStore is available;
 //    print an error message and return if not
   if ( !edm::Service<DQMStore>().isAvailable() ) {
-    edm::LogError ("saveBinningResults") << " Failed to access dqmStore --> binning results will NOT be saved !!";
+    edm::LogError ("BinningServiceBase::saveBinningResults") << " Failed to access dqmStore" 
+							     << " --> binning results will NOT be saved !!";
     return;
   }
   
@@ -134,7 +168,8 @@ void BinningServiceBase::saveBinningResults(const std::string& dqmDirectory, con
   std::vector<std::string> buffer;
   buffer << (*binning);
 
-  int id = 1;
+  std::vector<std::string> meNames_ordered;
+  
   for ( std::vector<std::string>::const_iterator entry = buffer.begin();
 	entry != buffer.end(); ++entry ) {
     std::string meName, meType, meValue;
@@ -142,33 +177,39 @@ void BinningServiceBase::saveBinningResults(const std::string& dqmDirectory, con
     decodeBinningStringRep(*entry, meName, meType, meValue, error);
 
     if ( error ) {
-      edm::LogError ("saveBinningResults") << " Error in parsing string = " << (*entry) << " --> skipping !!";
+      edm::LogError ("BinningServiceBase::saveBinningResults") << " Error in parsing string = " << (*entry) << " --> skipping !!";
       continue;
     }
-
-//--- encode id of MonitorElement,
-//    so that MonitorElements loaded from DQMStore
-//    can be sorted in the order in which they have been saved
-    std::ostringstream meName_encoded_ostringstream;
-    meName_encoded_ostringstream << std::setw(3) << id << meNameSeparator << meName;
-    std::string meName_encoded = meName_encoded_ostringstream .str();
-    //std::cout << "meName_encoded = " << meName_encoded << std::endl;
 
     if ( meType == "string" ) {
-      dqmStore.bookString(meName_encoded, meValue);
+      dqmStore.bookString(meName, meValue);
     } else if ( meType == "float" ) {
-      MonitorElement* me = dqmStore.bookFloat(meName_encoded);
+      MonitorElement* me = dqmStore.bookFloat(meName);
       me->Fill(atof(meValue.data()));
     } else if ( meType == "int" ) {
-      MonitorElement* me = dqmStore.bookInt(meName_encoded);
+      MonitorElement* me = dqmStore.bookInt(meName);
       me->Fill(atoi(meValue.data()));
     } else {
-      edm::LogError ("saveBinningResults") << " Undefined meType = " << meType << " --> skipping !!";
+      edm::LogError ("BinningServiceBase::saveBinningResults") << " Undefined meType = " << meType << " --> skipping !!";
       continue;
     }
 
-    ++id;
+    meNames_ordered.push_back(meName);
   }
+  
+//--- encode order of MonitorElements into auxiliary MonitorElement,
+//    so that MonitorElements can be loaded from DQMStore
+//    in the order in which they have been saved
+  std::ostringstream meValueOrder;
+  
+  unsigned numEntries = meNames_ordered.size();
+  for ( unsigned iEntry = 0; iEntry < numEntries; ++iEntry ) {
+    std::string meName = meNames_ordered[iEntry];
+    meValueOrder << meName;
+    if ( iEntry < (numEntries - 1) ) meValueOrder << ", ";
+  }
+
+  dqmStore.bookString(meNameOrder, meValueOrder.str());
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

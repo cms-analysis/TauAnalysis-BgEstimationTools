@@ -129,7 +129,7 @@ void DataBinning::decodeStringRep(std::vector<std::string>& buffer)
     decodeBinningStringRep(*entry, meName, meType, meValue, error);
 
     if ( error ) {
-      edm::LogError ("operator>>") << " Error in parsing string = " << (*entry) << " --> skipping !!";
+      edm::LogError ("DataBinning::operator>>") << " Error in parsing string = " << (*entry) << " --> skipping !!";
       continue;
     }
 
@@ -147,21 +147,21 @@ void DataBinning::decodeStringRep(std::vector<std::string>& buffer)
       numBins_initialized = true;
     } else if ( regexpParser_binContents_entry.Match(meName_tstring) == 1 ) {
       if ( !numBins_initialized ) {
-	edm::LogError ("operator>>") << " Need to initialize numBins before setting binContents !!";
+	edm::LogError ("DataBinning::operator>>") << " Need to initialize numBins before setting binContents !!";
 	continue;
       }
       
       TObjArray* subStrings = regexpParser_binContents_binNumber.MatchS(meName_tstring);
       if ( subStrings->GetEntries() == 2 ) {
-	unsigned binNumber = (unsigned)atoi(((TObjString*)subStrings->At(1))->GetString().Data());
+	int binNumber = (unsigned)atoi(((TObjString*)subStrings->At(1))->GetString().Data()) - 1;
 	float binContent = atof(meValue.data());
 	
-	if ( binNumber < numBins_ ) {
+	if ( binNumber >= 0 && binNumber < (int)numBins_ ) {
 	  binContents_[binNumber] = binContent;
 	  binContents_initialized[binNumber] = true;
 	} else {
-	  edm::LogError ("operator>>") << " Bin number = " << binNumber << " decoded from meName = " << meName
-				       << " not within numBins = " << numBins_ << " range of binning object !!";
+	  edm::LogError ("DataBinning::operator>>") << " Bin number = " << binNumber << " decoded from meName = " << meName
+					            << " not within numBins = " << numBins_ << " range of binning object !!";
 	  continue;
 	}
       } else {
@@ -169,21 +169,21 @@ void DataBinning::decodeStringRep(std::vector<std::string>& buffer)
       }
     } else if ( regexpParser_binSumw2_entry.Match(meName_tstring) == 1 ) {
       if ( !numBins_initialized ) {
-	edm::LogError ("operator>>") << " Need to initialize numBins before setting binSumw2 !!";
+	edm::LogError ("DataBinning::operator>>") << " Need to initialize numBins before setting binSumw2 !!";
 	continue;
       }
 
       TObjArray* subStrings = regexpParser_binSumw2_binNumber.MatchS(meName_tstring);
       if ( subStrings->GetEntries() == 2 ) {
-	unsigned binNumber = (unsigned)atoi(((TObjString*)subStrings->At(1))->GetString().Data());
+	int binNumber = (unsigned)atoi(((TObjString*)subStrings->At(1))->GetString().Data()) - 1;
 	float binSumw2 = atof(meValue.data());
 
-	if ( binNumber < numBins_ ) {
+	if ( binNumber >= 0 && binNumber < (int)numBins_ ) {
 	  binSumw2_[binNumber] = binSumw2;
 	  binSumw2_initialized[binNumber] = true;
 	} else {
-	  edm::LogError ("operator>>") << " Bin number = " << binNumber << " decoded from meName = " << meName
-				       << " not within numBins = " << numBins_ << " range of binning object !!";
+	  edm::LogError ("DataBinning::operator>>") << " Bin number = " << binNumber << " decoded from meName = " << meName
+					            << " not within numBins = " << numBins_ << " range of binning object !!";
 	  continue;
 	}
       } else {
@@ -192,7 +192,7 @@ void DataBinning::decodeStringRep(std::vector<std::string>& buffer)
     }
 
     if ( binNumber_error ) {
-      edm::LogError ("operator>>") << " Failed to decode bin number from meName = " << meName << " !!";
+      edm::LogError ("DataBinning::operator>>") << " Failed to decode bin number from meName = " << meName << " !!";
       continue;
     }
   }
@@ -205,7 +205,7 @@ void DataBinning::decodeStringRep(std::vector<std::string>& buffer)
       if ( !binSumw2_initialized[iBin] ) edm::LogError ("operator>>") << " Failed to decode binSumw2[" << iBin << "] !!";
     }
   } else {
-    edm::LogError ("operator>>") << " Failed to decode numBins !!";
+    edm::LogError ("DataBinning::operator>>") << " Failed to decode numBins !!";
   }
 }
 
