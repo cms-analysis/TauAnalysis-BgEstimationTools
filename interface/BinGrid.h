@@ -10,9 +10,9 @@
  * \author Christian Veelken, UC Davis
  *         (inspired by code written for H1 by Paul Laycock, University of Liverpool)
  *
- * \version $Revision: 1.1 $
+ * \version $Revision: 1.2 $
  *
- * $Id: BinGrid.h,v 1.1 2009/06/11 07:23:28 veelken Exp $
+ * $Id: BinGrid.h,v 1.2 2009/06/17 12:38:12 veelken Exp $
  *
  */
 
@@ -45,6 +45,12 @@ class BinGrid
 
   friend std::vector<std::string>& operator<<(std::vector<std::string>&, const BinGrid&);
   friend std::vector<std::string>& operator>>(std::vector<std::string>&, BinGrid&);
+
+ protected:
+//--- auxiliary functions
+//    (for initializing numBinsPerDimension and dimValues
+//     data-members for encoding/decoding of bin numbers)
+  virtual void initialize();
 
  private:
 //--- auxiliary functions
