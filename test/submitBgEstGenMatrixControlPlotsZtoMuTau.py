@@ -5,7 +5,7 @@ from TauAnalysis.BgEstimationTools.makeReplacementsBgEstGenMatrixControlPlots im
 
 # name of the directory (either on afs area or castor)
 # to which all .root files produced by the cmsRun job will be copied
-outputDirectory = "/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau/"
+outputDirectory = "/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoMuTau/"
 
 # small cmsRun job for testing purposes...
 #submitToBatch(configFile = "prodGenMatrixControlPlotsZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "Ztautau",
