@@ -27,11 +27,11 @@ void decodeBinningStringRep(const std::string& entry, std::string& meName, std::
 
   TString pattern_entry = "meName[[:space:]]*=[[:space:]]*[[:alnum:]_]+";
   pattern_entry.Append("; meType[[:space:]]*=[[:space:]]*[[:alnum:]]+");
-  pattern_entry.Append("; meValue[[:space:]]*=[[:space:]]*[+|-]*[[:alnum:].]+[,[[:space:]]*[+|-]*[[:alnum:].]+]*");
+  pattern_entry.Append("; meValue[[:space:]]*=[[:space:]]*[\\+\\-[:alnum:].]+[,[:space:]\\+\\-[:alnum:].]*"); 
   TPRegexp regexpParser_entry(pattern_entry);
   TString pattern_items = "meName[[:space:]]*=[[:space:]]*([[:alnum:]_]+)";
   pattern_items.Append("; meType[[:space:]]*=[[:space:]]*([[:alnum:]]+)");
-  pattern_items.Append("; meValue[[:space:]]*=[[:space:]]*([+|-]*[[:alnum:].]+[,[[:space:]]*[+|-]*[[:alnum:].]+]*)");
+  pattern_items.Append("; meValue[[:space:]]*=[[:space:]]*([\\+\\-[:alnum:].]+[,[:space:]\\+\\-[:alnum:].]*)");
   TPRegexp regexpParser_items(pattern_items);
 
   meName = "";
@@ -91,29 +91,29 @@ std::string encodeVDoubleStringRep(const std::vector<double>& elements)
 
 std::vector<double> decodeVDoubleStringRep(const std::string& entry, int& error)
 {
-  const std::string pattern_double = "[+|-]*[[:digit:]]+[.[:digit:]]*[[e|E][+|-][[:digit:]]+[.[:digit:]]*]*";
+  const std::string pattern_double = "[+|-]*[[:digit:].]+[eE\\+\\-.[:digit:]]*";
 
   TString pattern_entry = pattern_double.data();
   pattern_entry.Append("[,[:space:]*").Append(pattern_double.data()).Append("]*");
   TPRegexp regexpParser_entry(pattern_entry);
-  TString pattern_elements = TString("(").Append(pattern_double.data()).Append(")");
-  pattern_elements.Append("[,[:space:]*").Append("(").Append(pattern_double.data()).Append(")").Append("]*");
-  TPRegexp regexpParser_elements(pattern_entry);
 
   TString entry_tstring = entry.data();
+  //std::cout << "entry_tstring = " << entry_tstring << std::endl;
 
   std::vector<double> elements;
 
   if ( regexpParser_entry.Match(entry_tstring) == 1 ) { 
-    TObjArray* subStrings = regexpParser_elements.MatchS(entry_tstring);
+//--- iterate over all vector elements (separated by ",")
+    TObjArray* subStrings = entry_tstring.Tokenize(",");
     unsigned numElements = subStrings->GetEntries();
-//--- iterate over all vector elements (separated by ",");
-//    skip 0th match which refers to entire entry string
-    for ( unsigned iElement = 1; iElement < numElements; ++iElement ) {
-      std::string element_string = ((TObjString*)subStrings->At(iElement))->GetString().Data();
+    for ( unsigned iElement = 0; iElement < numElements; ++iElement ) {
+      std::string element_string = ((TObjString*)subStrings->At(iElement))->GetString().ReplaceAll(" ", "").Data();
+      //std::cout << " element_string = " << element_string << std::endl;
       double element = atof(element_string.data());
+      //std::cout << " element = " << element << std::endl;
       elements.push_back(element);
     }
+    delete subStrings;
   } else {
     edm::LogError ("decodeVDoubleStringRep") << " Error in parsing string = " << entry << " !!";
     error = 1;
