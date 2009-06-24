@@ -58,7 +58,7 @@ void BinningBase::decodeStringRep(std::vector<std::string>& buffer)
     decodeBinningStringRep(*entry, meName, meType, meValue, error);
 
     if ( error ) {
-      edm::LogError ("decodeStringRep") << " Error in parsing string = " << (*entry) << " --> skipping !!";
+      edm::LogError ("BinningBase::decodeStringRep") << " Error in parsing string = " << (*entry) << " --> skipping !!";
       continue;
     }
 
@@ -73,7 +73,7 @@ void BinningBase::decodeStringRep(std::vector<std::string>& buffer)
 //--- check that all data-members of BinningBase object 
 //    have been initialized
   if ( !name_initialized ) {
-    edm::LogError ("decodeStringRep") << " Failed to decode name !!";
+    edm::LogError ("BinningBase::decodeStringRep") << " Failed to decode name !!";
   }
 }
 
