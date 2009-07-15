@@ -25,10 +25,24 @@ bgEstNtupleOutputFileNameZtautau = cms.string('bgEstNtupleZtoMuTau_Ztautau.root'
 bgEstSampleOutputFileNameZmumu = cms.string('bgEstSampleZtoMuTau_Zmumu_partXX.root')
 
 # definitions for reading skimmed samples
-bgEstSampleFileNamesZmumu = cms.untracked.vstring(
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_Zmumu_part01.root',
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_Zmumu_part02.root',
+bgEstSampleFileNamesZmumu_part01 = cms.untracked.vstring(
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_Zmumu_part01.root'
+)
+
+bgEstSampleFileNamesZmumu_part02 = cms.untracked.vstring(
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_Zmumu_part02.root'
+)
+
+bgEstSampleFileNamesZmumu_part03 = cms.untracked.vstring(
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_Zmumu_part03.root'
+)
+
+bgEstSampleFileNamesZmumu_part04 = cms.untracked.vstring(
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_Zmumu_part04.root'
+)
+
+bgEstSampleFileNamesZmumu_part05 = cms.untracked.vstring(
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_Zmumu_part05.root'
 )
 
 # definitions for producing ntuples
@@ -50,9 +64,15 @@ bgEstSampleFileNamesZtautauPlusJets = cms.untracked.vstring(
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_ZtautauPlusJets_part03.root'
 )
 
-bgEstSampleFileNamesZmumuPlusJets = cms.untracked.vstring(
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_ZmumuPlusJets_part01.root',
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_ZmumuPlusJets_part02.root',
+bgEstSampleFileNamesZmumuPlusJets_part01 = cms.untracked.vstring(
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_ZmumuPlusJets_part01.root'
+)
+
+bgEstSampleFileNamesZmumuPlusJets_part02 = cms.untracked.vstring(
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_ZmumuPlusJets_part02.root'
+)
+
+bgEstSampleFileNamesZmumuPlusJets_part03 = cms.untracked.vstring(
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_ZmumuPlusJets_part03.root'
 )
 

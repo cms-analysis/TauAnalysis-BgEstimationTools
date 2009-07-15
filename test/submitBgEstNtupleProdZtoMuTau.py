@@ -30,9 +30,10 @@ submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sa
               job = "bgEstNtupleProd", queue = "1nd", outputDirectory = outputDirectory)
 
 # Z --> mu mu jobs
-submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "Zmumu",
-              replFunction = makeReplacementsBgEstNtupleProd, replacements = "maxEvents = -1",
-              job = "bgEstNtupleProd", queue = "1nd", outputDirectory = outputDirectory)
+for i in range(5):
+    submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "Zmumu_part%(i)02d" % {"i" : (i + 1)},
+                  replFunction = makeReplacementsBgEstNtupleProd, replacements = "maxEvents = -1",
+                  job = "bgEstNtupleProd", queue = "1nd", outputDirectory = outputDirectory)
 
 # pp --> mu X QCD jobs
 submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "InclusivePPmuX",
@@ -52,9 +53,10 @@ submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sa
 submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "ZeePlusJets",
               replFunction = makeReplacementsBgEstNtupleProd, replacements = "maxEvents = -1",
               job = "bgEstNtupleProd", queue = "1nd", outputDirectory = outputDirectory)
-submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "ZmumuPlusJets",
-              replFunction = makeReplacementsBgEstNtupleProd, replacements = "maxEvents = -1",
-              job = "bgEstNtupleProd", queue = "1nd", outputDirectory = outputDirectory)
+for i in range(3):
+    submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "ZmumuPlusJets_part%(i)02d" % {"i" : (i + 1)},
+                  replFunction = makeReplacementsBgEstNtupleProd, replacements = "maxEvents = -1",
+                  job = "bgEstNtupleProd", queue = "1nd", outputDirectory = outputDirectory)
 submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "ZtautauPlusJets",
               replFunction = makeReplacementsBgEstNtupleProd, replacements = "maxEvents = -1",
               job = "bgEstNtupleProd", queue = "1nd", outputDirectory = outputDirectory)
