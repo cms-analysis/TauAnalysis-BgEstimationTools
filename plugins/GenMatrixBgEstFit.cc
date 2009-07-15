@@ -583,13 +583,13 @@ GenMatrixBgEstFit::~GenMatrixBgEstFit()
   delete binGrid_;
 }
 
-void GenMatrixBgEstFit::beginJob(const edm::EventSetup& es)
+void GenMatrixBgEstFit::endJob()
 {
-  //std::cout << "<GenMatrixBgEstFit::beginJob>:" << std::endl; 
+  //std::cout << "<GenMatrixBgEstFit::endJob>:" << std::endl; 
 
 //--- check that configuration parameters contain no errors
   if ( cfgError_ ) {
-    edm::LogError ("GenMatrixBgEstFit::beginJob") << " Error in Configuration ParameterSet --> skipping !!";
+    edm::LogError ("GenMatrixBgEstFit::endJob") << " Error in Configuration ParameterSet --> skipping !!";
     return;
   }
 
@@ -648,8 +648,8 @@ void GenMatrixBgEstFit::beginJob(const edm::EventSetup& es)
 
       if ( controlPlotsFileName_.find(".") == std::string::npos ||
 	   controlPlotsFileName_.find(".") == (controlPlotsFileName_.length() - 1) ) {
-	edm::LogError ("GenMatrixBgEstFit::beginJob") << " Invalid format for fileName = " << controlPlotsFileName_
-						      << " --> skipping !!";
+	edm::LogError ("GenMatrixBgEstFit::endJob") << " Invalid format for fileName = " << controlPlotsFileName_
+						    << " --> skipping !!";
 	return;
       } 
 

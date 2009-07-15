@@ -14,7 +14,7 @@
  *
  * \version $Revision: 1.1 $
  *
- * $Id: GenMatrixBgEstFit.h,v 1.1 2009/02/04 15:53:56 veelken Exp $
+ * $Id: GenMatrixBgEstFit.h,v 1.1 2009/06/11 07:23:28 veelken Exp $
  *
  */
 
@@ -108,9 +108,9 @@ class GenMatrixBgEstFit : public edm::EDAnalyzer
   
  private:
 
-  void beginJob(const edm::EventSetup&);
+  void beginJob(const edm::EventSetup&) {}
   void analyze(const edm::Event&, const edm::EventSetup&) {}
-  void endJob() {}
+  void endJob();
 
 //--- private auxiliary functions
   double compNorm(processTreeEntryType*);

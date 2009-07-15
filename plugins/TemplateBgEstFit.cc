@@ -159,9 +159,9 @@ TemplateBgEstFit::~TemplateBgEstFit()
   delete model_;
 }
 
-void TemplateBgEstFit::beginJob(const edm::EventSetup& es)
+void TemplateBgEstFit::endJob()
 {
-  std::cout << "<TemplateBgEstFit::beginJob>:" << std::endl;
+  std::cout << "<TemplateBgEstFit::endJob>:" << std::endl;
 
 //--- check that configuration parameters contain no errors
   for ( std::vector<processEntryType*>::iterator processEntry = processEntries_.begin();
@@ -172,19 +172,21 @@ void TemplateBgEstFit::beginJob(const edm::EventSetup& es)
   if ( dataEntry_->cfgError_ ) cfgError_ = 1;
   
   if ( cfgError_ ) {
-    edm::LogError ("beginJob") << " Error in Configuration ParameterSet" 
-			       << " --> histogram will NOT be fitted !!";
+    edm::LogError ("endJob") << " Error in Configuration ParameterSet" 
+			     << " --> histogram will NOT be fitted !!";
     return;
   }
 
 //--- check that DQMStore service is available
   if ( !edm::Service<DQMStore>().isAvailable() ) {
-    edm::LogError ("beginJob") << " Failed to access dqmStore" 
-			       << " --> histogram will NOT be fitted !!";
+    edm::LogError ("endJob") << " Failed to access dqmStore" 
+			     << " --> histogram will NOT be fitted !!";
     return;
   }
 
   DQMStore& dqmStore = (*edm::Service<DQMStore>());
+
+  dqmStore.showDirStructure();
   
 //--- configure RooFit structure
   x_ = new RooRealVar("x", "x", xMin_, xMax_);
