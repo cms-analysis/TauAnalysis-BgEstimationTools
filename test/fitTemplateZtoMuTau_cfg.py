@@ -42,7 +42,8 @@ process.source = cms.Source("EmptySource")
 #
 bgEstEventSelection_Zmumu = "muonTrackIso < 1. && muonEcalIso < 1. && tauDiscrAgainstMuons < 0.5"
 bgEstEventSelection_WplusJets = "muonTrackIso < 1. && muonEcalIso < 1. && tauDiscrAgainstMuons > 0.5"
-bgEstEventSelection_WplusJets += " && diTauMt1MET > 40. && numGlobalMuons < 2"
+#bgEstEventSelection_WplusJets += " && diTauMt1MET > 40. && numGlobalMuons < 2"
+bgEstEventSelection_WplusJets += " && diTauMt1MET > 40. && diTauPzetaDiff < -25. && numGlobalMuons < 2"
 bgEstEventSelection_QCD = "muonTrackIso > 4. && muonEcalIso > 4. && tauDiscrAgainstMuons > 0.5"
 bgEstEventSelection_QCD += " && numGlobalMuons < 2"
 
@@ -58,6 +59,7 @@ prodTemplateHistZtoMuTau.branchName = cms.string('diTauMvis12')
 prodTemplateHistZtoMuTau.numBinsX = cms.uint32(30)
 prodTemplateHistZtoMuTau.xMin = cms.double(0.)
 prodTemplateHistZtoMuTau.xMax = cms.double(150.)
+prodTemplateHistZtoMuTau.norm = cms.double(1.)
 #
 # produce template histograms for Z --> mu mu (+ jets) background
 #
@@ -113,33 +115,33 @@ process.prodTemplateHistZtoMuTau_WplusJets = cms.Sequence(
 #
 # produce template histograms for QCD background
 #
-process.prodTemplateHistZtoMuTau_qcdSum_data = copy.deepcopy(prodTemplateHistZtoMuTau)
-process.prodTemplateHistZtoMuTau_qcdSum_data.fileNames = fileNames_pseudoData
-process.prodTemplateHistZtoMuTau_qcdSum_data.treeSelection = cms.string(bgEstEventSelection_QCD)
-process.prodTemplateHistZtoMuTau_qcdSum_data.meName = cms.string("fitTemplateZtoMuTau/qcdSum/data/diTauMvis12")
-process.prodTemplateHistZtoMuTau_qcdSum_pure = copy.deepcopy(process.prodTemplateHistZtoMuTau_qcdSum_data)
-process.prodTemplateHistZtoMuTau_qcdSum_pure.fileNames = fileNames_qcdSum
-process.prodTemplateHistZtoMuTau_qcdSum_pure.meName = cms.string("fitTemplateZtoMuTau/qcdSum/pure/diTauMvis12")
-process.prodTemplateHistZtoMuTau_qcdSum_Ztautau = copy.deepcopy(process.prodTemplateHistZtoMuTau_qcdSum_data)
-process.prodTemplateHistZtoMuTau_qcdSum_Ztautau.fileNames = fileNames_Ztautau
-process.prodTemplateHistZtoMuTau_qcdSum_Ztautau.meName = cms.string("fitTemplateZtoMuTau/qcdSum/Ztautau/diTauMvis12")
-process.prodTemplateHistZtoMuTau_qcdSum_Zmumu = copy.deepcopy(process.prodTemplateHistZtoMuTau_qcdSum_data)
-process.prodTemplateHistZtoMuTau_qcdSum_Zmumu.fileNames = fileNames_ZmumuPlusJets
-process.prodTemplateHistZtoMuTau_qcdSum_Zmumu.meName = cms.string("fitTemplateZtoMuTau/qcdSum/Zmumu/diTauMvis12")
-process.prodTemplateHistZtoMuTau_qcdSum_WplusJets = copy.deepcopy(process.prodTemplateHistZtoMuTau_qcdSum_data)
-process.prodTemplateHistZtoMuTau_qcdSum_WplusJets.fileNames = fileNames_WplusJets
-process.prodTemplateHistZtoMuTau_qcdSum_WplusJets.meName = cms.string("fitTemplateZtoMuTau/qcdSum/WplusJets/diTauMvis12")
-process.prodTemplateHistZtoMuTau_qcdSum = cms.Sequence(
-    process.prodTemplateHistZtoMuTau_qcdSum_data
-   +process.prodTemplateHistZtoMuTau_qcdSum_pure
-   +process.prodTemplateHistZtoMuTau_qcdSum_Ztautau
-   +process.prodTemplateHistZtoMuTau_qcdSum_Zmumu 
-   +process.prodTemplateHistZtoMuTau_qcdSum_WplusJets
+process.prodTemplateHistZtoMuTau_QCD_data = copy.deepcopy(prodTemplateHistZtoMuTau)
+process.prodTemplateHistZtoMuTau_QCD_data.fileNames = fileNames_pseudoData
+process.prodTemplateHistZtoMuTau_QCD_data.treeSelection = cms.string(bgEstEventSelection_QCD)
+process.prodTemplateHistZtoMuTau_QCD_data.meName = cms.string("fitTemplateZtoMuTau/QCD/data/diTauMvis12")
+process.prodTemplateHistZtoMuTau_QCD_pure = copy.deepcopy(process.prodTemplateHistZtoMuTau_QCD_data)
+process.prodTemplateHistZtoMuTau_QCD_pure.fileNames = fileNames_qcdSum
+process.prodTemplateHistZtoMuTau_QCD_pure.meName = cms.string("fitTemplateZtoMuTau/QCD/pure/diTauMvis12")
+process.prodTemplateHistZtoMuTau_QCD_Ztautau = copy.deepcopy(process.prodTemplateHistZtoMuTau_QCD_data)
+process.prodTemplateHistZtoMuTau_QCD_Ztautau.fileNames = fileNames_Ztautau
+process.prodTemplateHistZtoMuTau_QCD_Ztautau.meName = cms.string("fitTemplateZtoMuTau/QCD/Ztautau/diTauMvis12")
+process.prodTemplateHistZtoMuTau_QCD_Zmumu = copy.deepcopy(process.prodTemplateHistZtoMuTau_QCD_data)
+process.prodTemplateHistZtoMuTau_QCD_Zmumu.fileNames = fileNames_ZmumuPlusJets
+process.prodTemplateHistZtoMuTau_QCD_Zmumu.meName = cms.string("fitTemplateZtoMuTau/QCD/Zmumu/diTauMvis12")
+process.prodTemplateHistZtoMuTau_QCD_WplusJets = copy.deepcopy(process.prodTemplateHistZtoMuTau_QCD_data)
+process.prodTemplateHistZtoMuTau_QCD_WplusJets.fileNames = fileNames_WplusJets
+process.prodTemplateHistZtoMuTau_QCD_WplusJets.meName = cms.string("fitTemplateZtoMuTau/QCD/WplusJets/diTauMvis12")
+process.prodTemplateHistZtoMuTau_QCD = cms.Sequence(
+    process.prodTemplateHistZtoMuTau_QCD_data
+   +process.prodTemplateHistZtoMuTau_QCD_pure
+   +process.prodTemplateHistZtoMuTau_QCD_Ztautau
+   +process.prodTemplateHistZtoMuTau_QCD_Zmumu 
+   +process.prodTemplateHistZtoMuTau_QCD_WplusJets
 )
 
 process.prodTemplateHistZtoMuTau = cms.Sequence( process.prodTemplateHistZtoMuTau_Zmumu
                                                 +process.prodTemplateHistZtoMuTau_WplusJets
-                                                +process.prodTemplateHistZtoMuTau_qcdSum )
+                                                +process.prodTemplateHistZtoMuTau_QCD )
 
 #--------------------------------------------------------------------------------
 # load template histogram of visible muon + tau-jet mass distribution
@@ -170,33 +172,83 @@ process.loadHistZtoMuTau_data = cms.EDAnalyzer("DQMFileLoader",
 # plot template histograms of "pure" Monte Carlo processes
 # compared to the shapes determined by background "enriched" regions in (pseudo)Data
 #--------------------------------------------------------------------------------
+#
+# define template histograms for Z --> tau tau signal
+#
+# NOTE: backgrounds contributing to Z --> mu mu sample from which
+#       template histogram for Ztautau signal process is determined using MCEmbeddingTools
+#       not included yet, so use "pure" sample as approximation for sample determined in "deta"
+#       for the time being...
+#
 process.drawJob_Ztautau = copy.deepcopy(drawJobTemplateHist)
-process.drawJob_Ztautau.plots.dqmMonitorElements = cms.vstring(
-    'Ztautau_from_selZmumu/#PROCESSDIR#/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+process.drawJob_Ztautau.plots[0].dqmMonitorElements = cms.vstring(
+    'Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
 )
-process.drawJob_Ztautau.plots.processes = cms.vstring('pure')
-process.drawJob_Ztautau.title = cms.string("M_{vis}(Muon + Tau)")
-
-process.drawJob_Zmumu = copy.deepcopy(process.drawJob_Ztautau)
-process.drawJob_Zmumu.plots.dqmMonitorElements = cms.vstring('fitTemplateZtoMuTau/#PROCESSDIR#/diTauMvis12')
-process.drawJob_Zmumu.plots.processes = cms.vstring('data', 'pure')
-
-process.drawJob_WplusJets = copy.deepcopy(process.drawJob_Zmumu)
-process.drawJob_WplusJets.plots.processes = cms.vstring('data', 'pure')
-
-process.drawJob_qcdSum = copy.deepcopy(process.drawJob_Zmumu)
-process.drawJob_qcdSum.plots.processes = cms.vstring('data', 'pure')
+process.drawJob_Ztautau.plots[1].dqmMonitorElements = cms.vstring(
+    'Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+)
+process.drawJob_Ztautau.plots[2].dqmMonitorElements = cms.vstring(
+    'Ztautau/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+)
+process.drawJob_Ztautau.title = cms.string('M_{vis}^{#mu + #tau-jet} in Z #rightarrow #tau^{+} #tau^{-} Signal')
+#
+# define template histograms for Z --> mu mu background
+#
+process.drawJob_Zmumu = copy.deepcopy(drawJobTemplateHist)
+process.drawJob_Zmumu.plots[0].dqmMonitorElements = cms.vstring(
+    'fitTemplateZtoMuTau/Zmumu/data/diTauMvis12'
+)
+process.drawJob_Zmumu.plots[1].dqmMonitorElements = cms.vstring(
+    'fitTemplateZtoMuTau/Zmumu/pure/diTauMvis12'
+)
+process.drawJob_Zmumu.plots[2].dqmMonitorElements = cms.vstring(
+    'ZmumuPlusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+)
+process.drawJob_Zmumu.title = cms.string('M_{vis}^{#mu + #tau-jet} in Z #rightarrow #mu^{+} #mu^{-} Background')
+#
+# define template histograms for W + jets background
+#
+process.drawJob_WplusJets = copy.deepcopy(drawJobTemplateHist)
+process.drawJob_WplusJets.plots[0].dqmMonitorElements = cms.vstring(
+    'fitTemplateZtoMuTau/WplusJets/data/diTauMvis12'
+)
+process.drawJob_WplusJets.plots[1].dqmMonitorElements = cms.vstring(
+    'fitTemplateZtoMuTau/WplusJets/pure/diTauMvis12'
+)
+process.drawJob_WplusJets.plots[2].dqmMonitorElements = cms.vstring(
+    'WplusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+)
+process.drawJob_WplusJets.title = cms.string('M_{vis}^{#mu + #tau-jet} in W + jets Background')
+#
+# define template histograms for QCD background
+#
+process.drawJob_QCD = copy.deepcopy(drawJobTemplateHist)
+process.drawJob_QCD.plots[0].dqmMonitorElements = cms.vstring(
+    'fitTemplateZtoMuTau/QCD/data/diTauMvis12'
+)
+process.drawJob_QCD.plots[1].dqmMonitorElements = cms.vstring(
+    'fitTemplateZtoMuTau/QCD/pure/diTauMvis12'
+)
+process.drawJob_QCD.plots[2].dqmMonitorElements = cms.vstring(
+    'qcdSum/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+)
+process.drawJob_QCD.title = cms.string('M_{vis}^{#mu + #tau-jet} in QCD Background')
 
 process.plotTemplateHistZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
     processes = cms.PSet(
-        data = cms.PSet(
-            dqmDirectory = cms.string('Ztautau_data_from_selZmumu'),
-            legendEntry = cms.string('Process enriched in Data'),
+        bgEstData = cms.PSet(
+            dqmDirectory = cms.string(''),
+            legendEntry = drawJobTemplateHist.plots[0].legendEntry,
             type = cms.string('smMC')
         ),
-        pure = cms.PSet(
-            dqmDirectory = cms.string('Ztautau_pure_from_selZmumu'),
-            legendEntry = cms.string('pure Process'),
+        bgEstPure = cms.PSet(
+            dqmDirectory = cms.string(''),
+            legendEntry = drawJobTemplateHist.plots[1].legendEntry,
+            type = cms.string('smMC')
+        ),
+        finalEvtSel = cms.PSet(
+            dqmDirectory = cms.string(''),
+            legendEntry = drawJobTemplateHist.plots[2].legendEntry,
             type = cms.string('smMC')
         )
     ),
@@ -227,18 +279,17 @@ process.plotTemplateHistZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
         mcNormScale = copy.deepcopy(label_mcNormScale)
     ),
 
-    drawOptionSets = cms.PSet(
-        default = cms.PSet(
-            data = copy.deepcopy(drawOption_black_separate),
-            pure = copy.deepcopy(drawOption_blue_separate),
-        )
+    drawOptionEntries = cms.PSet(
+        bgEstData = copy.deepcopy(drawOption_black_points),
+        bgEstPure = copy.deepcopy(drawOption_darkBlue_eff),
+        finalEvtSel = copy.deepcopy(drawOption_red_eff)
     ),
 
     drawJobs = cms.PSet(
         Ztautau = copy.deepcopy(process.drawJob_Ztautau),
         Zmumu = copy.deepcopy(process.drawJob_Zmumu),
         WplusJets = copy.deepcopy(process.drawJob_WplusJets),
-        qcdSum = copy.deepcopy(process.drawJob_qcdSum)
+        QCD = copy.deepcopy(process.drawJob_QCD)
     ),
 
     canvasSizeX = cms.int32(800),
@@ -260,21 +311,19 @@ process.saveTemplateHistZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
 process.bgEstFitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",                                          
     processes = cms.PSet(
         Ztautau = cms.PSet(
-            meName = cms.string(
-                'Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
-            ),
+            meName = cms.string(process.drawJob_Ztautau.plots[0].dqmMonitorElements[0]),
             drawOptions = drawOption_Ztautau
         ),
         Zmumu = cms.PSet(
-            meName = process.prodTemplateHistZtoMuTau_Zmumu_data.meName,
+            meName = cms.string(process.drawJob_Zmumu.plots[0].dqmMonitorElements[0]),
             drawOptions = drawOption_Zmumu
         ),
         WplusJets = cms.PSet(
-            meName = process.prodTemplateHistZtoMuTau_WplusJets_data.meName,
+            meName = cms.string(process.drawJob_WplusJets.plots[0].dqmMonitorElements[0]),
             drawOptions = drawOption_WplusJets
         ),
         qcdSum = cms.PSet(
-            meName = process.prodTemplateHistZtoMuTau_qcdSum_data.meName,
+            meName = cms.string(process.drawJob_QCD.plots[0].dqmMonitorElements[0]),
             drawOptions = drawOption_QCD
         )
     ),
