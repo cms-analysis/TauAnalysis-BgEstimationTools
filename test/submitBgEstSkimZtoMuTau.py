@@ -34,7 +34,7 @@ for i in range(2):
 for i in range(5):
     submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "Zmumu_part%(i)02d" % {"i" : (i + 1)},
                   replFunction = makeReplacementsBgEstSkim, replacements = "maxEvents = -1",
-                  job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
+                  job = "bgEstSkim", queue = "1nw", outputDirectory = outputDirectory)
 
 # pp --> mu X QCD jobs
 submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "InclusivePPmuX",
@@ -58,7 +58,7 @@ for i in range(3):
                   job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
     submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "ZmumuPlusJets_part%(i)02d" % {"i" : (i + 1)},
                   replFunction = makeReplacementsBgEstSkim, replacements = "maxEvents = -1",
-                  job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
+                  job = "bgEstSkim", queue = "1nw", outputDirectory = outputDirectory)
     submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "ZtautauPlusJets_part%(i)02d" % {"i" : (i + 1)},
                   replFunction = makeReplacementsBgEstSkim, replacements = "maxEvents = -1",
                   job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
