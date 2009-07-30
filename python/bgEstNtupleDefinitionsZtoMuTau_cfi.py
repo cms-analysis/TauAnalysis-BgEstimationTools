@@ -4,7 +4,7 @@ import copy
 # define Ntuple files used for data-driven background estimation methods
 # in Z --> mu + tau-jet channel
 
-from TauAnalysis.BgEstimationTools.bgEstSampleDefinitionsZtoMuTau_cfi import *
+bgEstNtupleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau/")
 
 # Z --> tau tau sample
 fileNames_Ztautau = cms.vstring(

@@ -5,7 +5,6 @@ import copy
 # (running over skimmed samples stored on CASTOR)
 
 bgEstSampleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstSkim/ZtoMuTau/")
-bgEstNtupleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau/")
 
 # definitions for producing skimmed samples
 bgEstSampleOutputFileNameZtautau = cms.string('bgEstSampleZtoMuTau_Ztautau_partXX.root')
