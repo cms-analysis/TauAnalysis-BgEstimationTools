@@ -40,11 +40,15 @@ process.source = cms.Source("EmptySource")
 # define event selection of background enriched samples
 # from which template histograms are obtained
 #
-bgEstEventSelection_Zmumu = "muonTrackIso < 1. && muonEcalIso < 1. && tauDiscrAgainstMuons < 0.5"
-bgEstEventSelection_WplusJets = "muonTrackIso < 1. && muonEcalIso < 1. && tauDiscrAgainstMuons > 0.5"
-#bgEstEventSelection_WplusJets += " && diTauMt1MET > 40. && numGlobalMuons < 2"
-bgEstEventSelection_WplusJets += " && diTauMt1MET > 40. && diTauPzetaDiff < -25. && numGlobalMuons < 2"
-bgEstEventSelection_QCD = "muonTrackIso > 4. && muonEcalIso > 4. && tauDiscrAgainstMuons > 0.5"
+bgEstEventSelection_Zmumu = "(numSelDiTaus >= 1 && selMuonTrackIso_0 < 1. && selMuonEcalIso_0 < 1. && selTauDiscrAgainstMuons_0 < 0.5)"
+bgEstEventSelection_Zmumu += " || (numSelDiTaus >= 2 && selMuonTrackIso_1 < 1. && selMuonEcalIso_1 < 1. && selTauDiscrAgainstMuons_1 < 0.5)"
+bgEstEventSelection_WplusJets = "((numSelDiTaus >= 1 && selMuonTrackIso_0 < 1. && selMuonEcalIso_0 < 1. && selTauDiscrAgainstMuons_0 > 0.5"
+bgEstEventSelection_WplusJets += " && selDiTauMt1MET_0 > 40. && selDiTauPzetaDiff_0 < -25.)"
+bgEstEventSelection_WplusJets += " || (numSelDiTaus >= 2 && selMuonTrackIso_1 < 1. && selMuonEcalIso_1 < 1. && selTauDiscrAgainstMuons_1 > 0.5"
+bgEstEventSelection_WplusJets += " && selDiTauMt1MET_1 > 40. && selDiTauPzetaDiff_1 < -25.))"
+bgEstEventSelection_WplusJets += " && numGlobalMuons < 2"
+bgEstEventSelection_QCD = "((numSelDiTaus >= 1 && selMuonTrackIso_0 > 4. && selMuonEcalIso_0 > 4. && selTauDiscrAgainstMuons_0 > 0.5)"
+bgEstEventSelection_QCD += " || (numSelDiTaus >= 2 && selMuonTrackIso_1 > 4. && selMuonEcalIso_1 > 4. && selTauDiscrAgainstMuons_1 > 0.5))"
 bgEstEventSelection_QCD += " && numGlobalMuons < 2"
 
 print("bgEstEventSelection_Zmumu = " + bgEstEventSelection_Zmumu)
@@ -54,11 +58,15 @@ print("bgEstEventSelection_QCD = " + bgEstEventSelection_QCD)
 # define observable to be used as template
 # and histogram binning options
 #
+# NOTE: binning needs to match that of the final analysis,
+#       defined in TauAnalysis/Core/plugins/..HistManager.cc
+# 
+#
 prodTemplateHistZtoMuTau = copy.deepcopy(prodTemplateHist)
-prodTemplateHistZtoMuTau.branchName = cms.string('diTauMvis12')
-prodTemplateHistZtoMuTau.numBinsX = cms.uint32(30)
+prodTemplateHistZtoMuTau.branchName = cms.string('selDiTauMvis12_0')
+prodTemplateHistZtoMuTau.numBinsX = cms.uint32(40)
 prodTemplateHistZtoMuTau.xMin = cms.double(0.)
-prodTemplateHistZtoMuTau.xMax = cms.double(150.)
+prodTemplateHistZtoMuTau.xMax = cms.double(200.)
 prodTemplateHistZtoMuTau.norm = cms.double(1.)
 #
 # produce template histograms for Z --> mu mu (+ jets) background
@@ -344,7 +352,7 @@ process.bgEstFitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
 
     output = cms.PSet(
         controlPlots = cms.PSet(
-            fileName = cms.string("fitTemplateZtoMuTau.png")
+            fileName = cms.string("./plots/fitTemplateZtoMuTau.png")
         )
     )                                      
 )                          
