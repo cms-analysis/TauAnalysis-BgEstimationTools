@@ -252,7 +252,13 @@ void TemplateBgEstFit::print(std::ostream& stream)
   stream << "Fit Parameter:" << std::endl;
   for ( std::vector<processEntryType*>::iterator processEntry = processEntries_.begin();
 	processEntry != processEntries_.end(); ++processEntry ) {
-    stream << (*processEntry)->processName_ << ": normalization = " << (*processEntry)->norm_->getVal() << std::endl;
+    stream << (*processEntry)->processName_ << ": normalization = " << (*processEntry)->norm_->getVal();
+    if ( (*processEntry)->norm_->hasAsymError() ) {
+      stream << " + " << (*processEntry)->norm_->getAsymErrorHi() << " - " << fabs((*processEntry)->norm_->getAsymErrorLo());
+    } else if ( (*processEntry)->norm_->hasError() ) {
+      stream << " +/- " << (*processEntry)->norm_->getError();
+    }
+    stream << std::endl;
   }
 }
 
