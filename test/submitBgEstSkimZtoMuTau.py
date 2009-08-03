@@ -31,7 +31,7 @@ for i in range(2):
                   job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
 
 # Z --> mu mu jobs
-for i in range(5):
+for i in range(3):
     submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "Zmumu_part%(i)02d" % {"i" : (i + 1)},
                   replFunction = makeReplacementsBgEstSkim, replacements = "maxEvents = -1",
                   job = "bgEstSkim", queue = "1nw", outputDirectory = outputDirectory)

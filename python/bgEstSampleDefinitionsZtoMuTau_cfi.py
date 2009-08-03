@@ -42,18 +42,6 @@ bgEstSampleFileNamesZmumu_part03 = cms.untracked.vstring(
 bgEstSampleFileNamesZmumu_part03a = bgEstSampleFileNamesZmumu_part03
 bgEstSampleFileNamesZmumu_part03b = bgEstSampleFileNamesZmumu_part03
 
-bgEstSampleFileNamesZmumu_part04 = cms.untracked.vstring(
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_Zmumu_part04.root'
-)
-bgEstSampleFileNamesZmumu_part04a = bgEstSampleFileNamesZmumu_part04
-bgEstSampleFileNamesZmumu_part04b = bgEstSampleFileNamesZmumu_part04
-
-bgEstSampleFileNamesZmumu_part05 = cms.untracked.vstring(
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_Zmumu_part05.root'
-)
-bgEstSampleFileNamesZmumu_part05a = bgEstSampleFileNamesZmumu_part05
-bgEstSampleFileNamesZmumu_part05b = bgEstSampleFileNamesZmumu_part05
-
 # definitions for producing ntuples
 bgEstNtupleOutputFileNameZmumu = cms.string('bgEstNtupleZtoMuTau_Zmumu_partXX.root')
 

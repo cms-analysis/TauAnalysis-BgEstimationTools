@@ -18,11 +18,7 @@ fileNames_Zmumu = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part02a.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part02b.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part03a.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part03b.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part04a.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part04b.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part05a.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part05b.root'
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part03b.root'
 )
 
 #--------------------------------------------------------------------------------
