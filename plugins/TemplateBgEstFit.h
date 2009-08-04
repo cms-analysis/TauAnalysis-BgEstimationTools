@@ -10,9 +10,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.1 $
+ * \version $Revision: 1.2 $
  *
- * $Id: TemplateBgEstFit.h,v 1.1 2009/06/11 07:23:29 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.2 2009/07/15 09:03:47 veelken Exp $
  *
  */
 
@@ -28,6 +28,7 @@
 #include <RooHistPdf.h>
 #include <RooRealVar.h>
 #include <RooAddPdf.h>
+#include <RooFitResult.h>
 
 #include <string>
 
@@ -89,6 +90,7 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   RooRealVar* x_;
 
   RooAddPdf* model_;
+  RooFitResult* fitResult_;
 
   int cfgError_;
 };

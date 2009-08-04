@@ -6,9 +6,16 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 
 #include "TauAnalysis/DQMTools/interface/dqmAuxFunctions.h"
+#include "TauAnalysis/DQMTools/interface/generalAuxFunctions.h"
 
 #include <TCanvas.h>
 #include <TROOT.h>
+#include <TMath.h>
+#include <TEllipse.h>
+#include <TColor.h>
+#include <TMarker.h>
+#include <TH2F.h>
+#include <TLegend.h>
 
 #include <RooArgSet.h>
 #include <RooGlobalFunc.h>
@@ -51,10 +58,10 @@ TemplateBgEstFit::dataEntryType::~dataEntryType()
 
 void TemplateBgEstFit::dataEntryType::initialize(DQMStore& dqmStore, RooRealVar* x, int& error)
 {
-  std::cout << "<dataEntryType::initialize>:" << std::endl;
+  //std::cout << "<dataEntryType::initialize>:" << std::endl;
 
   std::string meName_full = dqmDirectoryName(dqmDirectory_store_).append(meName_);
-  std::cout << " meName_full = " << meName_full << std::endl;
+  //std::cout << " meName_full = " << meName_full << std::endl;
   
   MonitorElement* me = dqmStore.get(meName_full);
   if ( !me ) {
@@ -89,7 +96,7 @@ TemplateBgEstFit::processEntryType::~processEntryType()
 
 void TemplateBgEstFit::processEntryType::initialize(DQMStore& dqmStore, RooRealVar* x, int& error)
 {
-  std::cout << "<processEntryType::initialize>:" << std::endl;
+  //std::cout << "<processEntryType::initialize>:" << std::endl;
 
   dataEntryType::initialize(dqmStore, x, error);
 
@@ -109,7 +116,7 @@ void TemplateBgEstFit::processEntryType::initialize(DQMStore& dqmStore, RooRealV
 TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
   : cfgError_(0)
 {
-  std::cout << "<TemplateBgEstFit::TemplateBgEstFit>:" << std::endl;
+  //std::cout << "<TemplateBgEstFit::TemplateBgEstFit>:" << std::endl;
 
   edm::ParameterSet cfgProcesses = cfg.getParameter<edm::ParameterSet>("processes");
   std::vector<std::string> processNames = cfgProcesses.getParameterNamesForType<edm::ParameterSet>();
@@ -141,11 +148,13 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 
   edm::ParameterSet cfgControlPlots = cfg.getParameter<edm::ParameterSet>("output").getParameter<edm::ParameterSet>("controlPlots");
   controlPlotsFileName_ = cfgControlPlots.getParameter<std::string>("fileName");
+
+  fitResult_ = 0;
 }
 
 TemplateBgEstFit::~TemplateBgEstFit()
 {
-  std::cout << "<TemplateBgEstFit::~TemplateBgEstFit>:" << std::endl;
+  //std::cout << "<TemplateBgEstFit::~TemplateBgEstFit>:" << std::endl;
 
   for ( std::vector<processEntryType*>::iterator it = processEntries_.begin();
 	it != processEntries_.end(); ++it ) {
@@ -157,6 +166,8 @@ TemplateBgEstFit::~TemplateBgEstFit()
   delete x_;
 
   delete model_;
+
+  delete fitResult_;
 }
 
 void TemplateBgEstFit::endJob()
@@ -186,7 +197,7 @@ void TemplateBgEstFit::endJob()
 
   DQMStore& dqmStore = (*edm::Service<DQMStore>());
 
-  dqmStore.showDirStructure();
+  //dqmStore.showDirStructure();
   
 //--- configure RooFit structure
   x_ = new RooRealVar("x", "x", xMin_, xMax_);
@@ -234,7 +245,8 @@ void TemplateBgEstFit::endJob()
   std::cout << ">>> RootFit Observables <<<" << std::endl;
   model_->getObservables(dataEntry_->histogram_)->Print("v");
 
-  model_->fitTo(*dataEntry_->histogram_, RooFit::Extended());
+  fitResult_ = model_->fitTo(*dataEntry_->histogram_, RooFit::Extended(), RooFit::Save(true));
+  assert(fitResult_ != NULL);
 
 //--- print-out fit results
   print(std::cout);
@@ -244,6 +256,10 @@ void TemplateBgEstFit::endJob()
 //    compared to distribution of (pseudo)data
   if ( controlPlotsFileName_ != "" ) makeControlPlots();
 }
+
+//
+//-----------------------------------------------------------------------------------------------------------------------
+//
 
 void TemplateBgEstFit::print(std::ostream& stream)
 {
@@ -262,8 +278,125 @@ void TemplateBgEstFit::print(std::ostream& stream)
   }
 }
 
+//
+//-----------------------------------------------------------------------------------------------------------------------
+//
+
+void drawErrorEllipse(double x0, double y0, double Sxx, double Sxy, double Syy, 
+		      const char* labelX, const char* labelY, const char* fileName)
+{
+  //std::cout << "<drawErrorEllipse>:" << std::endl;
+  //std::cout << " x0 = " << x0 << std::endl;
+  //std::cout << " y0 = " << y0 << std::endl;
+  //if ( Sxy >  0. ) std::cout << "variables are correlated" << std::endl;
+  //if ( Sxy == 0. ) std::cout << "variables are uncorrelated" << std::endl;
+  //if ( Sxy <  0. ) std::cout << "variables are anti-correlated" << std::endl;
+  //std::cout << " -2*Sxy = " << -2*Sxy << std::endl;
+  //std::cout << " Sxx - Syy = " << Sxx - Syy << std::endl;
+  //std::cout << " labelX = " << labelX << std::endl;
+  //std::cout << " labelY = " << labelY << std::endl;
+  //std::cout << " fileName = " << fileName << std::endl;
+
+//--- draw one and two sigma error contours 
+//    centered at fit results (x0,y0) and with (correlated) uncertainties 
+//    estimated by elements Sxx, Sxy, Syy of covariance matrix passed as function arguments
+//    (note that since the covariance matrix is symmetric, 
+//     there is no need to pass element Syx of the covariance matrix)
+
+  TCanvas canvas("drawErrorEllipse", "drawErrorEllipse", 600, 600);
+  canvas.SetFillColor(10);
+
+//--- compute angle between first principal axis of error ellipse
+//    and x-axis
+  double alpha = 0.5*TMath::ATan2(-2*Sxy, Sxx - Syy);
+
+  //std::cout << "alpha = " << alpha*180./TMath::Pi() << std::endl;
+
+  double sinAlpha = TMath::Sin(alpha);
+  double cosAlpha = TMath::Cos(alpha);
+
+//--- compute covariance axis in coordinate system
+//    defined by principal axes of error ellipse
+  double Suu = Sxx*sinAlpha*sinAlpha + 2*Sxy*sinAlpha*cosAlpha + Syy*cosAlpha*cosAlpha;
+  double Svv = Sxx*cosAlpha*cosAlpha + 2*Sxy*sinAlpha*cosAlpha + Syy*sinAlpha*sinAlpha;
+  
+//--- resolve ambiguity which axis represents the first principal axis
+//    and which represents the second principal axis
+//
+//    NOTE: in case Sxy > 0. (correlation of variables X and Y), 
+//          the principal axis needs to point in direction of either the first or the third quadrant;
+//          in case Sxy < 0. (anti-correlation of variables X and Y), 
+//          the principal axis needs to point in direction of either the second or the fourth quadrant.
+  double sigmaX_transformed = 0.;
+  double sigmaY_transformed = 0.;
+  if ( (Sxy >= 0. && TMath::Abs(alpha) <= 0.5*TMath::Pi()) || 
+       (Sxy <  0. && TMath::Abs(alpha) >  0.5*TMath::Pi()) ) {
+    sigmaX_transformed = TMath::Sqrt(TMath::Max(Suu, Svv));
+    sigmaY_transformed = TMath::Sqrt(TMath::Min(Suu, Svv));
+  } else {
+    sigmaX_transformed = TMath::Sqrt(TMath::Min(Suu, Svv));
+    sigmaY_transformed = TMath::Sqrt(TMath::Max(Suu, Svv));
+  }
+
+  TEllipse oneSigmaErrorEllipse(x0, y0, sigmaX_transformed*1., sigmaY_transformed*1., 0., 360., alpha*180./TMath::Pi()); 
+  oneSigmaErrorEllipse.SetFillColor(5);
+  oneSigmaErrorEllipse.SetLineColor(44);
+  oneSigmaErrorEllipse.SetLineWidth(1);
+  TEllipse twoSigmaErrorEllipse(x0, y0, sigmaX_transformed*2., sigmaY_transformed*2., 0., 360., alpha*180./TMath::Pi()); 
+  TSeqCollection* colors = gROOT->GetListOfColors();
+  if ( colors && colors->At(42) ) {
+    TColor* orange = (TColor*)colors->At(42);
+    orange->SetRGB(1.00,0.80,0.00);
+  } else {
+    edm::LogWarning ("drawErrorEllipse") << " Failed to access list of Colors from gROOT object"
+					 << " --> skipping definition of Color 'orange' !!";
+  }
+  twoSigmaErrorEllipse.SetFillColor(42);
+  twoSigmaErrorEllipse.SetLineColor(44);
+  twoSigmaErrorEllipse.SetLineWidth(1);
+
+  TMarker centralValueMarker(x0, y0, 5);
+  centralValueMarker.SetMarkerSize(2);
+
+//--- create dummy histogram  
+//    defining region to be plotted
+  double minX = x0 - 2.2*TMath::Abs(cosAlpha*sigmaX_transformed + sinAlpha*sigmaY_transformed);
+  double maxX = x0 + 2.8*TMath::Abs(cosAlpha*sigmaX_transformed + sinAlpha*sigmaY_transformed);
+  double minY = y0 - 2.2*TMath::Abs(sinAlpha*sigmaX_transformed + cosAlpha*sigmaY_transformed);
+  double maxY = y0 + 2.8*TMath::Abs(sinAlpha*sigmaX_transformed + cosAlpha*sigmaY_transformed);
+
+//--- create dummy histogram  
+  TH2F dummyHistogram("dummyHistogram", "dummyHistogram", 5, minX, maxX, 5, minY, maxY);
+  dummyHistogram.SetTitle("");
+  dummyHistogram.SetStats(false);
+  dummyHistogram.SetXTitle(labelX);
+  dummyHistogram.SetYTitle(labelY);
+  dummyHistogram.SetTitleOffset(1.35, "Y");
+
+  dummyHistogram.Draw("AXIS");
+  
+  twoSigmaErrorEllipse.Draw();
+  oneSigmaErrorEllipse.Draw();
+
+  centralValueMarker.Draw();
+
+  TLegend legend(0.70, 0.70, 0.89, 0.89);
+  legend.SetBorderSize(0);
+  legend.SetFillColor(0);
+  legend.AddEntry(&centralValueMarker, "best Fit value", "p");
+  legend.AddEntry(&oneSigmaErrorEllipse, "1#sigma Contour", "f");
+  legend.AddEntry(&twoSigmaErrorEllipse, "2#sigma Contour", "f");
+
+  legend.Draw();
+
+  canvas.Print(fileName);
+}
+
 void TemplateBgEstFit::makeControlPlots()
 {
+//--- produce control plot of distribution observed in (pseudo)data
+//    versus sum of signal and background templates using normalization determined by fit
+
 //--- stop ROOT from opening X-window for canvas output
 //    (in order to be able to run in batch mode) 
   gROOT->SetBatch(true);
@@ -291,8 +424,52 @@ void TemplateBgEstFit::makeControlPlots()
   plotFrame->Draw();
   
   canvas.Update();
-  
-  canvas.Print(controlPlotsFileName_.data());
+
+  int errorFlag = 0;
+  std::string fileName = replace_string(controlPlotsFileName_, plotKeyword, std::string("normalization"), 1, 1, errorFlag);
+  if ( !errorFlag ) {
+    canvas.Print(fileName.data());
+  } else {
+    edm::LogError("makeControlPlots") << " Failed to decode controlPlotsFileName = " << controlPlotsFileName_ << " --> skipping !!";
+    return;
+  }
+
+//--- produce control plots of one and two sigma error contours 
+//    showing correlation of estimated normalization parameters 
+  const RooArgList& fitParameter = fitResult_->floatParsFinal();
+  int numFitParameter = fitParameter.getSize();
+  for ( int iX = 0; iX < numFitParameter; ++iX ) {
+    const RooAbsArg* paramX_arg = fitParameter.at(iX);
+    const RooRealVar* paramX = dynamic_cast<const RooRealVar*>(paramX_arg);
+    assert(paramX != NULL);
+    double x0 = paramX->getVal();
+    double sigmaX = paramX->getError();
+    double Sxx = sigmaX*sigmaX;
+    const char* labelX = paramX_arg->GetName();
+
+    for ( int iY = 0; iY < iX; ++iY ) {
+      const RooAbsArg* paramY_arg = fitParameter.at(iY);
+      const RooRealVar* paramY = dynamic_cast<const RooRealVar*>(paramY_arg);
+      assert(paramY != NULL);
+      double y0 = paramY->getVal();
+      double sigmaY = paramY->getError();
+      double Syy = sigmaY*sigmaY;
+      const char* labelY = paramY_arg->GetName();
+
+      double corrXY = fitResult_->correlation(*paramX_arg, *paramY_arg);
+      double Sxy = sigmaX*sigmaY*corrXY;
+      std::string fileNameParam = std::string("corr_").append(labelX).append("_vs_").append(labelY);
+      
+      int errorFlag = 0;
+      std::string fileName = replace_string(controlPlotsFileName_, plotKeyword, fileNameParam, 1, 1, errorFlag);
+      if ( !errorFlag ) {
+	drawErrorEllipse(x0, y0, Sxx, Sxy, Syy, labelX, labelY, fileName.data());
+      } else {
+	edm::LogError("makeControlPlots") << " Failed to decode controlPlotsFileName = " << controlPlotsFileName_ << " --> skipping !!";
+	return;
+      }
+    }
+  }
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
