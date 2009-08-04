@@ -352,7 +352,7 @@ process.bgEstFitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
 
     output = cms.PSet(
         controlPlots = cms.PSet(
-            fileName = cms.string("./plots/fitTemplateZtoMuTau.png")
+            fileName = cms.string("./plots/fitTemplateZtoMuTau_#PLOT#.png")
         )
     )                                      
 )                          
