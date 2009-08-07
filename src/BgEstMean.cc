@@ -32,5 +32,31 @@ void BgEstMean::update(const TVectorD& value)
   ++iValue_;
 }
 
+void BgEstMean::print(std::ostream& outputStream, const std::vector<std::string>* varNames) const
+{
+  if ( varNames && varNames->size() != numVar_ ) {
+    edm::LogError("BgEstMean::print") << "Given list of varable names of invalid size,"
+				      << " expected lenght = " << numVar_ << " !!";
+    return;
+  }
+
+  std::vector<std::string> varNames_temp;
+  for ( unsigned iVar = 0; iVar < numVar_; ++iVar ) {
+    if ( varNames ) {
+      varNames_temp.push_back(varNames->at(iVar));
+    } else {
+      std::ostringstream varName;
+      varName << "var_" << iVar;
+      varNames_temp.push_back(varName.str());
+    }
+  }
+
+  for ( unsigned iVar = 0; iVar < numVar_; ++iVar ) {
+    outputStream << varNames_temp[iVar] << ": mean = " << mean_(iVar) << std::endl;
+  }
+
+  outputStream << std::endl;  
+} 
+
 
 

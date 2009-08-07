@@ -17,11 +17,15 @@
  *
  * \version $Revision: 1.1 $
  *
- * $Id: BgEstMean.h,v 1.1 2009/06/11 07:23:29 veelken Exp $
+ * $Id: BgEstMean.h,v 1.1 2009/08/04 14:35:09 veelken Exp $
  *
  */
 
 #include <TVectorD.h>
+
+#include <iostream>
+#include <vector>
+#include <string>
 
 class BgEstMean
 {
@@ -33,6 +37,8 @@ class BgEstMean
 
   const TVectorD& operator()() const { return mean_; }
   double operator()(unsigned i) const { return mean_(i); }
+
+  void print(std::ostream&, const std::vector<std::string>* = 0) const;
 
  private:
   TVectorD mean_;
