@@ -165,10 +165,23 @@ process.loadTemplateHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMFileLoader",
 )
 
 #--------------------------------------------------------------------------------
-# load distribution of visible muon + tau-jet observed in (pseudo)data
+# normalize to unit area distribution of visible muon + tau-jet mass
+# produced from by MCEmbeddingTools from Z --> mu mu events selected in (pseudo)data
 #--------------------------------------------------------------------------------
 
-process.loadHistZtoMuTau_data = cms.EDAnalyzer("DQMFileLoader",
+process.normalizeTemplateHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMHistNormalizer",
+    meNameInput = cms.string('Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'),
+    meNameOutput = cms.string('Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMassShape'),
+    norm = cms.double(1.)
+)
+
+#--------------------------------------------------------------------------------
+# load distribution of visible muon + tau-jet mass
+# expected for different signal/background processes and observed in (pseudo)data
+# in events passing final analysis selection criteria
+#--------------------------------------------------------------------------------
+
+process.loadAnalysisHistZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     data = cms.PSet(
         inputFileNames = cms.vstring('rfio:/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoMuTau/plotsZtoMuTau_all_fixedCone.root'),
         scaleFactor = cms.double(1.),
@@ -177,8 +190,42 @@ process.loadHistZtoMuTau_data = cms.EDAnalyzer("DQMFileLoader",
 )
 
 #--------------------------------------------------------------------------------
+# normalize to unit area distribution of visible muon + tau-jet mass
+# in simulated signal/background events passing final analysis selection criteria
+#--------------------------------------------------------------------------------
+
+process.normalizeAnalysisHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMHistNormalizer",
+    meNameInput = cms.string('Ztautau/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'),
+    meNameOutput = cms.string('Ztautau/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMassShape'),
+    norm = cms.double(1.)
+)
+
+process.normalizeAnalysisHistZtoMuTau_Zmumu = cms.EDAnalyzer("DQMHistNormalizer",
+    meNameInput = cms.string('ZmumuPlusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'),
+    meNameOutput = cms.string('ZmumuPlusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMassShape'),
+    norm = cms.double(1.)
+)
+
+process.normalizeAnalysisHistZtoMuTau_WplusJets = cms.EDAnalyzer("DQMHistNormalizer",
+    meNameInput = cms.string('WplusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'),
+    meNameOutput = cms.string('WplusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMassShape'),
+    norm = cms.double(1.)
+)
+
+process.normalizeAnalysisHistZtoMuTau_QCD = cms.EDAnalyzer("DQMHistNormalizer",
+    meNameInput = cms.string('qcdSum/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'),
+    meNameOutput = cms.string('qcdSum/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMassShape'),
+    norm = cms.double(1.)
+)
+
+process.normalizeAnalysisHistZtoMuTau = cms.Sequence( process.normalizeAnalysisHistZtoMuTau_Ztautau
+                                                     +process.normalizeAnalysisHistZtoMuTau_Zmumu
+                                                     +process.normalizeAnalysisHistZtoMuTau_WplusJets
+                                                     +process.normalizeAnalysisHistZtoMuTau_QCD )
+
+#--------------------------------------------------------------------------------
 # plot template histograms of "pure" Monte Carlo processes
-# compared to the shapes determined by background "enriched" regions in (pseudo)Data
+# compared to the shapes determined by background enriched regions in (pseudo)Data
 #--------------------------------------------------------------------------------
 #
 # define template histograms for Z --> tau tau signal
@@ -190,13 +237,13 @@ process.loadHistZtoMuTau_data = cms.EDAnalyzer("DQMFileLoader",
 #
 process.drawJob_Ztautau = copy.deepcopy(drawJobTemplateHist)
 process.drawJob_Ztautau.plots[0].dqmMonitorElements = cms.vstring(
-    'Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+    process.normalizeTemplateHistZtoMuTau_Ztautau.meNameOutput.value() 
 )
 process.drawJob_Ztautau.plots[1].dqmMonitorElements = cms.vstring(
-    'Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+    process.normalizeTemplateHistZtoMuTau_Ztautau.meNameOutput.value() 
 )
 process.drawJob_Ztautau.plots[2].dqmMonitorElements = cms.vstring(
-    'Ztautau/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+    process.normalizeAnalysisHistZtoMuTau_Ztautau.meNameOutput.value() 
 )
 process.drawJob_Ztautau.title = cms.string('M_{vis}^{#mu + #tau-jet} in Z #rightarrow #tau^{+} #tau^{-} Signal')
 #
@@ -210,7 +257,7 @@ process.drawJob_Zmumu.plots[1].dqmMonitorElements = cms.vstring(
     'fitTemplateZtoMuTau/Zmumu/pure/diTauMvis12'
 )
 process.drawJob_Zmumu.plots[2].dqmMonitorElements = cms.vstring(
-    'ZmumuPlusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+    process.normalizeAnalysisHistZtoMuTau_Zmumu.meNameOutput.value()
 )
 process.drawJob_Zmumu.title = cms.string('M_{vis}^{#mu + #tau-jet} in Z #rightarrow #mu^{+} #mu^{-} Background')
 #
@@ -224,7 +271,7 @@ process.drawJob_WplusJets.plots[1].dqmMonitorElements = cms.vstring(
     'fitTemplateZtoMuTau/WplusJets/pure/diTauMvis12'
 )
 process.drawJob_WplusJets.plots[2].dqmMonitorElements = cms.vstring(
-    'WplusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+    process.normalizeAnalysisHistZtoMuTau_WplusJets.meNameOutput.value()
 )
 process.drawJob_WplusJets.title = cms.string('M_{vis}^{#mu + #tau-jet} in W + jets Background')
 #
@@ -238,7 +285,7 @@ process.drawJob_QCD.plots[1].dqmMonitorElements = cms.vstring(
     'fitTemplateZtoMuTau/QCD/pure/diTauMvis12'
 )
 process.drawJob_QCD.plots[2].dqmMonitorElements = cms.vstring(
-    'qcdSum/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/DiTauCandidateQuantities/VisMass'
+    process.normalizeAnalysisHistZtoMuTau_QCD.meNameOutput.value()
 )
 process.drawJob_QCD.title = cms.string('M_{vis}^{#mu + #tau-jet} in QCD Background')
 
@@ -308,7 +355,59 @@ process.plotTemplateHistZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
     indOutputFileName = cms.string('plotTemplateHistZtoMuTau_#PLOT#.png')
 )
 
-process.saveTemplateHistZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
+#--------------------------------------------------------------------------------
+# produce auxiliary histograms representing bias of visible muon + tau-jet mass distribution
+# introduced by differences in event selection between final analysis and background enriched samples
+#
+# NOTE:
+#  minuend    = contribution of (pure) signal/background process expected in final analysis
+#               (estimated by Monte Carlo)
+#  subtrahend = template histogram taken from background enriched sample,
+#               including contributions from other signal/background processes
+#               (determined by (pseudo)data)
+#  difference = minuend - subtrahend
+#
+# --> in order to account for bias between distribution observed in final analysis
+#     and the shapes of signal/background templates fitted to that distribution
+#     one needs an **upward** fluctuation of the histogram representing the difference,
+#     using a Gaussian of mean 0. and variance 1.
+#
+#--------------------------------------------------------------------------------
+
+process.prodSysBiasHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMHistSubtractor",
+    meNameMinuend = cms.string(process.drawJob_Ztautau.plots[2].dqmMonitorElements[0]), 
+    meNameSubtrahend = cms.string(process.drawJob_Ztautau.plots[0].dqmMonitorElements[0]),
+    meNameDifference = cms.string('fitTemplateZtoMuTau/Ztautau/systematics/bias/VisMassShape')
+)
+
+process.prodSysBiasHistZtoMuTau_Zmumu = cms.EDAnalyzer("DQMHistSubtractor",
+    meNameMinuend = cms.string(process.drawJob_Zmumu.plots[2].dqmMonitorElements[0]), 
+    meNameSubtrahend = cms.string(process.drawJob_Zmumu.plots[0].dqmMonitorElements[0]),
+    meNameDifference = cms.string('fitTemplateZtoMuTau/Zmumu/systematics/bias/VisMassShape')
+)
+
+process.prodSysBiasHistZtoMuTau_WplusJets = cms.EDAnalyzer("DQMHistSubtractor",
+    meNameMinuend = cms.string(process.drawJob_WplusJets.plots[2].dqmMonitorElements[0]), 
+    meNameSubtrahend = cms.string(process.drawJob_WplusJets.plots[0].dqmMonitorElements[0]),
+    meNameDifference = cms.string('fitTemplateZtoMuTau/WplusJets/systematics/bias/VisMassShape')
+)
+
+process.prodSysBiasHistZtoMuTau_QCD = cms.EDAnalyzer("DQMHistSubtractor",
+    meNameMinuend = cms.string(process.drawJob_QCD.plots[2].dqmMonitorElements[0]), 
+    meNameSubtrahend = cms.string(process.drawJob_QCD.plots[0].dqmMonitorElements[0]),
+    meNameDifference = cms.string('fitTemplateZtoMuTau/QCD/systematics/bias/VisMassShape')
+)
+
+process.prodSysBiasHistZtoMuTau = cms.Sequence( process.prodSysBiasHistZtoMuTau_Ztautau
+                                               +process.prodSysBiasHistZtoMuTau_Zmumu
+                                               +process.prodSysBiasHistZtoMuTau_WplusJets
+                                               +process.prodSysBiasHistZtoMuTau_QCD )
+
+#--------------------------------------------------------------------------------
+# store all histograms into ROOT file
+#--------------------------------------------------------------------------------
+
+process.saveAllHistZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
     outputFileName = cms.string('templatesZtoMuTau.root')
 )
 
@@ -330,7 +429,7 @@ process.bgEstFitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
             meName = cms.string(process.drawJob_WplusJets.plots[0].dqmMonitorElements[0]),
             drawOptions = drawOption_WplusJets
         ),
-        qcdSum = cms.PSet(
+        QCD = cms.PSet(
             meName = cms.string(process.drawJob_QCD.plots[0].dqmMonitorElements[0]),
             drawOptions = drawOption_QCD
         )
@@ -347,8 +446,47 @@ process.bgEstFitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
         variableName = prodTemplateHistZtoMuTau.branchName,
         variableTitle = cms.string("M_{vis}^{#mu + #tau-jet}"),
         xMin = cms.double(0.),
-        xMax = cms.double(150.)
+        xMax = cms.double(150.),
+        verbosity = cms.PSet(
+            printLevel = cms.int32(1),
+            printWarnings = cms.bool(True)
+        )
     ),
+
+    estStatUncertainties = cms.PSet(
+        numSamplings = cms.PSet(
+            stat = cms.int32(1000)
+        ),
+        chi2redMax = cms.double(3.),
+        verbosity = cms.PSet(
+            printLevel = cms.int32(-1),
+            printWarnings = cms.bool(False)
+        )
+    ),
+
+    estSysUncertainties = cms.PSet(
+        fluctuations = cms.PSet(
+            bias = cms.PSet(
+                meNames = cms.PSet(
+                    Ztautau = process.prodSysBiasHistZtoMuTau_Ztautau.meNameDifference,
+                    Zmumu = process.prodSysBiasHistZtoMuTau_Zmumu.meNameDifference,
+                    WplusJets = process.prodSysBiasHistZtoMuTau_WplusJets.meNameDifference,
+                    QCD = process.prodSysBiasHistZtoMuTau_QCD.meNameDifference
+                ),
+                direction = cms.string("up"), # up/down/bidirectional
+                mode = cms.string("coherent") # coherent/incoherent
+            )
+        ),       
+        numSamplings = cms.PSet(
+            stat = cms.int32(100),
+            sys = cms.int32(100)
+        ),
+        chi2redMax = cms.double(3.),
+        verbosity = cms.PSet(
+            printLevel = cms.int32(-1),
+            printWarnings = cms.bool(False)
+        )
+    ),                                     
 
     output = cms.PSet(
         controlPlots = cms.PSet(
@@ -361,9 +499,12 @@ process.fitZtoMuTau = cms.Sequence( process.bgEstFitZtoMuTau )
 
 process.p = cms.Path( process.prodTemplateHistZtoMuTau
                      +process.loadTemplateHistZtoMuTau_Ztautau
-                     +process.loadHistZtoMuTau_data
+                     +process.normalizeTemplateHistZtoMuTau_Ztautau 
+                     +process.loadAnalysisHistZtoMuTau
+                     +process.normalizeAnalysisHistZtoMuTau 
                      +process.plotTemplateHistZtoMuTau
-                     +process.saveTemplateHistZtoMuTau
+                     +process.prodSysBiasHistZtoMuTau
+                     +process.saveAllHistZtoMuTau
                      +process.fitZtoMuTau )
 
 # print-out all python configuration parameter information
