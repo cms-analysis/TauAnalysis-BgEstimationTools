@@ -9,13 +9,20 @@
 BgEstCovMatrix::BgEstCovMatrix(unsigned d)
   : cov_(d, d), auxDelta_(d), auxMean_(d)
 {
+  //std::cout << "<BgEstCovMatrix::BgEstCovMatrix>:" << std::endl;
+
   numVar_ = d;
+  //std::cout << " numVar = " << numVar_ << std::endl;
 
   iValue_ = 0;
+  //std::cout << " iValue = " << iValue_ << std::endl;
 }
 
 void BgEstCovMatrix::update(const TVectorD& value)
 {
+  //std::cout << "<BgEstCovMatrix::update>:" << std::endl;
+  //std::cout << " iValue = " << iValue_ << std::endl;
+
   if ( value.GetNoElements() != (int)numVar_ ) {
     edm::LogError("BgEstCovMatrix::update") << "Given value has invalid dimension = " << value.GetNoElements() << "," 
 					    << " expected = " << numVar_ << " --> mean value will NOT be updated !!";
@@ -37,16 +44,19 @@ void BgEstCovMatrix::update(const TVectorD& value)
 
     for ( unsigned iVar = 0; iVar < numVar_; ++iVar ) {
       auxDelta_(iVar) = value(iVar) - auxMean_(iVar);
+      //std::cout << " auxDelta(iVar = " << iVar << ") = " << auxDelta_(iVar) << std::endl;
     }
     
     for ( unsigned iRow = 0; iRow < numVar_; ++iRow ) {
       for ( unsigned iColumn = 0; iColumn < numVar_; ++iColumn ) {
 	cov_(iRow, iColumn) += weight*auxDelta_(iRow)*auxDelta_(iColumn);
+	//std::cout << "cov(iRow = " << iRow << ", iColumn = " << iColumn << ") = " << cov_(iRow, iColumn) << std::endl;
       }
     }
     
     for ( unsigned iVar = 0; iVar < numVar_; ++iVar ) {
       auxMean_(iVar) += auxDelta_(iVar)/(iValue_ + 1.);
+      //std::cout << " auxMean(iVar = " << iVar << ") = " << auxMean_(iVar) << std::endl;
     }
   }
 
@@ -58,12 +68,16 @@ TMatrixD BgEstCovMatrix::operator()() const
 //--- normalize covariance matrix
 //    to number of values for which it has been computer
 
+  //std::cout << "<BgEstCovMatrix::operator()>:" << std::endl;
+
   TMatrixD cov_normalized(numVar_, numVar_);
 
   if ( iValue_ > 0 ) {
     for ( unsigned iRow = 0; iRow < numVar_; ++iRow ) {
       for ( unsigned iColumn = 0; iColumn < numVar_; ++iColumn ) {
 	cov_normalized(iRow, iColumn) = cov_(iRow, iColumn)/iValue_;
+	//std::cout << "cov_normalized(iRow = " << iRow << ", iColumn = " << iColumn << ")" 
+	//	    << " = " << cov_normalized(iRow, iColumn) << std::endl;
       }
     }
   }
@@ -74,12 +88,13 @@ TMatrixD BgEstCovMatrix::operator()() const
 double BgEstCovMatrix::sigma(unsigned i) const
 {
   if ( i >= 0 && i < numVar_ ) {
-    return TMath::Sqrt(cov_(i, i));
+    if ( iValue_ > 0 ) return TMath::Sqrt(cov_(i, i)/iValue_);
   } else {
     edm::LogError("BgEstCovMatrix::sigma") << "Given index i = " << i << " out of bounds,"
 					   << " expected range = 0.." << (numVar_ - 1) << " !!";
-    return 0.;
   }
+  
+  return 0.;
 }
 
 double BgEstCovMatrix::correlation(unsigned i, unsigned j) const
@@ -142,5 +157,6 @@ void BgEstCovMatrix::print(std::ostream& outputStream, const std::vector<std::st
   for ( unsigned iCharacter = 0; iCharacter < (widthColumn*(numVar_ + 1)); ++iCharacter ) {
     outputStream << "-";
   }
+
   outputStream << std::endl;  
 } 
