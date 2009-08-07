@@ -66,6 +66,13 @@ fileNames_qcdSum = cms.vstring(
 
 #--------------------------------------------------------------------------------
 
+# ttbar + jets sample
+fileNames_TTplusJets = cms.vstring(
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_TTplusJets.root'
+)
+
+#--------------------------------------------------------------------------------
+
 # (pseudo)Data sample = sum of all signal + background Monte Carlo samples
 fileNames_pseudoData = cms.vstring()
 fileNames_pseudoData.extend(fileNames_Ztautau)

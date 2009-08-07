@@ -167,3 +167,31 @@ bgEstNtupleOutputFileNameInclusivePPmuX = cms.string('bgEstNtupleZtoMuTau_Inclus
 
 bgEstNtupleOutputFileNamePPmuXptGt20 = cms.string('bgEstNtupleZtoMuTau_PPmuXptGt20_partXX.root')
 
+#--------------------------------------------------------------------------------
+
+# definitions for producing skimmed samples
+bgEstSampleOutputFileNameTTplusJets = cms.string('bgEstSampleZtoMuTau_TTplusJets_partXX.root')
+
+# definitions for reading skimmed samples
+bgEstSampleFileNamesTTplusJets_part01  = cms.untracked.vstring(
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part01.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part02.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part03.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part04.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part05.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part06.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part07.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part08.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part09.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part10.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part11.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part12.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part13.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part14.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part15.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part16.root'
+)
+
+# definitions for producing ntuples
+bgEstNtupleOutputFileNameTTplusJets = cms.string('bgEstNtupleZtoMuTau_TTplusJets_partXX.root')
+
