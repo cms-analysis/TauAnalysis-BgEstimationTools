@@ -10,9 +10,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.2 $
+ * \version $Revision: 1.3 $
  *
- * $Id: TemplateBgEstFit.h,v 1.2 2009/07/15 09:03:47 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.3 2009/08/04 14:36:59 veelken Exp $
  *
  */
 
@@ -39,23 +39,39 @@ class TemplateBgEstFit : public edm::EDAnalyzer
     dataEntryType(const std::string&, const std::string&);
     virtual ~dataEntryType();
     virtual void initialize(DQMStore&, RooRealVar*, int&);
+    virtual void fluctuate(bool, bool);
     std::string processName_;
-    std::string dqmDirectory_store_;
     std::string meName_;
+    MonitorElement* me_;
+    RooRealVar* x_;
+    std::string histogramName_;
     RooDataHist* histogram_;
+    TH1* fluctHistogram_;
     int cfgError_;
+  };
+
+  struct sysFluctEntryType
+  {
+    std::string fluctName_;
+    std::string meName_;
+    MonitorElement* me_;
+    int direction_;
+    int mode_;
   };
 
   struct processEntryType : public dataEntryType
   {
     processEntryType(const std::string&, const std::string&, int, int, int);
     virtual ~processEntryType();
-    virtual void initialize(DQMStore&, RooRealVar*, int&);
+    void initialize(DQMStore&, RooRealVar*, int&);
+    void fluctuate(bool, bool);
+    std::string pdfName_;
     RooHistPdf* pdf_;
     RooRealVar* norm_;
     int lineColor_;
     int lineStyle_;
     int lineWidth_;
+    std::vector<sysFluctEntryType> sysErrFluctuations_;
   };
 
  public:
@@ -70,19 +86,36 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   void endJob();
 
 //--- private auxiliary functions
+  void buildModel();
   void print(std::ostream& stream);
   void makeControlPlots();
+  double compChi2red() const;
+  void estimateUncertainties(bool, int, bool, int, double, const char*, int, bool);
 
 //--- configuration parameters
   std::string variableName_;
   std::string variableTitle_;
   double xMin_;
   double xMax_;
+  int printLevel_;
+  bool printWarnings_;
 
   std::string controlPlotsFileName_;
 
+  int statErrNumSamplings_;
+  double statErrChi2redMax_;
+  int statErrPrintLevel_;
+  bool statErrPrintWarnings_;
+
+  int sysErrNumStatSamplings_;
+  int sysErrNumSysSamplings_;
+  double sysErrChi2redMax_;
+  int sysErrPrintLevel_;
+  bool sysErrPrintWarnings_;
+  
 //--- internal data-members for handling histograms
 //    and performing fit
+  std::vector<std::string> processNames_;
   std::vector<processEntryType*> processEntries_;
   
   dataEntryType* dataEntry_;
