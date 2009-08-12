@@ -8,11 +8,27 @@
  * to distribution observed in data
  * (class implements "template" method for data-driven background estimation)
  *
+ * NOTE: The TemplateBgEstFit class is capable of fitting distributions of up to three different observables simultaneously,
+ *       determining the contribution of signal and background processes as the normalization parameters of the templates
+ *       that best fit the combination of all observed distributions.
+ *       
+ *       In case of more than one distribution fitted, the fit is implemented by constructing an auxiliary product PDF,
+ *       obtained by multiplying the different one-dimensional distributions to be fitted.
+ *
+ *       This multiplication is done for purely technical reasons only 
+ *       (in order to implement the solution to the problem 
+ *        "fit one, two or three one-dimensional distributions by a sum of template PDFs
+ *         the normalization parameters of which are to be determined by the fit in such a way
+ *         that for each signal/background process the same normalization parameter fits all distributions"
+ *        in a way that is supported by the RooFit package used to implement the technical aspects of the fit)
+ *       and does in particular NOT mean that any assumption is made 
+ *       that the observables used in the fit are uncorrelated/independent of each other !!
+ *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.3 $
+ * \version $Revision: 1.4 $
  *
- * $Id: TemplateBgEstFit.h,v 1.3 2009/08/04 14:36:59 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.4 2009/08/07 11:53:32 veelken Exp $
  *
  */
 
@@ -27,51 +43,99 @@
 #include <RooDataHist.h>
 #include <RooHistPdf.h>
 #include <RooRealVar.h>
-#include <RooAddPdf.h>
+#include <RooAbsPdf.h>
 #include <RooFitResult.h>
 
 #include <string>
 
 class TemplateBgEstFit : public edm::EDAnalyzer
 {
-  struct dataEntryType
+  struct dataDistr1dType
   {
-    dataEntryType(const std::string&, const std::string&);
-    virtual ~dataEntryType();
-    virtual void initialize(DQMStore&, RooRealVar*, int&);
+    dataDistr1dType(const std::string&, const std::string&, const std::string&, RooRealVar*, bool);
+    virtual ~dataDistr1dType();
+    virtual void initialize();
     virtual void fluctuate(bool, bool);
     std::string processName_;
+    std::string varName_;
     std::string meName_;
     MonitorElement* me_;
-    RooRealVar* x_;
-    std::string histogramName_;
-    RooDataHist* histogram_;
+    RooRealVar* xRef_;
+    bool cutUnfittedRegion_;
+    TH1* histogram_;    
+    std::string dataHistName_;
+    RooDataHist* dataHist_;
     TH1* fluctHistogram_;
-    int cfgError_;
+    int error_;
   };
 
-  struct sysFluctEntryType
+  struct dataDistrNdType 
+  {
+    dataDistrNdType(int, bool);
+    ~dataDistrNdType();
+    void addElement(const std::string&, RooRealVar*, const std::string&);
+    void initialize();
+    void buildFitData();
+    void fluctuate(bool, bool);
+    unsigned numDimensions_;
+    std::vector<std::string> varNames_;
+    std::map<std::string, dataDistr1dType*> dataEntries1d_;
+    int fitMode_;
+    bool cutUnfittedRegion_;
+    RooDataHist* fitData_;
+    double normCorrFactor_;
+    TH1* auxHistogram_;
+    int error_;
+  };
+
+  struct sysFluctDefType
   {
     std::string fluctName_;
     std::string meName_;
     MonitorElement* me_;
-    int direction_;
-    int mode_;
+    double pullRMS_;
+    double pullMin_;
+    double pullMax_;
+    int fluctMode_;
   };
 
-  struct processEntryType : public dataEntryType
+  struct modelTemplate1dType : public dataDistr1dType
   {
-    processEntryType(const std::string&, const std::string&, int, int, int);
-    virtual ~processEntryType();
-    void initialize(DQMStore&, RooRealVar*, int&);
+    modelTemplate1dType(const std::string&, const std::string&, const std::string&, RooRealVar*, bool);
+    virtual ~modelTemplate1dType();
+    void initialize();
     void fluctuate(bool, bool);
+    std::string pdf1dName_;
+    RooHistPdf* pdf1d_;
+    std::vector<sysFluctDefType> sysErrFluctuations_;
+  };
+
+  struct modelTemplateNdType
+  {
+    modelTemplateNdType(const std::string&, const edm::ParameterSet&, int, bool);
+    ~modelTemplateNdType();
+    void addElement(const std::string&, RooRealVar*, const std::string&);
+    void initialize();
+    void buildPdf();
+    void fluctuate(bool, bool);
+    std::string processName_;
     std::string pdfName_;
-    RooHistPdf* pdf_;
+    RooAbsPdf* pdf_;
+    bool pdfIsOwned_;
     RooRealVar* norm_;
+    unsigned numDimensions_;
+    std::vector<std::string> varNames_;
+    std::map<std::string, modelTemplate1dType*> processEntries1d_;
+    int fitMode_;
+    bool cutUnfittedRegion_;
+    double normCorrFactor_;
     int lineColor_;
     int lineStyle_;
     int lineWidth_;
-    std::vector<sysFluctEntryType> sysErrFluctuations_;
+    TH1* auxHistogram_;
+    std::string auxDataHistName_;
+    RooDataHist* auxDataHist_;
+    int error_;
   };
 
  public:
@@ -86,17 +150,17 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   void endJob();
 
 //--- private auxiliary functions
-  void buildModel();
+  void buildFitModel();
   void print(std::ostream& stream);
   void makeControlPlots();
-  double compChi2red() const;
+  double compChi2red();
   void estimateUncertainties(bool, int, bool, int, double, const char*, int, bool);
 
 //--- configuration parameters
-  std::string variableName_;
-  std::string variableTitle_;
-  double xMin_;
-  double xMax_;
+  int fitMode_;
+  
+  bool cutUnfittedRegion_;
+
   int printLevel_;
   bool printWarnings_;
 
@@ -116,16 +180,20 @@ class TemplateBgEstFit : public edm::EDAnalyzer
 //--- internal data-members for handling histograms
 //    and performing fit
   std::vector<std::string> processNames_;
-  std::vector<processEntryType*> processEntries_;
-  
-  dataEntryType* dataEntry_;
+  std::vector<std::string> varNames_;
 
-  RooRealVar* x_;
+  typedef std::map<std::string, modelTemplateNdType*> processEntryMap;
+  processEntryMap processEntries_;
 
-  RooAddPdf* model_;
+  dataDistrNdType* dataEntry_;
+
+  typedef std::map<std::string, RooRealVar*> realVarMap;
+  realVarMap x_;
+
+  RooAbsPdf* fitModel_;
   RooFitResult* fitResult_;
 
-  int cfgError_;
+  int error_;
 };
 
 #endif  

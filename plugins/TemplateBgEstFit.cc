@@ -18,12 +18,17 @@
 #include <TEllipse.h>
 #include <TColor.h>
 #include <TMarker.h>
+#include <TH1F.h>
 #include <TH2F.h>
+#include <TH3F.h>
+#include <TArrayD.h>
 #include <TLegend.h>
 #include <TRandom3.h>
 #include <TVectorD.h>
 #include <TMatrixD.h>
 
+#include <RooAddPdf.h>
+#include <RooProdPdf.h>
 #include <RooArgSet.h>
 #include <RooGlobalFunc.h>
 #include <RooPlot.h>
@@ -36,16 +41,15 @@ const int defaultCanvasSizeY = 600;
 
 const float maxNorm = 1.e+6;
 
-const std::string fluctDirection_up = "up";
-const std::string fluctDirection_down = "down";
-const std::string fluctDirection_bidirectional = "bidirectional";
-
-enum { kUp, kDown, kBidirectional };
-
 const std::string fluctMode_coherent = "coherent";
 const std::string fluctMode_incoherent = "incoherent";
 
 enum { kCoherent, kIncoherent };
+
+const std::string fitMode_1dPlus = "1d+";
+const std::string fitMode_Nd = "Nd";
+
+enum { k1dPlus, kNd };
 
 TRandom3 gRndNum;
 
@@ -53,21 +57,20 @@ const double epsilon = 1.e-3;
 
 const int fitStatus_converged = 0;
 
-void drawErrorEllipse(double, double, double, double, double, const char*, const char*, const char*);
-void makeCovariancePlots(TVectorD, TMatrixD, const std::vector<std::string>&, const std::string&, const char*);
+typedef std::vector<std::string> vstring;
+typedef std::pair<double, double> double_pair;
 
-double getSampledPull(int fluctDirection)
+void drawErrorEllipse(double, double, double, double, double, const char*, const char*, const char*);
+void makeCovariancePlots(TVectorD, TMatrixD, const vstring&, const std::string&, const char*);
+
+double getSampledPull(double pullRMS, double pullMin, double pullMax)
 {
-  assert(fluctDirection == kUp || fluctDirection == kDown || fluctDirection == kBidirectional);
-  
   double fluctPull = 0.;
   bool fluctPull_isValid = false;
 
   while ( !fluctPull_isValid ) {
-    double x = gRndNum.Gaus(0., 1.);
-    if ( (fluctDirection == kUp   && x >= 0.) ||
-	 (fluctDirection == kDown && x <= 0.) ||
-	  fluctDirection == kBidirectional    ) {
+    double x = gRndNum.Gaus(0., pullRMS);
+    if ( x >= pullMin && x <= pullMax ) {
       fluctPull = x;
       fluctPull_isValid = true;
     }
@@ -76,17 +79,17 @@ double getSampledPull(int fluctDirection)
   return fluctPull;
 }
 
-void sampleStatTH1(TH1* origHistogram, TH1* fluctHistogram)
+void sampleHistogram_stat(TH1* origHistogram, TH1* fluctHistogram)
 {
 //--- fluctuate bin-contents by Gaussian distribution
 //    with zero mean and standard deviation given by bin-errors
 
-  int numBins = origHistogram->GetNbinsX();
-  for ( int iBin = 0; iBin <= numBins; ++iBin ) {
+  int numBins = origHistogram->GetMaximumBin() + 1;
+  for ( int iBin = 0; iBin < numBins; ++iBin ) {
     double origBinContent = origHistogram->GetBinContent(iBin);
     double origBinError = origHistogram->GetBinError(iBin);
 
-    double fluctPull = getSampledPull(kBidirectional);
+    double fluctPull = getSampledPull(1., -5., +5.);
     double fluctBinContent = origBinContent + fluctPull*origBinError;
     
     fluctHistogram->SetBinContent(iBin, fluctBinContent);
@@ -94,16 +97,18 @@ void sampleStatTH1(TH1* origHistogram, TH1* fluctHistogram)
   }
 }
 
-void sampleSysTH1(TH1* fluctHistogram, TH1* sysHistogram, int fluctDirection, int fluctMode)
+void sampleHistogram_sys(TH1* fluctHistogram, TH1* sysHistogram, 
+			 double pullRMS, double pullMin, double pullMax, 
+			 int fluctMode)
 {
   assert(fluctMode == kCoherent || fluctMode == kIncoherent);
 
 //--- fluctuate bin-contents by Gaussian distribution
 //    with zero mean and standard deviation given by bin-errors
-  double sampledPull = getSampledPull(fluctDirection);
+  double sampledPull = getSampledPull(pullRMS, pullMin, pullMax);
 
-  int numBins = fluctHistogram->GetNbinsX();
-  for ( int iBin = 0; iBin <= numBins; ++iBin ) {
+  int numBins = fluctHistogram->GetMaximumBin() + 1;
+  for ( int iBin = 0; iBin < numBins; ++iBin ) {
     double fluctBinContent = fluctHistogram->GetBinContent(iBin);
     double fluctBinError = fluctHistogram->GetBinError(iBin);
     
@@ -116,154 +121,692 @@ void sampleSysTH1(TH1* fluctHistogram, TH1* sysHistogram, int fluctDirection, in
     fluctHistogram->SetBinContent(iBin, modBinContent);
     fluctHistogram->SetBinError(iBin, modBinError);
 
-    if ( fluctMode == kIncoherent ) sampledPull = getSampledPull(fluctDirection);
+    if ( fluctMode == kIncoherent ) sampledPull = getSampledPull(pullRMS, pullMin, pullMax);
   }
 }
 
-void makePositiveTH1(TH1* fluctHistogram)
+TArrayD getBinning(const TH1* histogram)
 {
-  int numBins = fluctHistogram->GetNbinsX();
-  for ( int iBin = 0; iBin <= numBins; ++iBin ) {
+  TArrayD binning;
+
+//--- check if histogram given as function argument
+//    has been created with array of explicitely specified bin-edges
+//    or by specifying (numBins, xMin, xMax)
+  if ( histogram->GetXaxis()->GetXbins() && histogram->GetXaxis()->GetXbins()->GetSize() > 0 ) {
+    binning = (*histogram->GetXaxis()->GetXbins());
+  } else {
+    int numBins = histogram->GetXaxis()->GetNbins();
+    double xMin = histogram->GetXaxis()->GetXmin();
+    double xMax = histogram->GetXaxis()->GetXmax();
+    double binWidth = (xMax - xMin)/numBins;
+    binning.Set(numBins + 1);
+    for ( int iBin = 0; iBin < (numBins + 1); ++iBin ) {
+      binning[iBin] = xMin + iBin*binWidth;
+    }
+  }
+  
+  return binning;
+}
+
+double getIntegral(const TH1* histogram)
+{
+//--- return total number of entries in histogram given as function argument
+//    (including underflow and overflow bins)
+
+  int numBins = histogram->GetNbinsX();
+  return histogram->Integral(0, numBins + 1);
+}
+
+double getIntegral(const TH1* histogram, double xMin, double xMax)
+{
+//--- return sum of entries in histogram given as function argument within range xMin...xMax
+
+  double integral = 0.;
+
+  int numBins = histogram->GetNbinsX();
+  for ( int iBin = 0; iBin < (numBins + 2); ++iBin ) {
+    double binCenter = histogram->GetBinCenter(iBin);
+    
+    if ( !(binCenter > xMin && binCenter < xMax) ) continue;
+
+    double binContent = histogram->GetBinContent(iBin);
+
+    integral += binContent;
+  }
+
+  return integral;
+}
+
+
+void makeHistogramPositive(TH1* fluctHistogram)
+{
+  int numBins = fluctHistogram->GetMaximumBin() + 1;
+  for ( int iBin = 0; iBin < numBins; ++iBin ) {
     if ( fluctHistogram->GetBinContent(iBin) < 0. ) fluctHistogram->SetBinContent(iBin, 0.);
   }
 }
 
+TH1* makeConcatenatedHistogram(const std::string& concatHistogramName, const std::vector<TH1*>& histograms, 
+			       const std::vector<double_pair>& xRanges)
+{
+  std::cout << "<makeConcatenatedHistogram>:" << std::endl;
+
+  unsigned numHistograms = histograms.size();
+
+  int numBinsTot = 0;
+
+  for ( unsigned iHistogram = 0; iHistogram < numHistograms; ++iHistogram ) {
+    const TH1* histogram_i = histograms[iHistogram];
+    numBinsTot += (histogram_i->GetMaximumBin() + 1);
+  }
+
+  TH1* concatHistogram = new TH1F(concatHistogramName.data(), concatHistogramName.data(), numBinsTot, -0.5, numBinsTot - 0.5);
+
+  int iBin_concat = 0;
+
+  for ( unsigned iHistogram = 0; iHistogram < numHistograms; ++iHistogram ) {
+    const TH1* histogram_i = histograms[iHistogram];
+
+    int numBins_i = histogram_i->GetMaximumBin() + 1;
+    for ( int iBin_i = 0; iBin_i < numBins_i; ++iBin_i ) {
+      double binCenter_i = histogram_i->GetBinCenter(iBin_i);
+
+      double xMin = xRanges[iHistogram].first;
+      double xMax = xRanges[iHistogram].second;
+
+//--- take care that ranges of "original" histograms excluded from fit
+//    do not get included in fit of concatenated histogram
+      if ( binCenter_i >= xMin && binCenter_i <= xMax ) {
+	double binContent_i = histogram_i->GetBinContent(iBin_i);
+	double binError_i = histogram_i->GetBinError(iBin_i);
+
+	concatHistogram->SetBinContent(iBin_concat, binContent_i);
+	concatHistogram->SetBinError(iBin_concat, binError_i);
+      } else {
+	concatHistogram->SetBinContent(iBin_concat, 0.);
+	concatHistogram->SetBinError(iBin_concat, 0.);
+      }
+
+      ++iBin_concat;
+    }
+  }
+
+//--- normalize concatenated histogram to total number of entries in first histogram
+//    (the same event enters concatenated histograms multiple times,
+//     and would hence be "double-counted" if the normalization of the concatenated histogram
+//     is not corrected for accordingly)
+  double integral_concatenated = getIntegral(concatHistogram);
+  double norm = getIntegral(histograms[0]);
+  if ( integral_concatenated > 0. ) {
+    std::cout << "--> scaling concatHistogram by factor = " << (norm/integral_concatenated) << std::endl;
+    concatHistogram->Scale(norm/integral_concatenated);
+  }
+
+  return concatHistogram;
+}
+
 //
 //-----------------------------------------------------------------------------------------------------------------------
 //
 
-TemplateBgEstFit::dataEntryType::dataEntryType(const std::string& processName, const std::string& meName)
-  : histogram_(0), 
-    cfgError_(0)
-{
-  //std::cout << "<dataEntryType::dataEntryType>:" << std::endl;
-  //std::cout << " processName = " << processName << std::endl;
-  //std::cout << " meName = " << meName << std::endl;
+TemplateBgEstFit::dataDistr1dType::dataDistr1dType(const std::string& processName, const std::string& varName, 
+						   const std::string& meName, RooRealVar* x, bool cutUnfittedRegion)
+  : processName_(processName),
+    varName_(varName),
+    meName_(meName),
+    xRef_(x),
+    cutUnfittedRegion_(cutUnfittedRegion),
+    histogram_(0),
+    dataHist_(0), 
+    error_(0)
+{}
 
-  processName_ = processName;
-
-  meName_ = meName;
-}
-
-TemplateBgEstFit::dataEntryType::~dataEntryType()
+TemplateBgEstFit::dataDistr1dType::~dataDistr1dType()
 {
   delete histogram_;
+  delete dataHist_;
   delete fluctHistogram_;
 }
 
-void TemplateBgEstFit::dataEntryType::initialize(DQMStore& dqmStore, RooRealVar* x, int& error)
+void TemplateBgEstFit::dataDistr1dType::initialize()
 {
-  //std::cout << "<dataEntryType::initialize>:" << std::endl;
+  //std::cout << "<dataDistr1dType::initialize>:" << std::endl;
 
+  DQMStore& dqmStore = (*edm::Service<DQMStore>());
   me_ = dqmStore.get(meName_);
   if ( !me_ ) {
-    edm::LogError ("dataEntryType::initialize") << " Failed to access dqmMonitorElement = " << meName_ << " !!";
-    error = 1;
+    edm::LogError ("dataDistr1dType") << " Failed to access dqmMonitorElement = " << meName_ << " !!";
+    error_ = 1;
     return;
   }
 
-  x_ = x;
+//--- make sure that x-axis range excluded from fit
+//    does really have no effect on fit results
+//    (differences between the event selection criteria
+//     applied in the final analysis and the background enriched samples
+//     may cause sizeable deviations between the templates obtained from the background enriched samples 
+//     and the distributions observed in the final analysis;
+//     even in case regions with deviations are not within the fitted region,
+//     they may affect the fit results via differences in the fractions of events 
+//     that are outside of the region included in the fit,
+//     because the normalization of PDFs depends on these fractions)
+  histogram_ = (TH1*)me_->getTH1()->Clone();
+  if ( cutUnfittedRegion_ ) {
+    const RooAbsBinning& xRange = xRef_->getBinning();
+    double xMin = xRange.lowBound();
+    double xMax = xRange.highBound();
+    int numBins = histogram_->GetNbinsX();
+    for ( int iBin = 0; iBin < (numBins + 2); ++iBin ) {
+      double binCenter = histogram_->GetBinCenter(iBin);
+      
+      if ( !(binCenter > xMin && binCenter < xMax) ) {
+	histogram_->SetBinContent(iBin, 0.);
+	histogram_->SetBinError(iBin, 0.);
+      }
+    }
+  }
 
-  histogramName_ = std::string(processName_).append("_histogram");
-  histogram_ = new RooDataHist(histogramName_.data(), histogramName_.data(), *x_, me_->getTH1());
-
-  fluctHistogram_ = (TH1*)me_->getTH1()->Clone();
+  dataHistName_ = std::string(processName_).append("_").append(varName_).append("_rooDataHist");
+  dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, histogram_);
+  
+  fluctHistogram_ = (TH1*)histogram_->Clone();
 }
 
-void TemplateBgEstFit::dataEntryType::fluctuate(bool, bool)
+void TemplateBgEstFit::dataDistr1dType::fluctuate(bool, bool)
 {  
-  sampleStatTH1(me_->getTH1(), fluctHistogram_);
+  sampleHistogram_stat(histogram_, fluctHistogram_);
 
-  makePositiveTH1(fluctHistogram_);
+  makeHistogramPositive(fluctHistogram_);
 
-  delete histogram_;
-  histogram_ = new RooDataHist(histogramName_.data(), histogramName_.data(), *x_, fluctHistogram_);
+  delete dataHist_;
+  dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, fluctHistogram_);
 }
 
 //
 //-----------------------------------------------------------------------------------------------------------------------
 //
 
-TemplateBgEstFit::processEntryType::processEntryType(const std::string& processName, const std::string& meName,
-						     int lineColor, int lineStyle, int lineWidth)
-  : dataEntryType(processName, meName), 
-    pdf_(0), norm_(0)
+TemplateBgEstFit::dataDistrNdType::dataDistrNdType(int fitMode, bool cutUnfittedRegion)
+  : numDimensions_(0),
+    fitMode_(fitMode),
+    cutUnfittedRegion_(cutUnfittedRegion),
+    fitData_(0),
+    normCorrFactor_(1.),
+    auxHistogram_(0),
+    error_(0)
+{}
+
+TemplateBgEstFit::dataDistrNdType::~dataDistrNdType()
 {
-  lineColor_ = lineColor;
-  lineStyle_ = lineStyle;
-  lineWidth_ = lineWidth;
+  for ( std::map<std::string, dataDistr1dType*>::iterator it = dataEntries1d_.begin();
+	it != dataEntries1d_.end(); ++it ) {
+    delete it->second;
+  }
+
+  delete fitData_;
+  
+  delete auxHistogram_;
 }
 
-TemplateBgEstFit::processEntryType::~processEntryType()
+void TemplateBgEstFit::dataDistrNdType::addElement(const std::string& varName, RooRealVar* x, const std::string& meName)
 {
-  delete pdf_;
-  delete norm_;
+  varNames_.push_back(varName);
+  
+  dataDistr1dType* dataEntry1d = new dataDistr1dType("data", varName, meName, x, cutUnfittedRegion_);
+  if ( dataEntry1d->error_ ) error_ = 1;
+  dataEntries1d_[varName] = dataEntry1d;
+  
+  ++numDimensions_;
 }
 
-void TemplateBgEstFit::processEntryType::initialize(DQMStore& dqmStore, RooRealVar* x, int& error)
+void TemplateBgEstFit::dataDistrNdType::initialize()
 {
-  //std::cout << "<processEntryType::initialize>:" << std::endl;
+  std::cout << "<dataDistrNdType::initialize>:" << std::endl;
 
-  dataEntryType::initialize(dqmStore, x, error);
+  for ( std::map<std::string, dataDistr1dType*>::iterator dataEntry1d = dataEntries1d_.begin();
+	dataEntry1d != dataEntries1d_.end(); ++dataEntry1d ) { 
+    dataEntry1d->second->initialize();
+    if ( dataEntry1d->second->error_ ) error_ = 1;
 
-  if ( error ) return;
+    std::cout << "processName = " << dataEntry1d->second->processName_ << std::endl;
+
+    const RooAbsBinning& xRange = dataEntry1d->second->xRef_->getBinning();
+    double xMin = xRange.lowBound();
+    double xMax = xRange.highBound();
+    double integral_fitted = getIntegral(dataEntry1d->second->histogram_, xMin, xMax);
+    std::cout << " integral_fitted = " << integral_fitted << std::endl;
+    
+    double integral = getIntegral(dataEntry1d->second->me_->getTH1());
+    std::cout << " integral = " << integral << std::endl;
+    
+    if ( integral_fitted > 0. ) normCorrFactor_ *= (integral/integral_fitted);
+  }
+
+  std::cout << "--> using normCorrFactor = " << normCorrFactor_ << std::endl;
+
+  buildFitData();
+}
+
+void TemplateBgEstFit::dataDistrNdType::buildFitData()
+{
+  assert(fitMode_ == k1dPlus || fitMode_ == kNd);
+
+  if ( numDimensions_ == 1 ) {
+    std::string varName_1 = varNames_.front();
+    RooDataHist* histogram_1 = dataEntries1d_[varName_1]->dataHist_;
+    
+    std::string fitDataName = "fitData_rooDataHist";
+
+    fitData_ = (RooDataHist*)histogram_1->Clone(fitDataName.data());
+  } else {
+    if ( fitMode_ == k1dPlus ) {
+      std::vector<TH1*> histograms;
+      std::vector<double_pair> xRanges;
+      for ( unsigned iDimension = 0; iDimension < numDimensions_; ++iDimension ) {
+	std::string varName = varNames_[iDimension];
+	dataDistr1dType* dataEntry1d = dataEntries1d_[varName];
+	histograms.push_back(dataEntry1d->histogram_);
+	const RooAbsBinning& xRange = dataEntry1d->xRef_->getBinning();
+	double xMin = xRange.lowBound();
+	double xMax = xRange.highBound();
+	xRanges.push_back(double_pair(xMin, xMax));
+      }
+
+      std::string auxHistogramName = "auxHistogram_1dPlus";
+      delete auxHistogram_;
+      auxHistogram_ = makeConcatenatedHistogram(auxHistogramName, histograms, xRanges);
+    } else if ( fitMode_ == kNd ) {
+      if ( numDimensions_ == 2 ) {
+	const std::string& varName_1 = varNames_[0];
+	TH1* histogram_1 = dataEntries1d_[varName_1]->histogram_;
+	int numBins_1 = histogram_1->GetXaxis()->GetNbins();
+	TArrayD binning_1 = getBinning(histogram_1);
+	double integral_1 = getIntegral(histogram_1);
+	  
+	const std::string& varName_2 = varNames_[1];
+	TH1* histogram_2 = dataEntries1d_[varName_2]->histogram_;
+	int numBins_2 = histogram_2->GetXaxis()->GetNbins();
+	TArrayD binning_2 = getBinning(histogram_2);
+	double integral_2 = getIntegral(histogram_2);
+
+	if ( TMath::Abs(integral_1 - integral_2) > epsilon ) {
+	  static bool isFirstWarning = true;
+	  if ( isFirstWarning )	
+	    edm::LogWarning ("buildFitData") << " Difference in integrals between first (" << varName_1 << " = " << integral_1 << ")"
+					     << " and second (" << varName_2 << " = " << integral_2 << ") Histogram detected !!";
+	  isFirstWarning = false;
+	}
+	  
+	std::string auxHistogramName = std::string(histogram_1->GetName()).append("_").append(histogram_2->GetName());
+	delete auxHistogram_;
+	auxHistogram_ = new TH2F(auxHistogramName.data(), auxHistogramName.data(), 
+				 numBins_1, binning_1.GetArray(), numBins_2, binning_2.GetArray());
+	for ( int iBin_1 = 0; iBin_1 < (numBins_1 + 2); ++iBin_1 ) {
+	  double binCenter_1 = histogram_1->GetBinCenter(iBin_1);
+	  double binContent_1 = histogram_1->GetBinContent(iBin_1)/integral_1;
+	  double binError_1 = histogram_1->GetBinError(iBin_1)/integral_1;
+	    
+	  for ( int iBin_2 = 0; iBin_2 < (numBins_2 + 2); ++iBin_2 ) {
+	    double binCenter_2 = histogram_2->GetBinCenter(iBin_2);
+	    double binContent_2 = histogram_2->GetBinContent(iBin_2)/integral_2;
+	    double binError_2 = histogram_2->GetBinError(iBin_2)/integral_2;
+	    
+	    double binContent_combined = binContent_1*binContent_2;
+	    double binError_d1_2 = binError_1*binContent_2;
+	    double binError_1_d2 = binContent_1*binError_2;
+	    double binError2_combined = binError_d1_2*binError_d1_2 + binError_1_d2*binError_1_d2;
+	    
+	    int iBin_aux = auxHistogram_->FindBin(binCenter_1, binCenter_2);
+	    //std::cout << " iBin_aux = " << iBin_aux << std::endl;
+	    
+	    auxHistogram_->SetBinContent(iBin_aux, integral_1*binContent_combined);
+	    auxHistogram_->SetBinError(iBin_aux, integral_1*TMath::Sqrt(binError2_combined));
+
+	    //std::cout << "setting binContent(" << varName_1 << " = " << binCenter_1 << ", " << varName_2 << " = " << binCenter_2 << ")"
+	    //	        << " = " << auxHistogram_->GetBinContent(iBin_aux)
+	    //          << " +/- binError = " << auxHistogram_->GetBinError(iBin_aux) << std::endl;
+	  }
+	}
+
+	//std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << std::endl;
+	assert(TMath::Abs(getIntegral(auxHistogram_) - integral_1) < epsilon);
+      } else if ( numDimensions_ == 3 ) {
+	const std::string& varName_1 = varNames_[0];
+	TH1* histogram_1 = dataEntries1d_[varName_1]->histogram_;
+	int numBins_1 = histogram_1->GetXaxis()->GetNbins();
+	TArrayD binning_1 = getBinning(histogram_1);
+	double integral_1 = getIntegral(histogram_1);
+      
+	const std::string& varName_2 = varNames_[1];
+	TH1* histogram_2 = dataEntries1d_[varName_2]->histogram_;
+	int numBins_2 = histogram_2->GetXaxis()->GetNbins();
+	TArrayD binning_2 = getBinning(histogram_2);
+	double integral_2 = getIntegral(histogram_2);
+      
+	const std::string& varName_3 = varNames_[2];
+	TH1* histogram_3 = dataEntries1d_[varName_3]->histogram_;
+	int numBins_3 = histogram_3->GetXaxis()->GetNbins();
+	TArrayD binning_3 = getBinning(histogram_3);
+	double integral_3 = getIntegral(histogram_3);
+	
+	if ( TMath::Abs(integral_1 - integral_2) > epsilon ||
+	     TMath::Abs(integral_1 - integral_3) > epsilon ||
+	     TMath::Abs(integral_2 - integral_3) > epsilon ) {
+	  static bool isFirstWarning = true;
+	  if ( isFirstWarning )	
+	    edm::LogWarning ("buildFitData") << " Difference in integrals between first (" << varName_1 << " = " << integral_1 << "),"
+					     << " second (" << varName_2 << " = " << integral_2 << ")"
+					     << " and third (" << varName_3 << " = " << integral_3 << ") Histogram detected !!";
+	  isFirstWarning = false;
+	}
+
+	std::string auxHistogramName
+	  = std::string(histogram_1->GetName()).append("_").append(histogram_2->GetName()).append("_").append(histogram_3->GetName());
+	delete auxHistogram_;
+	auxHistogram_ = new TH3F(auxHistogramName.data(), auxHistogramName.data(), 
+				 numBins_1, binning_1.GetArray(), numBins_2, binning_2.GetArray(), numBins_3, binning_3.GetArray());
+	for ( int iBin_1 = 0; iBin_1 < (numBins_1 + 2); ++iBin_1 ) {
+	  double binCenter_1 = histogram_1->GetBinCenter(iBin_1);
+	  double binContent_1 = histogram_1->GetBinContent(iBin_1)/integral_1;
+	  double binError_1 = histogram_1->GetBinError(iBin_1)/integral_1;
+	
+	  for ( int iBin_2 = 0; iBin_2 < (numBins_2 + 2); ++iBin_2 ) {
+	    double binCenter_2 = histogram_2->GetBinCenter(iBin_2);
+	    double binContent_2 = histogram_2->GetBinContent(iBin_2)/integral_2;
+	    double binError_2 = histogram_2->GetBinError(iBin_2)/integral_2;
+	    
+	    for ( int iBin_3 = 0; iBin_3 < (numBins_3 + 2); ++iBin_3 ) {
+	      double binCenter_3 = histogram_3->GetBinCenter(iBin_3);
+	      double binContent_3 = histogram_3->GetBinContent(iBin_3)/integral_3;
+	      double binError_3 = histogram_3->GetBinError(iBin_3)/integral_3;
+	      
+	      double binContent_combined = binContent_1*binContent_2*binContent_3;
+	      double binError_d1_2_3 = binError_1*binContent_2*binContent_3;
+	      double binError_1_d2_3 = binContent_1*binError_2*binContent_3;
+	      double binError_1_2_d3 = binContent_1*binContent_2*binError_3;
+	      double binError2_combined 
+		= binError_d1_2_3*binError_d1_2_3 + binError_1_d2_3*binError_1_d2_3 + binError_1_2_d3*binError_1_2_d3;
+	      
+	      int iBin_aux = auxHistogram_->FindBin(binCenter_1, binCenter_2, binCenter_3);
+	    
+	      auxHistogram_->SetBinContent(iBin_aux, integral_1*binContent_combined);
+	      auxHistogram_->SetBinError(iBin_aux, integral_1*TMath::Sqrt(binError2_combined));
+	    }
+	  }
+	}
+	
+	//std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << std::endl;
+        assert(TMath::Abs(getIntegral(auxHistogram_) - integral_1) < epsilon);
+      } else {
+	edm::LogError ("buildFitData") << " Number of Dimensions = " << numDimensions_ << " exceed maximum" 
+				       << " supported for fitMode = " << fitMode_ << " !!";
+	error_ = 1;
+	return;
+      }
+    } 
+
+    std::string fitDataName = "fitData_rooDataHist";
+    
+    TObjArray fitData_varsCollection;
+    for ( std::map<std::string, dataDistr1dType*>::iterator dataEntry1d = dataEntries1d_.begin();
+	  dataEntry1d != dataEntries1d_.end(); ++dataEntry1d ) {
+      fitData_varsCollection.Add(dataEntry1d->second->xRef_);
+    }
+    
+    std::string fitData_varsArgName = std::string("fitData").append("_varsArgs");
+    RooArgList fitData_varsArgs(fitData_varsCollection, fitData_varsArgName.data());
+    
+    fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), fitData_varsArgs, auxHistogram_);
+  } 
+}
+
+void TemplateBgEstFit::dataDistrNdType::fluctuate(bool, bool)
+{
+  for ( std::map<std::string, dataDistr1dType*>::iterator dataEntry1d = dataEntries1d_.begin();
+	dataEntry1d != dataEntries1d_.end(); ++dataEntry1d ) {
+    dataEntry1d->second->fluctuate(true, false);
+  }
+
+  buildFitData();
+}
+
+//
+//-----------------------------------------------------------------------------------------------------------------------
+//
+
+TemplateBgEstFit::modelTemplate1dType::modelTemplate1dType(const std::string& processName, const std::string& varName,
+							   const std::string& meName, RooRealVar* x, bool cutUnfittedRegion)
+  : dataDistr1dType(processName, varName, meName, x, cutUnfittedRegion),
+    pdf1d_(0)
+{}
+
+TemplateBgEstFit::modelTemplate1dType::~modelTemplate1dType()
+{
+  delete pdf1d_;
+}
+
+void TemplateBgEstFit::modelTemplate1dType::initialize()
+{
+  //std::cout << "<modelTemplate1dType::initialize>:" << std::endl;
+
+  dataDistr1dType::initialize();
+
+  if ( error_ ) return;
  
-  pdfName_ = std::string(processName_).append("_").append("pdf");
-  pdf_ = new RooHistPdf(pdfName_.data(), pdfName_.data(), *x_, *histogram_);
+//--- renormalize template histogram to unit area
+//    in case region excluded from fit is cut
+/*
+  double integral = getIntegral(histogram_);
+  if ( integral > 0. ) {
+    std::cout << "--> scaling histogram by factor = " << (1./integral) << std::endl;
+    histogram_->Scale(1./integral);
+  }
+ */
+  pdf1dName_ = std::string(processName_).append("_").append(varName_).append("_").append("pdf");
+  pdf1d_ = new RooHistPdf(pdf1dName_.data(), pdf1dName_.data(), *xRef_, *dataHist_);
 
-  std::string normName = std::string(processName_).append("_").append("norm");
-  norm_ = new RooRealVar(normName.data(), normName.data(), 0., maxNorm);
-
-  for ( std::vector<sysFluctEntryType>::iterator sysErrFluctuation = sysErrFluctuations_.begin();
+  DQMStore& dqmStore = (*edm::Service<DQMStore>());
+  for ( std::vector<sysFluctDefType>::iterator sysErrFluctuation = sysErrFluctuations_.begin();
 	sysErrFluctuation != sysErrFluctuations_.end(); ++sysErrFluctuation ) {
-    //std::cout << " sysErrFluctuation->meName = " << sysErrFluctuation->meName_ << std::endl;
     sysErrFluctuation->me_ = dqmStore.get(sysErrFluctuation->meName_);
     if ( !sysErrFluctuation->me_ ) {
-      edm::LogError ("processEntryType::initialize") << " Failed to access dqmMonitorElement = " << sysErrFluctuation->meName_ << " !!";
-      error = 1;
-      return;
+      edm::LogError ("modelTemplate1dType") << " Failed to access dqmMonitorElement = " << sysErrFluctuation->meName_ << " !!";
+      error_ = 1;
+      continue;
     }
 
 //--- check that histograms representing systematic uncertainties have the same binning
 //    as that representing expectation
-    if ( !isCompatibleBinning(me_->getTH1(), sysErrFluctuation->me_->getTH1()) ) {
-      edm::LogError ("processEntryType::initialize") << " Incompatible binning of histograms " << meName_ 
-						     << " and " << sysErrFluctuation->meName_ << " !!";
-      error = 1;
-      return;
+    if ( !isCompatibleBinning(histogram_, sysErrFluctuation->me_->getTH1()) ) {
+      edm::LogError ("modelTemplate1dType") << " Incompatible binning of histograms " << meName_ 
+					    << " and " << sysErrFluctuation->meName_ << " !!";
+      error_ = 1;
+      continue;
     }
   }
 }
 
-void TemplateBgEstFit::processEntryType::fluctuate(bool fluctStat, bool fluctSys)
+void TemplateBgEstFit::modelTemplate1dType::fluctuate(bool fluctStat, bool fluctSys)
 {
   if ( fluctStat ) {
-    sampleStatTH1(me_->getTH1(), fluctHistogram_);
+    sampleHistogram_stat(histogram_, fluctHistogram_);
   } else {
-    TH1* origHistogram = me_->getTH1();
-    int numBins = origHistogram->GetNbinsX();
-    for ( int iBin = 0; iBin <= numBins; ++iBin ) {
-      double origBinContent = origHistogram->GetBinContent(iBin);
-      double origBinError = origHistogram->GetBinError(iBin);
+    int numBins = histogram_->GetMaximumBin() + 1;
+    for ( int iBin = 0; iBin < numBins; ++iBin ) {
+      double binContent = histogram_->GetBinContent(iBin);
+      double binError = histogram_->GetBinError(iBin);
 
-      fluctHistogram_->SetBinContent(iBin, origBinContent);
-      fluctHistogram_->SetBinError(iBin, origBinError);
+      fluctHistogram_->SetBinContent(iBin, binContent);
+      fluctHistogram_->SetBinError(iBin, binError);
     }
   }
 
   if ( fluctSys ) {
-    for ( std::vector<sysFluctEntryType>::const_iterator sysErrFluctuation = sysErrFluctuations_.begin();
+    for ( std::vector<sysFluctDefType>::const_iterator sysErrFluctuation = sysErrFluctuations_.begin();
 	  sysErrFluctuation != sysErrFluctuations_.end(); ++sysErrFluctuation ) {
-      sampleSysTH1(fluctHistogram_, sysErrFluctuation->me_->getTH1(),  sysErrFluctuation->direction_, sysErrFluctuation->mode_);
+      sampleHistogram_sys(fluctHistogram_, sysErrFluctuation->me_->getTH1(),  
+			  sysErrFluctuation->pullRMS_, sysErrFluctuation->pullMin_, sysErrFluctuation->pullMax_, 
+			  sysErrFluctuation->fluctMode_);
     }
   }
 
-  makePositiveTH1(fluctHistogram_);
+  makeHistogramPositive(fluctHistogram_);
 
-  delete histogram_;
-  histogram_ = new RooDataHist(histogramName_.data(), histogramName_.data(), *x_, fluctHistogram_);
-  delete pdf_;
-  pdf_ = new RooHistPdf(pdfName_.data(), pdfName_.data(), *x_, *histogram_);
+  delete dataHist_;
+  dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, fluctHistogram_);
+  delete pdf1d_;
+  pdf1d_ = new RooHistPdf(pdf1dName_.data(), pdf1dName_.data(), *xRef_, *dataHist_);
+}
+
+//
+//-----------------------------------------------------------------------------------------------------------------------
+//
+
+TemplateBgEstFit::modelTemplateNdType::modelTemplateNdType(const std::string& processName, const edm::ParameterSet& cfgProcess,
+							   int fitMode, bool cutUnfittedRegion)
+  : processName_(processName),
+    pdf_(0),
+    numDimensions_(0),
+    fitMode_(fitMode),
+    cutUnfittedRegion_(cutUnfittedRegion),
+    normCorrFactor_(1.),
+    auxHistogram_(0),
+    auxDataHist_(0),
+    error_(0)
+{
+  edm::ParameterSet cfgDrawOptions_process = cfgProcess.getParameter<edm::ParameterSet>("drawOptions");
+  lineColor_ = cfgDrawOptions_process.getParameter<int>("lineColor");
+  lineStyle_ = cfgDrawOptions_process.getParameter<int>("lineStyle");
+  lineWidth_ = cfgDrawOptions_process.getParameter<int>("lineWidth");
+
+  std::string normName = std::string(processName_).append("_").append("norm");
+  norm_ = new RooRealVar(normName.data(), normName.data(), 0., maxNorm);
+}
+
+TemplateBgEstFit::modelTemplateNdType::~modelTemplateNdType()
+{
+  for ( std::map<std::string, modelTemplate1dType*>::iterator it = processEntries1d_.begin();
+	it != processEntries1d_.end(); ++it ) {
+    delete it->second;
+  }
+
+  delete auxHistogram_;
+  delete auxDataHist_;
+
+  if ( pdfIsOwned_ ) delete pdf_;
+
+  delete norm_;
+}
+
+void TemplateBgEstFit::modelTemplateNdType::addElement(const std::string& varName, RooRealVar* x, const std::string& meName)
+{
+  varNames_.push_back(varName);
+  
+  modelTemplate1dType* processEntry1d = new modelTemplate1dType(processName_, varName, meName, x, cutUnfittedRegion_);
+  if ( processEntry1d->error_ ) error_ = 1;
+  processEntries1d_[varName] = processEntry1d;
+  
+  ++numDimensions_;
+}
+
+void TemplateBgEstFit::modelTemplateNdType::initialize()
+{
+  std::cout << "<modelTemplateNdType::initialize>:" << std::endl;
+
+  for ( std::map<std::string, modelTemplate1dType*>::iterator processEntry1d = processEntries1d_.begin();
+	processEntry1d != processEntries1d_.end(); ++processEntry1d ) {
+    processEntry1d->second->initialize();
+    if ( processEntry1d->second->error_ ) error_ = 1;
+
+    std::cout << "processName = " << processEntry1d->second->processName_ << std::endl;
+      
+    const RooAbsBinning& xRange = processEntry1d->second->xRef_->getBinning();
+    double xMin = xRange.lowBound();
+    double xMax = xRange.highBound();
+    double integral_fitted = getIntegral(processEntry1d->second->histogram_, xMin, xMax);
+    std::cout << " integral_fitted = " << integral_fitted << std::endl;
+    
+    double integral = getIntegral(processEntry1d->second->me_->getTH1());
+    std::cout << " integral = " << integral << std::endl;
+    
+    if ( integral_fitted > 0. ) normCorrFactor_ *= (integral/integral_fitted);
+  }
+
+  std::cout << "--> using normCorrFactor = " << normCorrFactor_ << std::endl;
+
+  buildPdf();
+}
+
+void TemplateBgEstFit::modelTemplateNdType::buildPdf()
+{
+  assert(fitMode_ == k1dPlus || fitMode_ == kNd);
+
+  if ( numDimensions_ == 1 ) {
+    const std::string varName = varNames_.front();
+    pdfName_ = processEntries1d_[varName]->pdf1dName_;
+    pdf_ = processEntries1d_[varName]->pdf1d_;
+    pdfIsOwned_ = false;
+  } else {
+    if ( fitMode_ == k1dPlus ) {
+      std::vector<TH1*> histograms;
+      std::vector<double_pair> xRanges;
+      for ( std::map<std::string, modelTemplate1dType*>::iterator processEntry1d = processEntries1d_.begin();
+	    processEntry1d != processEntries1d_.end(); ++processEntry1d ) {
+	histograms.push_back(processEntry1d->second->histogram_);
+	const RooAbsBinning& xRange = processEntry1d->second->xRef_->getBinning();
+	double xMin = xRange.lowBound();
+	double xMax = xRange.highBound();
+	xRanges.push_back(double_pair(xMin, xMax));
+      }
+
+      std::string auxHistogramName = std::string(processName_).append("_").append("auxHistogram_1dPlus");
+      delete auxHistogram_;
+      auxHistogram_ = makeConcatenatedHistogram(auxHistogramName, histograms, xRanges);
+
+//--- adjust range to be fitted for first variable
+//    to x-axis of concatenated histogram
+      const std::string varName = varNames_.front();
+      RooRealVar* xRef_aux = processEntries1d_[varName]->xRef_;
+      xRef_aux->setMin(auxHistogram_->GetXaxis()->GetXmin());
+      xRef_aux->setMax(auxHistogram_->GetXaxis()->GetXmax());
+
+      auxDataHistName_ = std::string(processName_).append("_").append(varName).append("_rooDataHist");
+      delete auxDataHist_;
+      auxDataHist_ = new RooDataHist(auxDataHistName_.data(), auxDataHistName_.data(), *xRef_aux, auxHistogram_);
+
+      delete pdf_;
+      pdf_ = new RooHistPdf(pdfName_.data(), pdfName_.data(), *xRef_aux, *auxDataHist_);
+
+      pdfIsOwned_ = true;
+    } else if ( fitMode_ == kNd ) {
+      pdfName_ = std::string(processName_).append("_").append("pdf");
+
+      TObjArray pdf1dCollection;
+      for ( std::map<std::string, modelTemplate1dType*>::iterator processEntry1d = processEntries1d_.begin();
+	    processEntry1d != processEntries1d_.end(); ++processEntry1d ) {
+	pdf1dCollection.Add(processEntry1d->second->pdf1d_);
+      }
+
+      std::string pdfArgName = std::string(processName_).append("_pdfArgs");
+      RooArgList pdfArgs(pdf1dCollection, pdfArgName.data());
+      
+      //std::cout << "--> creating RooProdPdf with name = " << pdfName_ << std::endl;
+      pdf_ = new RooProdPdf(pdfName_.data(), pdfName_.data(), pdfArgs);
+
+      pdfIsOwned_ = true;
+    }
+  }
+}
+
+void TemplateBgEstFit::modelTemplateNdType::fluctuate(bool fluctStat, bool fluctSys)
+{
+  for ( std::map<std::string, modelTemplate1dType*>::iterator processEntry1d = processEntries1d_.begin();
+	processEntry1d != processEntries1d_.end(); ++processEntry1d ) {
+    processEntry1d->second->fluctuate(fluctStat, fluctSys);
+  }
+
+  if ( pdfIsOwned_ ) delete pdf_;
+  buildPdf();
 }
 
 //
@@ -271,45 +814,109 @@ void TemplateBgEstFit::processEntryType::fluctuate(bool fluctStat, bool fluctSys
 //
 
 TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
-  : cfgError_(0)
+  : error_(0)
 {
   std::cout << "<TemplateBgEstFit::TemplateBgEstFit>:" << std::endl;
 
-  edm::ParameterSet cfgProcesses = cfg.getParameter<edm::ParameterSet>("processes");
-  std::vector<std::string> processNames = cfgProcesses.getParameterNamesForType<edm::ParameterSet>();
-  for ( std::vector<std::string>::const_iterator processName = processNames.begin(); 
-	processName != processNames.end(); ++processName ) {
-    edm::ParameterSet cfgProcess = cfgProcesses.getParameter<edm::ParameterSet>(*processName);
+  edm::ParameterSet cfgFit = cfg.getParameter<edm::ParameterSet>("fit");
 
-    std::string meName_process = cfgProcess.getParameter<std::string>("meName");
-
-    edm::ParameterSet cfgDrawOptions_process = cfgProcess.getParameter<edm::ParameterSet>("drawOptions");
-    int lineColor_process = cfgDrawOptions_process.getParameter<int>("lineColor");
-    int lineStyle_process = cfgDrawOptions_process.getParameter<int>("lineStyle");
-    int lineWidth_process = cfgDrawOptions_process.getParameter<int>("lineWidth");
-
-    processNames_.push_back(*processName);
-
-    processEntryType* processEntry = new processEntryType(*processName, meName_process, 
-							  lineColor_process, lineStyle_process, lineWidth_process);
-    processEntries_.push_back(processEntry);
+  std::string fitMode_string = ( cfgFit.exists("mode") ) ? cfgFit.getParameter<std::string>("mode") : fitMode_Nd;
+  if ( fitMode_string == fitMode_1dPlus ) {
+    fitMode_ = k1dPlus;
+  } else if ( fitMode_string == fitMode_Nd ) {
+    fitMode_ = kNd;
+  } else {
+    edm::LogError ("TemplateBgEstFit") << " Invalid 'fitMode' parameter = " << fitMode_string << " !!";
+    error_ = 1;
   }
 
-  edm::ParameterSet cfgData = cfg.getParameter<edm::ParameterSet>("data");
-  std::string meName_data = cfgData.getParameter<std::string>("meName");
-  dataEntry_ = new dataEntryType("data", meName_data);
-  
-  edm::ParameterSet cfgFit = cfg.getParameter<edm::ParameterSet>("fit");
-  variableName_ = ( cfgFit.exists("variableName") ) ? cfgFit.getParameter<std::string>("variableName") : "";
-  variableTitle_ = ( cfgFit.exists("variableTitle") ) ? cfgFit.getParameter<std::string>("variableTitle") : "";
-  xMin_ = cfgFit.getParameter<double>("xMin");
-  xMax_ = cfgFit.getParameter<double>("xMax");
+  //std::cout << " fitMode = " << fitMode_string << std::endl;
+
+  cutUnfittedRegion_ = ( cfgFit.exists("cutUnfittedRegion") ) ? cfgFit.getParameter<bool>("cutUnfittedRegion") : false;
+
   printLevel_ = ( cfgFit.exists("printLevel") ) ? cfgFit.getParameter<int>("printLevel") : 1;
   printWarnings_  = ( cfgFit.exists("printWarnings") ) ? cfgFit.getParameter<bool>("printWarnings") : true;
 
+//--- read list of variables to be used in fit
+//    (for each variable: name, title and range to be fitted)
+  edm::ParameterSet cfgVariables = cfgFit.getParameter<edm::ParameterSet>("variables");
+  vstring varNames = cfgVariables.getParameterNamesForType<edm::ParameterSet>();
+  for ( vstring::const_iterator varName = varNames.begin(); 
+	varName != varNames.end(); ++varName ) {
+    edm::ParameterSet cfgVariable = cfgVariables.getParameter<edm::ParameterSet>(*varName);
+
+    varNames_.push_back(*varName);
+
+    std::string name = cfgVariable.getParameter<std::string>("name");
+    std::string title = cfgVariable.getParameter<std::string>("title");
+    double xMin = cfgVariable.getParameter<double>("xMin");
+    double xMax = cfgVariable.getParameter<double>("xMax");
+
+    x_[*varName] = new RooRealVar(name.data(), title.data(), xMin, xMax);
+  }
+
+//--- read configuration parameters specifying signal and background templates
+//    fitted to the distributions observed in (pseudo)data
+//    (for each process: name; for each combination of variable and process: name of DQM MonitorElement holding template histogram)
+  edm::ParameterSet cfgProcesses = cfg.getParameter<edm::ParameterSet>("processes");
+  vstring processNames = cfgProcesses.getParameterNamesForType<edm::ParameterSet>();
+  for ( vstring::const_iterator processName = processNames.begin(); 
+	processName != processNames.end(); ++processName ) {
+    edm::ParameterSet cfgProcess = cfgProcesses.getParameter<edm::ParameterSet>(*processName);
+
+    processNames_.push_back(*processName);
+
+    modelTemplateNdType* processEntry = new modelTemplateNdType(*processName, cfgProcess, fitMode_, cutUnfittedRegion_);
+
+    edm::ParameterSet cfgMonitorElements = cfgProcess.getParameter<edm::ParameterSet>("meNames");
+    for ( vstring::const_iterator varName = varNames_.begin();
+	  varName != varNames_.end(); ++varName ) {
+      if ( !cfgMonitorElements.exists(*varName) ) {
+	edm::LogError ("TemplateBgEstFit") << " No Template of variable = " << (*varName) 
+					   << " defined for process = " << (*processName) << " !!";
+	error_ = 1;
+	continue;
+      }
+
+      std::string meName = cfgMonitorElements.getParameter<std::string>(*varName);
+
+      processEntry->addElement(*varName, x_[*varName], meName);
+    }
+
+    processEntries_[*processName] = processEntry;
+  }
+  
+//--- read configuration parameters specifying distributions observed in (pseudo)data 
+//    that are to be fitted
+//    (for each variable: name of DQM MonitorElements holding template histogram)
+//
+//    WARNING: dataDistrNdType::addElement and modelTemplateNdType::addElement need to be called
+//              with variable names sorted in the **exact** same order !!
+//
+  edm::ParameterSet cfgData = cfg.getParameter<edm::ParameterSet>("data");
+
+  dataEntry_ = new dataDistrNdType(fitMode_, cutUnfittedRegion_);
+
+  edm::ParameterSet cfgMonitorElements = cfgData.getParameter<edm::ParameterSet>("meNames");
+  for ( vstring::const_iterator varName = varNames_.begin();
+        varName != varNames_.end(); ++varName ) {
+    if ( !cfgMonitorElements.exists(*varName) ) {
+      edm::LogError ("TemplateBgEstFit") << " No Template of variable = " << (*varName) << " defined for data !!";
+      error_ = 1;
+      continue;
+    }
+
+    std::string meName = cfgMonitorElements.getParameter<std::string>(*varName);
+
+    dataEntry_->addElement(*varName, x_[*varName], meName);
+  }
+
+//--- read configuration parameters specifying options for making control plots
   edm::ParameterSet cfgControlPlots = cfg.getParameter<edm::ParameterSet>("output").getParameter<edm::ParameterSet>("controlPlots");
   controlPlotsFileName_ = cfgControlPlots.getParameter<std::string>("fileName");
 
+//--- read configuration parameters specifying how statistical and systematic uncertainties 
+//    on normalization factors determined by fit get estimated
   edm::ParameterSet cfgStatErr = cfg.getParameter<edm::ParameterSet>("estStatUncertainties");
   statErrNumSamplings_ = cfgStatErr.getParameter<edm::ParameterSet>("numSamplings").getParameter<int>("stat");
   statErrChi2redMax_ = cfgStatErr.getParameter<double>("chi2redMax");  
@@ -318,23 +925,14 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 
   edm::ParameterSet cfgSysErr = cfg.getParameter<edm::ParameterSet>("estSysUncertainties");
   edm::ParameterSet cfgSysFluctuations = cfgSysErr.getParameter<edm::ParameterSet>("fluctuations");
-  std::vector<std::string> sysFluctNames = cfgSysFluctuations.getParameterNamesForType<edm::ParameterSet>();
-  for ( std::vector<std::string>::const_iterator sysFluctName = sysFluctNames.begin(); 
+  vstring sysFluctNames = cfgSysFluctuations.getParameterNamesForType<edm::ParameterSet>();
+  for ( vstring::const_iterator sysFluctName = sysFluctNames.begin(); 
 	sysFluctName != sysFluctNames.end(); ++sysFluctName ) {
     edm::ParameterSet cfgSysFluct = cfgSysFluctuations.getParameter<edm::ParameterSet>(*sysFluctName);
 
-    std::string fluctDirection_string = cfgSysFluct.getParameter<std::string>("direction");
-    int fluctDirection_int = -1;
-    if ( fluctDirection_string == fluctDirection_up ) {
-      fluctDirection_int = kUp;
-    } else if ( fluctDirection_string == fluctDirection_down ) {
-      fluctDirection_int = kDown;
-    } else if ( fluctDirection_string == fluctDirection_bidirectional ) {
-      fluctDirection_int = kBidirectional;
-    } else {
-      edm::LogError ("TemplateBgEstFit::TemplateBgEstFit") << " Invalid 'direction' parameter = " << fluctDirection_string << " !!";
-      cfgError_ = 1;
-    }
+    double pullRMS = cfgSysFluct.getParameter<double>("pullRMS");
+    double pullMin = cfgSysFluct.getParameter<double>("pullMin");
+    double pullMax = cfgSysFluct.getParameter<double>("pullMax");
 
     std::string fluctMode_string = cfgSysFluct.getParameter<std::string>("mode");
     int fluctMode_int = -1;
@@ -344,30 +942,42 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
       fluctMode_int = kIncoherent;
     } else {
       edm::LogError ("TemplateBgEstFit::TemplateBgEstFit") << " Invalid 'mode' parameter = " << fluctMode_string << " !!";
-      cfgError_ = 1;
+      error_ = 1;
     }
 
     edm::ParameterSet cfgProcesses = cfgSysFluct.getParameter<edm::ParameterSet>("meNames");
 
-    for ( std::vector<processEntryType*>::iterator processEntry = processEntries_.begin();
-	  processEntry != processEntries_.end(); ++processEntry ) {
-      const std::string& processName = (*processEntry)->processName_;
-      if ( !cfgProcesses.exists(processName) ) {
-	edm::LogError ("TemplateBgEstFit::TemplateBgEstFit") << " No MonitorElement defined for estimating systematic Uncertainty = " 
-							     << (*sysFluctName) << " of process = " << processName << " !!";
-	cfgError_ = 1;
+    for ( vstring::iterator processName = processNames_.begin();
+	  processName != processNames_.end(); ++processName ) {
+      if ( !cfgProcesses.exists(*processName) ) {
+	edm::LogError ("TemplateBgEstFit") << " No Estimate of systematic Uncertainty = " << (*sysFluctName) 
+					   << " defined for process = " << (*processName) << " !!";
+	error_ = 1;
 	continue;
       }
 
-      std::string meName = cfgProcesses.getParameter<std::string>(processName);
+      edm::ParameterSet cfgProcess = cfgProcesses.getParameter<edm::ParameterSet>(*processName);
 
-      sysFluctEntryType sysFluctEntry;
-      sysFluctEntry.fluctName_ = (*sysFluctName);
-      sysFluctEntry.meName_ = meName;
-      sysFluctEntry.direction_ = fluctDirection_int;
-      sysFluctEntry.mode_ = fluctMode_int;
+      for ( vstring::const_iterator varName = varNames_.begin();
+	    varName != varNames_.end(); ++varName ) {
+	if ( !cfgProcess.exists(*varName) ) {
+	  edm::LogError ("TemplateBgEstFit") << " No Estimate of systematic Uncertainty = " << (*sysFluctName) 
+					     << " on variable = " << (*varName) << " defined for process = " << (*processName) << " !!";
+	  error_ = 1;
+	}
 
-      (*processEntry)->sysErrFluctuations_.push_back(sysFluctEntry);
+	std::string meName = cfgProcess.getParameter<std::string>(*varName);
+
+	sysFluctDefType sysFluctDef;
+	sysFluctDef.fluctName_ = (*sysFluctName);
+	sysFluctDef.meName_ = meName;
+	sysFluctDef.pullRMS_ = pullRMS;
+	sysFluctDef.pullMin_ = pullMin;
+	sysFluctDef.pullMax_ = pullMax;
+	sysFluctDef.fluctMode_ = fluctMode_int;
+
+	processEntries_[*processName]->processEntries1d_[*varName]->sysErrFluctuations_.push_back(sysFluctDef);
+      }
     }
   }
   sysErrNumStatSamplings_ = cfgSysErr.getParameter<edm::ParameterSet>("numSamplings").getParameter<int>("stat");
@@ -376,24 +986,26 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
   sysErrPrintLevel_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<int>("printLevel");
   sysErrPrintWarnings_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<bool>("printWarnings");
 
-  x_ = 0;
-  model_ = 0;
+  fitModel_ = 0;
   fitResult_ = 0;
 }
 
 TemplateBgEstFit::~TemplateBgEstFit()
 {
-  //std::cout << "<TemplateBgEstFit::~TemplateBgEstFit>:" << std::endl;
-
-  for ( std::vector<processEntryType*>::iterator it = processEntries_.begin();
+  std::cout << "<TemplateBgEstFit::~TemplateBgEstFit>:" << std::endl;
+  for ( processEntryMap::iterator it = processEntries_.begin();
 	it != processEntries_.end(); ++it ) {
-    delete (*it);
+    delete it->second;
   }
 
   delete dataEntry_;
 
-  delete x_;
-  delete model_;
+  for ( realVarMap::iterator it = x_.begin();
+	it != x_.end(); ++it ) {
+    delete it->second;
+  }
+
+  delete fitModel_;
   delete fitResult_;
 }
 
@@ -401,26 +1013,25 @@ TemplateBgEstFit::~TemplateBgEstFit()
 //-----------------------------------------------------------------------------------------------------------------------
 //
 
-void TemplateBgEstFit::buildModel()
+void TemplateBgEstFit::buildFitModel()
 {
-  std::string modelName = std::string("pdfModel");
-  std::string modelTitle = modelName;
-
-  TObjArray model_pdfCollection;
-  TObjArray model_normCollection;
-  for ( std::vector<processEntryType*>::iterator processEntry = processEntries_.begin();
+  std::string fitModelName = "fitModel";
+  
+  TObjArray fitModel_pdfCollection;
+  TObjArray fitModel_normCollection;
+  for ( processEntryMap::iterator processEntry = processEntries_.begin();
 	processEntry != processEntries_.end(); ++processEntry ) {
-    model_pdfCollection.Add((*processEntry)->pdf_);
-    model_normCollection.Add((*processEntry)->norm_);
+    fitModel_pdfCollection.Add(processEntry->second->pdf_);
+    fitModel_normCollection.Add(processEntry->second->norm_);
   }
 
-  std::string model_pdfArgName = std::string("pdfModel").append("_pdfArgs");
-  RooArgList model_pdfArgs(model_pdfCollection, model_pdfArgName.data());
-  std::string model_normArgName = std::string("pdfModel").append("_normArgs");
-  RooArgList model_normArgs(model_normCollection, model_normArgName.data());
+  std::string fitModel_pdfArgName = std::string("fitModel").append("_pdfArgs");
+  RooArgList fitModel_pdfArgs(fitModel_pdfCollection, fitModel_pdfArgName.data());
+  std::string fitModel_normArgName = std::string("fitModel").append("_normArgs");
+  RooArgList fitModel_normArgs(fitModel_normCollection, fitModel_normArgName.data());
 
-  //std::cout << "--> creating RooAddPdf with name = " << modelName << std::endl;
-  model_ = new RooAddPdf(modelName.data(), modelTitle.data(), model_pdfArgs, model_normArgs);
+  //std::cout << "--> creating RooAddPdf with name = " << fitModelName << std::endl;
+  fitModel_ = new RooAddPdf(fitModelName.data(), fitModelName.data(), fitModel_pdfArgs, fitModel_normArgs);
 }
 
 //
@@ -431,20 +1042,6 @@ void TemplateBgEstFit::endJob()
 {
   std::cout << "<TemplateBgEstFit::endJob>:" << std::endl;
 
-//--- check that configuration parameters contain no errors
-  for ( std::vector<processEntryType*>::iterator processEntry = processEntries_.begin();
-	processEntry != processEntries_.end(); ++processEntry ) {
-    if ( (*processEntry)->cfgError_ ) cfgError_ = 1;
-  }
-
-  if ( dataEntry_->cfgError_ ) cfgError_ = 1;
-  
-  if ( cfgError_ ) {
-    edm::LogError ("TemplateBgEstFit::endJob") << " Error in Configuration ParameterSet" 
-					       << " --> histogram will NOT be fitted !!";
-    return;
-  }
-
 //--- check that DQMStore service is available
   if ( !edm::Service<DQMStore>().isAvailable() ) {
     edm::LogError ("TemplateBgEstFit::endJob") << " Failed to access dqmStore" 
@@ -452,52 +1049,62 @@ void TemplateBgEstFit::endJob()
     return;
   }
 
-  DQMStore& dqmStore = (*edm::Service<DQMStore>());
-
+  //DQMStore& dqmStore = (*edm::Service<DQMStore>());
   //dqmStore.showDirStructure();
-  
-//--- configure RooFit structure
-  x_ = new RooRealVar("x", "x", xMin_, xMax_);
 
-  int error = 0;
-  for ( std::vector<processEntryType*>::iterator processEntry = processEntries_.begin();
+//--- check that configuration parameters contain no errors,
+//    retrieve MonitorElements from DQMStore
+//    and check that all DQM MonitorElements have successfully been retrieved
+  for ( processEntryMap::iterator processEntry = processEntries_.begin();
 	processEntry != processEntries_.end(); ++processEntry ) {
-    (*processEntry)->initialize(dqmStore, x_, error);
+    processEntry->second->initialize();
+    if ( processEntry->second->error_ ) error_ = 1;
   }
 
-  dataEntry_->initialize(dqmStore, x_, error);
+  dataEntry_->initialize();
+  if ( dataEntry_->error_ ) error_ = 1;
   
-  if ( error ) {
-    edm::LogError ("TemplateBgEstFit::endJob") << " Failed to access dqmMonitorElement(s) --> histograms will NOT be fitted !!";
+  if ( error_ ) {
+    edm::LogError ("TemplateBgEstFit::endJob") << " Error in Configuration ParameterSet" 
+					       << " --> histogram will NOT be fitted !!";
     return;
   }
   
-//--- fit template shapes of different signal and background processes
-//    to distribution observed in (pseudo)data
-  buildModel();
+//--- configure RooFit structure;
+//    print-out structure once configuration finished
+  buildFitModel();
 
   std::cout << ">>> RootFit model used for generalized Matrix method Fit <<<" << std::endl;
-  model_->printCompactTree();
-
-  std::cout << ">>> RootFit Variables <<<" << std::endl;
-  model_->getVariables()->Print("v");
+  fitModel_->printCompactTree();
 
   std::cout << ">>> RootFit Parameters <<<" << std::endl;
-  model_->getParameters(dataEntry_->histogram_)->Print("v");
+  for ( vstring::const_iterator varName = varNames_.begin();
+	varName != varNames_.end(); ++varName ) {
+    std::cout << "for Variable = " << (*varName) << ":" << std::endl;
+    fitModel_->getParameters(dataEntry_->dataEntries1d_[*varName]->dataHist_)->Print("v");
+  }
 
   std::cout << ">>> RootFit Observables <<<" << std::endl;
-  model_->getObservables(dataEntry_->histogram_)->Print("v");
+  for ( vstring::const_iterator varName = varNames_.begin();
+	varName != varNames_.end(); ++varName ) {
+    std::cout << "for Variable = " << (*varName) << ":" << std::endl;
+    fitModel_->getObservables(dataEntry_->dataEntries1d_[*varName]->dataHist_)->Print("v");
+  }
 
-//--- NOTE: RooFit::Warnings not implemented in RooFit version 
+//--- fit template shapes of different signal and background processes
+//    to distribution observed in (pseudo)data
+//
+//    NOTE: RooFit::Warnings not implemented in RooFit version 
 //          included in ROOT 5.18/00a linked against CMSSW_2_2_13
-  fitResult_ = model_->fitTo(*dataEntry_->histogram_, RooFit::Extended(), RooFit::Save(true), 
-			     RooFit::PrintLevel(printLevel_) /* , RooFit::Warnings(printWarnings_) */ );
+//
+  fitResult_ = fitModel_->fitTo(*dataEntry_->fitData_, RooFit::Extended(), RooFit::Save(true), 
+				RooFit::PrintLevel(printLevel_) /* , RooFit::Warnings(printWarnings_) */ );
   assert(fitResult_ != NULL);
 
 //--- print-out fit results
   std::cout << ">>> Fit Results <<<" << std::endl;
   std::cout << " fitStatus = " << fitResult_->status() << std::endl;
-  std::cout << " chi2red = " << compChi2red() << std::endl;
+  std::cout << " Chi2red = " << compChi2red() << std::endl;
   print(std::cout);
 
 //--- produce plot of different signal and background processes
@@ -522,21 +1129,33 @@ void TemplateBgEstFit::endJob()
   bool totErrPrintWarnings = (statErrPrintWarnings_ && sysErrPrintWarnings_);
   estimateUncertainties(true, sysErrNumStatSamplings_, true, sysErrNumSysSamplings_, chi2redMax,
 			"estTotUncertainties", totErrPrintLevel, totErrPrintWarnings);
-
+ 
   std::cout << "done." << std::endl;
 }
 
 void TemplateBgEstFit::print(std::ostream& stream)
 {
   stream << "Fit Parameter:" << std::endl;
-  for ( std::vector<processEntryType*>::iterator processEntry = processEntries_.begin();
+  for ( processEntryMap::iterator processEntry = processEntries_.begin();
 	processEntry != processEntries_.end(); ++processEntry ) {
-    stream << " " << (*processEntry)->processName_ << ": normalization = " << (*processEntry)->norm_->getVal();
-    if ( (*processEntry)->norm_->hasAsymError() ) {
-      stream << " + " << (*processEntry)->norm_->getAsymErrorHi() << " - " << fabs((*processEntry)->norm_->getAsymErrorLo());
-    } else if ( (*processEntry)->norm_->hasError() ) {
-      stream << " +/- " << (*processEntry)->norm_->getError();
+    const std::string& processName = processEntry->first;
+    RooRealVar* processNorm = processEntry->second->norm_;
+
+//--- correct normalization factor determined by fit
+//    for events events passing final analysis selection criteria
+//    that are outside fitted region
+    double normCorrFactor = dataEntry_->normCorrFactor_;
+
+    stream << " " << processName << ": normalization = " << normCorrFactor*processNorm->getVal()
+	   << " (within fitted region = " << processNorm->getVal() << ")";
+
+    if ( processNorm->hasAsymError() ) {
+      stream << " + " << normCorrFactor*processNorm->getAsymErrorHi() << "(" << processNorm->getAsymErrorHi() << ")"
+	     << " - " << fabs(normCorrFactor*processNorm->getAsymErrorLo()) << "(" << fabs(processNorm->getAsymErrorLo()) << ")";
+    } else if ( processNorm->hasError() ) {
+      stream << " +/- " << normCorrFactor*processNorm->getError() << "(" << processNorm->getError() << ")";
     }
+
     stream << std::endl;
   }
 }
@@ -553,44 +1172,102 @@ void TemplateBgEstFit::makeControlPlots()
   TCanvas canvas("TemplateBgEstFit", "TemplateBgEstFit", defaultCanvasSizeX, defaultCanvasSizeY);
   canvas.SetFillColor(10);
 
-  RooPlot* plotFrame = x_->frame();
-  std::string plotTitle = std::string("TemplateBgEstFit - Results for fitting ").append(variableName_);
-  plotFrame->SetTitle(plotTitle.data());
-  dataEntry_->histogram_->plotOn(plotFrame, RooFit::MarkerColor(kBlack), RooFit::MarkerStyle(2));
-  for ( std::vector<processEntryType*>::const_iterator processEntry = processEntries_.begin();
-	processEntry != processEntries_.end(); ++processEntry ) {
-    std::string componentName = (*processEntry)->pdf_->GetName();
-    model_->plotOn(plotFrame, RooFit::Components(componentName.data()), 
-		   RooFit::LineColor((*processEntry)->lineColor_), 
-		   RooFit::LineStyle((*processEntry)->lineStyle_), 
-		   RooFit::LineWidth((*processEntry)->lineWidth_));
-  }
-  model_->plotOn(plotFrame, RooFit::LineColor(kBlack), RooFit::LineStyle(kSolid), RooFit::LineWidth(2));
-  plotFrame->SetXTitle(variableTitle_.data());
-  //plotFrame->SetTitleOffset(1.2, "X");
-  plotFrame->SetYTitle("");
-  //plotFrame->SetTitleOffset(1.2, "Y");
-  plotFrame->Draw();
-  
-  canvas.Update();
+  for ( vstring::const_iterator varName = varNames_.begin(); 
+	varName != varNames_.end(); ++varName ) {
+    TH1* fittedHistogram_sum = 0;
 
-  int errorFlag = 0;
-  std::string fileName = replace_string(controlPlotsFileName_, plotKeyword, std::string("normalization"), 1, 1, errorFlag);
-  if ( !errorFlag ) {
-    canvas.Print(fileName.data());
-  } else {
-    edm::LogError("TemplateBgEstFit::makeControlPlots") << " Failed to decode controlPlotsFileName = " << controlPlotsFileName_ 
-							<< " --> skipping !!";
-    return;
+    std::vector<TH1*> fittedHistograms;
+
+    TLegend legend(0.67, 0.63, 0.89, 0.89);
+    legend.SetBorderSize(0);
+    legend.SetFillColor(0);
+
+    for ( processEntryMap::iterator processEntry = processEntries_.begin();
+	  processEntry != processEntries_.end(); ++processEntry ) {
+      const std::string& processName = processEntry->first;
+      double processNorm = processEntry->second->norm_->getVal();
+
+//--- correct normalization factor determined by fit
+//    for events events passing final analysis selection criteria
+//    that are outside fitted region
+      double normCorrFactor = dataEntry_->normCorrFactor_;
+
+      TH1* processShapeHist = processEntry->second->processEntries1d_[*varName]->me_->getTH1();
+
+      std::string fittedHistogramName_process = std::string(processShapeHist->GetName()).append("_cloned");
+      TH1* fittedHistogram_process = (TH1*)processShapeHist->Clone(fittedHistogramName_process.data());
+
+      if ( getIntegral(fittedHistogram_process) > 0. ) {
+	fittedHistogram_process->Scale(normCorrFactor*processNorm/getIntegral(fittedHistogram_process));
+      }
+
+      fittedHistogram_process->SetLineColor(processEntry->second->lineColor_);
+      fittedHistogram_process->SetLineStyle(processEntry->second->lineStyle_);
+      fittedHistogram_process->SetLineWidth(processEntry->second->lineWidth_);
+      
+      fittedHistograms.push_back(fittedHistogram_process);
+
+      legend.AddEntry(fittedHistogram_process, processName.data(), "l");
+
+      if ( !fittedHistogram_sum ) {
+	std::string fittedHistogramName_sum = std::string(*varName).append("_histogram_fittedSum");
+	fittedHistogram_sum = (TH1*)fittedHistogram_process->Clone(fittedHistogramName_sum.data());
+	fittedHistogram_sum->SetStats(false);
+	fittedHistogram_sum->GetXaxis()->SetTitle(varName->data());
+	fittedHistogram_sum->SetLineColor(1); // black
+	fittedHistogram_sum->SetLineStyle(1); // solid
+	fittedHistogram_sum->SetLineWidth(fittedHistogram_process->GetLineWidth());
+      } else {
+	fittedHistogram_sum->Add(fittedHistogram_process);
+      }
+    }
+
+    TH1* dataHistogram = dataEntry_->dataEntries1d_[*varName]->me_->getTH1();
+    dataHistogram->SetMarkerStyle(8);
+    legend.AddEntry(dataHistogram, "final Evt. Sel.", "p");
+
+    double yMax = TMath::Max(fittedHistogram_sum->GetMaximum(),
+			     dataHistogram->GetMaximum());
+    fittedHistogram_sum->SetMaximum(1.3*yMax);
+    legend.AddEntry(fittedHistogram_sum, "fitted #Sigma", "l");
+
+    fittedHistogram_sum->Draw("hist");
+
+    for ( std::vector<TH1*>::const_iterator fittedHistogram_process = fittedHistograms.begin();
+	  fittedHistogram_process != fittedHistograms.end(); ++fittedHistogram_process ) {
+      (*fittedHistogram_process)->Draw("histsame");
+    }
+
+    dataHistogram->Draw("e1psame");
+
+    legend.Draw();
+  
+    canvas.Update();
+
+    int errorFlag = 0;
+    std::string fileName = replace_string(controlPlotsFileName_, plotKeyword, *varName, 1, 1, errorFlag);
+    if ( !errorFlag ) {
+      canvas.Print(fileName.data());
+    } else {
+      edm::LogError("TemplateBgEstFit::makeControlPlots") << " Failed to decode controlPlotsFileName = " << controlPlotsFileName_ 
+							  << " --> skipping !!";
+      return;
+    }
+
+    delete fittedHistogram_sum;
+    for ( std::vector<TH1*>::iterator it = fittedHistograms.begin();
+	  it != fittedHistograms.end(); ++it ) {
+      delete (*it);
+    }
   }
 
 //--- produce control plots of one and two sigma error contours 
-//    showing correlation of estimated normalization parameters 
+//    showing correlation of estimated normalization factors
   const RooArgList& fitParameter = fitResult_->floatParsFinal();
   int numFitParameter = fitParameter.getSize();
   TVectorD mean(numFitParameter);
   TMatrixD cov(numFitParameter, numFitParameter);
-  std::vector<std::string> labels(numFitParameter);
+  vstring labels(numFitParameter);
   for ( int iX = 0; iX < numFitParameter; ++iX ) {
     const RooAbsArg* paramX_arg = fitParameter.at(iX);
     const RooRealVar* paramX = dynamic_cast<const RooRealVar*>(paramX_arg);
@@ -615,67 +1292,58 @@ void TemplateBgEstFit::makeControlPlots()
   makeCovariancePlots(mean, cov, labels, controlPlotsFileName_, "");
 }
 
-double TemplateBgEstFit::compChi2red() const
+double TemplateBgEstFit::compChi2red() 
 {
   //std::cout << "<TemplateBgEstFit::compChi2red>:" << std::endl;
-/*
-//--- check that template histograms for all processes
-//    are properly normalized to unit area
-  for ( std::vector<processEntryType*>::const_iterator processEntry = processEntries_.begin();
-	processEntry != processEntries_.end(); ++processEntry ) {
-    TH1* histogramProcess = (*processEntry)->me_->getTH1();
-
-    std::cout << "processName = " << (*processEntry)->processName_ << ": integral = " << histogramProcess->Integral() << std::endl;
-  }
- */
+  
   double chi2 = 0.;
   int numDoF = 0;
-  TH1* histogramData = dataEntry_->me_->getTH1();
-  int numBins = histogramData->GetNbinsX();
-  for ( int iBin = 1; iBin < numBins; ++iBin ) {
-    double dataBinCenter = histogramData->GetBinCenter(iBin);
 
-//--- restrict computation of chi^2 to range included in fit
-    if ( !(dataBinCenter > xMin_ && dataBinCenter < xMax_) ) continue;
+  for ( vstring::const_iterator varName = varNames_.begin(); 
+	varName != varNames_.end(); ++varName ) {
+    const TH1* histogramData = dataEntry_->dataEntries1d_[*varName]->me_->getTH1();
+    const RooAbsBinning& xRange = x_[*varName]->getBinning();
+    double xMin = xRange.lowBound();
+    double xMax = xRange.highBound();
+    int numBins = histogramData->GetNbinsX();
+    for ( int iBin = 0; iBin < (numBins + 2); ++iBin ) {
+      double dataBinCenter = histogramData->GetBinCenter(iBin);
 
-    //std::cout << "iBin = " << iBin << ":" << std::endl;
+//--- restrict computation of chi^2 to region included in fit
+      if ( !(dataBinCenter > xMin && dataBinCenter < xMax) ) continue;
 
-    double dataBinContent = histogramData->GetBinContent(iBin);
-    //std::cout << " dataBinContent = " << dataBinContent << std::endl;
-    double dataBinError = histogramData->GetBinError(iBin);
-    //std::cout << " dataBinError = " << dataBinError << std::endl;
-
-    double fitBinContent = 0.;
-    double fitBinError2 = 0.;
-    for ( std::vector<processEntryType*>::const_iterator processEntry = processEntries_.begin();
+      double dataBinContent = histogramData->GetBinContent(iBin);
+      double dataBinError = histogramData->GetBinError(iBin);
+      
+      double fitBinContent = 0.;
+      double fitBinError2 = 0.;
+      for ( processEntryMap::iterator processEntry = processEntries_.begin();
 	    processEntry != processEntries_.end(); ++processEntry ) {
-      TH1* histogramProcess = (*processEntry)->me_->getTH1();
+	const TH1* histogramProcess = processEntry->second->processEntries1d_[*varName]->me_->getTH1();
 
-      double processBinContent = histogramProcess->GetBinContent(iBin);
-      double processBinError = histogramProcess->GetBinError(iBin);
+	double processBinContent = histogramProcess->GetBinContent(iBin);
+	double processBinError = histogramProcess->GetBinError(iBin);
 
-      //std::cout << " processName = " << (*processEntry)->processName_ << std::endl;
+	double processNorm = processEntry->second->norm_->getVal();
+	double processNormCorrFactor = processEntry->second->normCorrFactor_;
+	//std::cout << "processName = " << processEntry->first << ": processNormCorrFactor = " << processNormCorrFactor << std::endl;
 
-      double processNorm = (*processEntry)->norm_->getVal();
-      //std::cout << "  processNorm = " << processNorm << std::endl;
+	double processBinContent_scaled = processNormCorrFactor*processNorm*processBinContent;
+	double processBinError_scaled = processNormCorrFactor*processNorm*processBinError;
 
-      double processBinContent_scaled = processNorm*processBinContent;
-      //std::cout << "  processBinContent_scaled = " << processBinContent_scaled << std::endl;
-      double processBinError_scaled = processNorm*processBinError;
-      //std::cout << "  processBinError_scaled = " << processBinError_scaled << std::endl;
+	fitBinContent += processBinContent_scaled;
+	fitBinError2 += processBinError_scaled*processBinError_scaled;
+      }
+      
+      //std::cout << "iBin = " << iBin << ": dataBinContent = " << dataBinContent << ", fitBinContent = " << fitBinContent << std::endl;
 
-      fitBinContent += processBinContent_scaled;
-      fitBinError2 += processBinError_scaled*processBinError_scaled;
-    }
-
-    double diffBinContent2 = (dataBinContent - fitBinContent)*(dataBinContent - fitBinContent);
-    //std::cout << " diffBinContent2 = " << diffBinContent2 << std::endl;
-    double diffBinError2 = fitBinError2 + dataBinError*dataBinError;
-    //std::cout << " diffBinError2 = " << diffBinError2 << std::endl;
-
-    if ( diffBinError2 > 0. ) {
-      chi2 += (diffBinContent2/diffBinError2);
-      ++numDoF;
+      double diffBinContent2 = (dataBinContent - fitBinContent)*(dataBinContent - fitBinContent);
+      double diffBinError2 = fitBinError2 + dataBinError*dataBinError;
+      
+      if ( diffBinError2 > 0. ) {
+	chi2 += (diffBinContent2/diffBinError2);
+	++numDoF;
+      }
     }
   }
 
@@ -709,38 +1377,37 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
   for ( int iRndStat = 0; iRndStat < numStatSamplings; ++iRndStat ) {
     for ( int iRndSys = 0; iRndSys < numSysSamplings; ++iRndSys ) {
 
-      //std::cout << "iRndStat = " << iRndStat << ", iRndSys = " << iRndSys << ":" << std::endl;
+      std::cout << "<TemplateBgEstFit::estimateUncertainties>: iRndStat = " << iRndStat << ", iRndSys = " << iRndSys << std::endl;
 
-//--- fluctuate distribution observed in (pseudo)data
+//--- fluctuate distributions observed in (pseudo)data
       dataEntry_->fluctuate(true, false);
 
 //--- fluctuate template histograms fitted to the (pseudo)data  
-      for ( std::vector<processEntryType*>::iterator processEntry = processEntries_.begin();
+      for ( processEntryMap::iterator processEntry = processEntries_.begin();
 	    processEntry != processEntries_.end(); ++processEntry ) {
-	(*processEntry)->fluctuate(fluctStat, fluctSys);
+	processEntry->second->fluctuate(fluctStat, fluctSys);
       }
 
-      delete model_;
-      buildModel();
+      delete fitModel_;
+      buildFitModel();
+      delete dataEntry_->fitData_;
+      dataEntry_->buildFitData();
 
       delete fitResult_;
-      fitResult_ = model_->fitTo(*dataEntry_->histogram_, RooFit::Extended(), RooFit::Save(true), 
-				 RooFit::PrintLevel(printLevel) /* , RooFit::Warnings(printWarnings) */ );
+      fitResult_ = fitModel_->fitTo(*dataEntry_->fitData_, RooFit::Extended(), RooFit::Save(true), 
+				    RooFit::PrintLevel(printLevel) /* , RooFit::Warnings(printWarnings) */ );
 
       ++numTotFits;
 
       for ( int iProcess = 0; iProcess < numProcesses; ++iProcess ) {
-	fitValues(iProcess) = processEntries_[iProcess]->norm_->getVal();
-	//std::cout << " fitValue(iProcess = " << iProcess << ", processName = " << processEntries_[iProcess]->processName_ << ")"
+	const std::string& processName = processNames_[iProcess];
+	fitValues(iProcess) = processEntries_[processName]->norm_->getVal();
+	//std::cout << " fitValue(iProcess = " << iProcess << ", processName = " << processName << ")"
 	//	    << " = " << fitValues(iProcess) << std::endl;
       }
 
       int fitStatus = fitResult_->status();
-      //std::cout << " fitStatus = " << fitStatus << std::endl;
-
       double chi2red = compChi2red();
-      //std::cout << " chi2red = " << chi2red << std::endl;
-
       if ( !(fitStatus == fitStatus_converged && chi2red < chi2redMax) ) continue;
 
       mean.update(fitValues);
@@ -843,10 +1510,10 @@ void drawErrorEllipse(double x0, double y0, double Sxx, double Sxy, double Syy,
 
 //--- create dummy histogram  
 //    defining region to be plotted
-  double minX = x0 - 2.2*TMath::Abs(cosAlpha*sigmaX_transformed + sinAlpha*sigmaY_transformed);
-  double maxX = x0 + 2.8*TMath::Abs(cosAlpha*sigmaX_transformed + sinAlpha*sigmaY_transformed);
-  double minY = y0 - 2.2*TMath::Abs(sinAlpha*sigmaX_transformed + cosAlpha*sigmaY_transformed);
-  double maxY = y0 + 2.8*TMath::Abs(sinAlpha*sigmaX_transformed + cosAlpha*sigmaY_transformed);
+  double minX = x0 - 2.2*TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed);
+  double maxX = x0 + 2.8*TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed);
+  double minY = y0 - 2.2*TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed);
+  double maxY = y0 + 2.8*TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed);
 
   if ( TMath::Abs(maxX - minX) < epsilon || 
        TMath::Abs(maxY - minY) < epsilon ) {
@@ -884,7 +1551,7 @@ void drawErrorEllipse(double x0, double y0, double Sxx, double Sxy, double Syy,
   canvas.Print(fileName);
 }
 
-void makeCovariancePlots(TVectorD mean, TMatrixD cov, const std::vector<std::string>& labels, 
+void makeCovariancePlots(TVectorD mean, TMatrixD cov, const vstring& labels, 
 			 const std::string& controlPlotsFileName, const char* type)
 {
   int numFitParameter = mean.GetNoElements();
