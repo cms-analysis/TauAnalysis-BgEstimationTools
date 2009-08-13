@@ -76,7 +76,7 @@ print("bgEstEventSelection_QCD = " + bgEstEventSelection_QCD)
 
 dqmDirectory_Ztautau_finalEvtSel = 'Ztautau/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/'
 dqmDirectory_Ztautau_ZmumuTemplate = 'Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/'
-dqmDirectory_Ztautau_systematics = processName + '/tautau/systematics/'
+dqmDirectory_Ztautau_systematics = processName + '/Ztautau/systematics/'
 
 dqmDirectory_Zmumu_finalEvtSel = 'ZmumuPlusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/'
 dqmDirectory_Zmumu_bgEstEnriched_pure = processName + '/Zmumu/pure/'
@@ -653,8 +653,8 @@ process.loadAllHistZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
 )
 
 process.p = cms.Path(
-    #process.prodAllHistZtoMuTau
-    process.loadAllHistZtoMuTau
+    process.prodAllHistZtoMuTau
+    #process.loadAllHistZtoMuTau
    + process.fitZtoMuTau
 )
 
