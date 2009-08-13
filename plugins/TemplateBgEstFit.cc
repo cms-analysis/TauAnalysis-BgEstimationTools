@@ -24,8 +24,6 @@
 #include <TArrayD.h>
 #include <TLegend.h>
 #include <TRandom3.h>
-#include <TVectorD.h>
-#include <TMatrixD.h>
 
 #include <RooAddPdf.h>
 #include <RooProdPdf.h>
@@ -61,7 +59,7 @@ typedef std::vector<std::string> vstring;
 typedef std::pair<double, double> double_pair;
 
 void drawErrorEllipse(double, double, double, double, double, const char*, const char*, const char*);
-void makeCovariancePlots(TVectorD, TMatrixD, const vstring&, const std::string&, const char*);
+void makeCovariancePlots(TVectorD, TVectorD, TMatrixD, const vstring&, const std::string&, const char*);
 
 double getSampledPull(double pullRMS, double pullMin, double pullMax)
 {
@@ -79,36 +77,44 @@ double getSampledPull(double pullRMS, double pullMin, double pullMax)
   return fluctPull;
 }
 
-void sampleHistogram_stat(TH1* origHistogram, TH1* fluctHistogram)
+void sampleHistogram_stat(const TH1* origHistogram, TH1* fluctHistogram)
 {
 //--- fluctuate bin-contents by Gaussian distribution
 //    with zero mean and standard deviation given by bin-errors
 
-  int numBins = origHistogram->GetMaximumBin() + 1;
-  for ( int iBin = 0; iBin < numBins; ++iBin ) {
+  //std::cout << "<sampleHistogram_stat>:" << std::endl;
+
+  int numBins = origHistogram->GetNbinsX();
+  for ( int iBin = 0; iBin < (numBins + 2); ++iBin ) {
     double origBinContent = origHistogram->GetBinContent(iBin);
     double origBinError = origHistogram->GetBinError(iBin);
 
     double fluctPull = getSampledPull(1., -5., +5.);
     double fluctBinContent = origBinContent + fluctPull*origBinError;
+
+    //std::cout << "iBin = " << iBin << ": origBinContent = " << origBinContent << ","
+    //          << " fluctPull = " << fluctPull
+    //	        << " --> fluctBinContent = " << fluctBinContent << std::endl;
     
     fluctHistogram->SetBinContent(iBin, fluctBinContent);
     fluctHistogram->SetBinError(iBin, origBinError);
   }
 }
 
-void sampleHistogram_sys(TH1* fluctHistogram, TH1* sysHistogram, 
+void sampleHistogram_sys(TH1* fluctHistogram, const TH1* sysHistogram, 
 			 double pullRMS, double pullMin, double pullMax, 
 			 int fluctMode)
 {
+  //std::cout << "<sampleHistogram_sys>:" << std::endl;
+
   assert(fluctMode == kCoherent || fluctMode == kIncoherent);
 
 //--- fluctuate bin-contents by Gaussian distribution
 //    with zero mean and standard deviation given by bin-errors
   double sampledPull = getSampledPull(pullRMS, pullMin, pullMax);
 
-  int numBins = fluctHistogram->GetMaximumBin() + 1;
-  for ( int iBin = 0; iBin < numBins; ++iBin ) {
+  int numBins = fluctHistogram->GetNbinsX();
+  for ( int iBin = 0; iBin < (numBins + 2); ++iBin ) {
     double fluctBinContent = fluctHistogram->GetBinContent(iBin);
     double fluctBinError = fluctHistogram->GetBinError(iBin);
     
@@ -116,7 +122,11 @@ void sampleHistogram_sys(TH1* fluctHistogram, TH1* sysHistogram,
     double sysBinError = sysHistogram->GetBinError(iBin);
 
     double modBinContent = fluctBinContent + sampledPull*sysBinContent;
-    double modBinError = TMath::Sqrt(fluctBinError*fluctBinError + sysBinError*sysBinError);
+    double modBinError = TMath::Sqrt(fluctBinError*fluctBinError + (sampledPull*sysBinError)*(sampledPull*sysBinError));
+
+    //std::cout << "iBin = " << iBin << ": fluctBinContent = " << fluctBinContent << ","
+    //	        << " sysBinContent = " << sysBinContent << ", sampledPull = " << sampledPull
+    //	        << " --> modBinContent = " << modBinContent << std::endl;
 
     fluctHistogram->SetBinContent(iBin, modBinContent);
     fluctHistogram->SetBinError(iBin, modBinError);
@@ -180,8 +190,8 @@ double getIntegral(const TH1* histogram, double xMin, double xMax)
 
 void makeHistogramPositive(TH1* fluctHistogram)
 {
-  int numBins = fluctHistogram->GetMaximumBin() + 1;
-  for ( int iBin = 0; iBin < numBins; ++iBin ) {
+  int numBins = fluctHistogram->GetNbinsX();
+  for ( int iBin = 0; iBin < (numBins + 2); ++iBin ) {
     if ( fluctHistogram->GetBinContent(iBin) < 0. ) fluctHistogram->SetBinContent(iBin, 0.);
   }
 }
@@ -197,7 +207,7 @@ TH1* makeConcatenatedHistogram(const std::string& concatHistogramName, const std
 
   for ( unsigned iHistogram = 0; iHistogram < numHistograms; ++iHistogram ) {
     const TH1* histogram_i = histograms[iHistogram];
-    numBinsTot += (histogram_i->GetMaximumBin() + 1);
+    numBinsTot += (histogram_i->GetNbinsX() + 2);
   }
 
   TH1* concatHistogram = new TH1F(concatHistogramName.data(), concatHistogramName.data(), numBinsTot, -0.5, numBinsTot - 0.5);
@@ -207,8 +217,8 @@ TH1* makeConcatenatedHistogram(const std::string& concatHistogramName, const std
   for ( unsigned iHistogram = 0; iHistogram < numHistograms; ++iHistogram ) {
     const TH1* histogram_i = histograms[iHistogram];
 
-    int numBins_i = histogram_i->GetMaximumBin() + 1;
-    for ( int iBin_i = 0; iBin_i < numBins_i; ++iBin_i ) {
+    int numBins_i = histogram_i->GetNbinsX();
+    for ( int iBin_i = 0; iBin_i < (numBins_i + 2); ++iBin_i ) {
       double binCenter_i = histogram_i->GetBinCenter(iBin_i);
 
       double xMin = xRanges[iHistogram].first;
@@ -243,6 +253,33 @@ TH1* makeConcatenatedHistogram(const std::string& concatHistogramName, const std
   }
 
   return concatHistogram;
+}
+
+void unpackFitResult(const RooFitResult* fitResult, TVectorD& mean, TMatrixD& cov)
+{
+  const RooArgList& fitParameter = fitResult->floatParsFinal();
+  int numFitParameter = fitParameter.getSize();
+  mean.ResizeTo(numFitParameter);
+  cov.ResizeTo(numFitParameter, numFitParameter);
+  for ( int iX = 0; iX < numFitParameter; ++iX ) {
+    const RooAbsArg* paramX_arg = fitParameter.at(iX);
+    const RooRealVar* paramX = dynamic_cast<const RooRealVar*>(paramX_arg);
+    assert(paramX != NULL);
+    mean(iX) = paramX->getVal();
+    double sigmaX = paramX->getError();    
+    for ( int iY = 0; iY < numFitParameter; ++iY ) {
+      if ( iY == iX ) {
+	cov(iX, iX) = sigmaX*sigmaX;
+      } else {
+	const RooAbsArg* paramY_arg = fitParameter.at(iY);
+	const RooRealVar* paramY = dynamic_cast<const RooRealVar*>(paramY_arg);
+	assert(paramY != NULL);
+	double sigmaY = paramY->getError();
+	double corrXY = fitResult->correlation(*paramX_arg, *paramY_arg);
+	cov(iX, iY) = sigmaX*sigmaY*corrXY;
+      }
+    }
+  }
 }
 
 //
@@ -306,10 +343,10 @@ void TemplateBgEstFit::dataDistr1dType::initialize()
     }
   }
 
-  dataHistName_ = std::string(processName_).append("_").append(varName_).append("_rooDataHist");
-  dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, histogram_);
-  
   fluctHistogram_ = (TH1*)histogram_->Clone();
+
+  dataHistName_ = std::string(processName_).append("_").append(varName_).append("_rooDataHist");
+  dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, fluctHistogram_);
 }
 
 void TemplateBgEstFit::dataDistr1dType::fluctuate(bool, bool)
@@ -593,15 +630,6 @@ void TemplateBgEstFit::modelTemplate1dType::initialize()
 
   if ( error_ ) return;
  
-//--- renormalize template histogram to unit area
-//    in case region excluded from fit is cut
-/*
-  double integral = getIntegral(histogram_);
-  if ( integral > 0. ) {
-    std::cout << "--> scaling histogram by factor = " << (1./integral) << std::endl;
-    histogram_->Scale(1./integral);
-  }
- */
   pdf1dName_ = std::string(processName_).append("_").append(varName_).append("_").append("pdf");
   pdf1d_ = new RooHistPdf(pdf1dName_.data(), pdf1dName_.data(), *xRef_, *dataHist_);
 
@@ -631,8 +659,8 @@ void TemplateBgEstFit::modelTemplate1dType::fluctuate(bool fluctStat, bool fluct
   if ( fluctStat ) {
     sampleHistogram_stat(histogram_, fluctHistogram_);
   } else {
-    int numBins = histogram_->GetMaximumBin() + 1;
-    for ( int iBin = 0; iBin < numBins; ++iBin ) {
+    int numBins = histogram_->GetNbinsX();
+    for ( int iBin = 0; iBin < (numBins + 2); ++iBin ) {
       double binContent = histogram_->GetBinContent(iBin);
       double binError = histogram_->GetBinError(iBin);
 
@@ -1107,6 +1135,9 @@ void TemplateBgEstFit::endJob()
   std::cout << " Chi2red = " << compChi2red() << std::endl;
   print(std::cout);
 
+//--- save normalization factors determined and covariance matrix estimated by fit
+  unpackFitResult(fitResult_, fitResultMean_, fitResultCov_);
+
 //--- produce plot of different signal and background processes
 //    using scale factors determined by fit
 //    compared to distribution of (pseudo)data
@@ -1116,7 +1147,7 @@ void TemplateBgEstFit::endJob()
   std::cout << ">>> Statistical Uncertainties <<<" << std::endl;
   estimateUncertainties(true, statErrNumSamplings_, false, 1, statErrChi2redMax_, 
 			"estStatUncertainties", statErrPrintLevel_, statErrPrintWarnings_);
-
+ 
 //--- estimate systematic uncertainties
   std::cout << ">>> Systematic Uncertainties <<<" << std::endl;
   estimateUncertainties(false, sysErrNumStatSamplings_, true, sysErrNumSysSamplings_, sysErrChi2redMax_,
@@ -1129,7 +1160,7 @@ void TemplateBgEstFit::endJob()
   bool totErrPrintWarnings = (statErrPrintWarnings_ && sysErrPrintWarnings_);
   estimateUncertainties(true, sysErrNumStatSamplings_, true, sysErrNumSysSamplings_, chi2redMax,
 			"estTotUncertainties", totErrPrintLevel, totErrPrintWarnings);
- 
+  
   std::cout << "done." << std::endl;
 }
 
@@ -1265,31 +1296,13 @@ void TemplateBgEstFit::makeControlPlots()
 //    showing correlation of estimated normalization factors
   const RooArgList& fitParameter = fitResult_->floatParsFinal();
   int numFitParameter = fitParameter.getSize();
-  TVectorD mean(numFitParameter);
-  TMatrixD cov(numFitParameter, numFitParameter);
   vstring labels(numFitParameter);
   for ( int iX = 0; iX < numFitParameter; ++iX ) {
     const RooAbsArg* paramX_arg = fitParameter.at(iX);
-    const RooRealVar* paramX = dynamic_cast<const RooRealVar*>(paramX_arg);
-    assert(paramX != NULL);
-    mean(iX) = paramX->getVal();
-    double sigmaX = paramX->getError();    
-    for ( int iY = 0; iY < numFitParameter; ++iY ) {
-      if ( iY == iX ) {
-	cov(iX, iX) = sigmaX*sigmaX;
-      } else {
-	const RooAbsArg* paramY_arg = fitParameter.at(iY);
-	const RooRealVar* paramY = dynamic_cast<const RooRealVar*>(paramY_arg);
-	assert(paramY != NULL);
-	double sigmaY = paramY->getError();
-	double corrXY = fitResult_->correlation(*paramX_arg, *paramY_arg);
-	cov(iX, iY) = sigmaX*sigmaY*corrXY;
-      }
-    }
     labels[iX] = paramX_arg->GetName();
   }
 
-  makeCovariancePlots(mean, cov, labels, controlPlotsFileName_, "");
+  makeCovariancePlots(fitResultMean_, fitResultMean_, fitResultCov_, labels, controlPlotsFileName_, "");
 }
 
 double TemplateBgEstFit::compChi2red() 
@@ -1393,10 +1406,8 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
       delete dataEntry_->fitData_;
       dataEntry_->buildFitData();
 
-      delete fitResult_;
-      fitResult_ = fitModel_->fitTo(*dataEntry_->fitData_, RooFit::Extended(), RooFit::Save(true), 
-				    RooFit::PrintLevel(printLevel) /* , RooFit::Warnings(printWarnings) */ );
-
+      fitModel_->fitTo(*dataEntry_->fitData_, RooFit::Extended(),
+		       RooFit::PrintLevel(printLevel) /* , RooFit::Warnings(printWarnings) */ );
       ++numTotFits;
 
       for ( int iProcess = 0; iProcess < numProcesses; ++iProcess ) {
@@ -1406,9 +1417,9 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
 	//	    << " = " << fitValues(iProcess) << std::endl;
       }
 
-      int fitStatus = fitResult_->status();
       double chi2red = compChi2red();
-      if ( !(fitStatus == fitStatus_converged && chi2red < chi2redMax) ) continue;
+      //std::cout << "Chi2red = " << chi2red << std::endl;
+      if ( !(chi2red < chi2redMax) ) continue;
 
       mean.update(fitValues);
       cov.update(fitValues);
@@ -1425,31 +1436,20 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
   std::cout << "Covariance Matrix:" << std::endl;
   cov.print(std::cout, &processNames_);
   
-  if ( controlPlotsFileName_ != "" ) makeCovariancePlots(mean(), cov(), processNames_, controlPlotsFileName_, type);
+  if ( controlPlotsFileName_ != "" ) makeCovariancePlots(fitResultMean_, mean(), cov(), processNames_, controlPlotsFileName_, type);
 }
 
 //
 //-----------------------------------------------------------------------------------------------------------------------
 //
 
-void drawErrorEllipse(double x0, double y0, double Sxx, double Sxy, double Syy, 
+void drawErrorEllipse(double x0, double y0, double errX0, double errY0, double Sxx, double Sxy, double Syy, 
 		      const char* labelX, const char* labelY, const char* fileName)
 {
-  //std::cout << "<drawErrorEllipse>:" << std::endl;
-  //std::cout << " x0 = " << x0 << std::endl;
-  //std::cout << " y0 = " << y0 << std::endl;
-  //if ( Sxy >  0. ) std::cout << "variables are correlated" << std::endl;
-  //if ( Sxy == 0. ) std::cout << "variables are uncorrelated" << std::endl;
-  //if ( Sxy <  0. ) std::cout << "variables are anti-correlated" << std::endl;
-  //std::cout << " -2*Sxy = " << -2*Sxy << std::endl;
-  //std::cout << " Sxx - Syy = " << Sxx - Syy << std::endl;
-  //std::cout << " labelX = " << labelX << std::endl;
-  //std::cout << " labelY = " << labelY << std::endl;
-  //std::cout << " fileName = " << fileName << std::endl;
-
-//--- draw one and two sigma error contours 
-//    centered at fit results (x0,y0) and with (correlated) uncertainties 
-//    estimated by elements Sxx, Sxy, Syy of covariance matrix passed as function arguments
+//--- draw best fit estimate (x0,y0) 
+//    plus one and two sigma error contours centered at (errX0,errY0) 
+//    and with (correlated) uncertainties estimated by elements Sxx, Sxy, Syy of covariance matrix 
+//    passed as function arguments
 //    (note that since the covariance matrix is symmetric, 
 //     there is no need to pass element Syx of the covariance matrix)
 
@@ -1488,11 +1488,11 @@ void drawErrorEllipse(double x0, double y0, double Sxx, double Sxy, double Syy,
     sigmaY_transformed = TMath::Sqrt(TMath::Max(Suu, Svv));
   }
 
-  TEllipse oneSigmaErrorEllipse(x0, y0, sigmaX_transformed*1., sigmaY_transformed*1., 0., 360., alpha*180./TMath::Pi()); 
+  TEllipse oneSigmaErrorEllipse(errX0, errY0, sigmaX_transformed*1., sigmaY_transformed*1., 0., 360., alpha*180./TMath::Pi()); 
   oneSigmaErrorEllipse.SetFillColor(5);
   oneSigmaErrorEllipse.SetLineColor(44);
   oneSigmaErrorEllipse.SetLineWidth(1);
-  TEllipse twoSigmaErrorEllipse(x0, y0, sigmaX_transformed*2., sigmaY_transformed*2., 0., 360., alpha*180./TMath::Pi()); 
+  TEllipse twoSigmaErrorEllipse(errX0, errY0, sigmaX_transformed*2., sigmaY_transformed*2., 0., 360., alpha*180./TMath::Pi()); 
   TSeqCollection* colors = gROOT->GetListOfColors();
   if ( colors && colors->At(42) ) {
     TColor* orange = (TColor*)colors->At(42);
@@ -1510,11 +1510,15 @@ void drawErrorEllipse(double x0, double y0, double Sxx, double Sxy, double Syy,
 
 //--- create dummy histogram  
 //    defining region to be plotted
-  double minX = x0 - 2.2*TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed);
-  double maxX = x0 + 2.8*TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed);
-  double minY = y0 - 2.2*TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed);
-  double maxY = y0 + 2.8*TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed);
-
+  double minX = TMath::Min(errX0 - 2.2*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)),
+			   x0 - 0.2*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)));
+  double maxX = TMath::Max(errX0 + 2.8*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)),
+			   x0 + 0.2*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)));
+  double minY = TMath::Min(errY0 - 2.2*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)),
+			   y0 - 0.2*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)));
+  double maxY = TMath::Max(errY0 + 2.8*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)),
+			   y0 + 0.2*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)));
+			   
   if ( TMath::Abs(maxX - minX) < epsilon || 
        TMath::Abs(maxY - minY) < epsilon ) {
     if ( TMath::Abs(maxX - minX) < epsilon ) edm::LogWarning ("drawErrorEllipse") << " Invalid x-range: minX = maxX = " << minX;
@@ -1551,29 +1555,32 @@ void drawErrorEllipse(double x0, double y0, double Sxx, double Sxy, double Syy,
   canvas.Print(fileName);
 }
 
-void makeCovariancePlots(TVectorD mean, TMatrixD cov, const vstring& labels, 
+void makeCovariancePlots(TVectorD estimate, TVectorD errMean, TMatrixD errCov, const vstring& labels, 
 			 const std::string& controlPlotsFileName, const char* type)
 {
-  int numFitParameter = mean.GetNoElements();
-  assert(cov.GetNrows() == numFitParameter && cov.GetNcols() == numFitParameter);
+  int numFitParameter = estimate.GetNoElements();
+  assert(errMean.GetNoElements() == numFitParameter);
+  assert(errCov.GetNrows() == numFitParameter && errCov.GetNcols() == numFitParameter);
   for ( int iX = 0; iX < numFitParameter; ++iX ) {
-    double x0 = mean(iX);
-    double Sxx = cov(iX, iX);
+    double x0 = estimate(iX);
+    double errX0 = errMean(iX);
+    double Sxx = errCov(iX, iX);
     const char* labelX = labels[iX].data();
 
     for ( int iY = 0; iY < iX; ++iY ) {
-      double y0 = mean(iY);
-      double Syy = cov(iY, iY);
+      double y0 = estimate(iY);
+      double errY0 = errMean(iY);
+      double Syy = errCov(iY, iY);
       const char* labelY = labels[iY].data();
 
-      double Sxy = cov(iX, iY);
+      double Sxy = errCov(iX, iY);
       std::string fileNameParam = std::string("corr_").append(labelX).append("_vs_").append(labelY);
       if ( type != "" ) fileNameParam.append("_").append(type);
       
       int errorFlag = 0;
       std::string fileName = replace_string(controlPlotsFileName, plotKeyword, fileNameParam, 1, 1, errorFlag);
       if ( !errorFlag ) {
-	drawErrorEllipse(x0, y0, Sxx, Sxy, Syy, labelX, labelY, fileName.data());
+	drawErrorEllipse(x0, y0, errX0, errY0, Sxx, Sxy, Syy, labelX, labelY, fileName.data());
       } else {
 	edm::LogError("drawErrorEllipses") << " Failed to decode controlPlotsFileName = " << controlPlotsFileName 
 					   << " --> skipping !!";
