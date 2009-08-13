@@ -26,9 +26,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.4 $
+ * \version $Revision: 1.5 $
  *
- * $Id: TemplateBgEstFit.h,v 1.4 2009/08/07 11:53:32 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.5 2009/08/12 14:34:12 veelken Exp $
  *
  */
 
@@ -39,6 +39,9 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "DQMServices/Core/interface/MonitorElement.h"
+
+#include <TVectorD.h>
+#include <TMatrixD.h>
 
 #include <RooDataHist.h>
 #include <RooHistPdf.h>
@@ -192,6 +195,8 @@ class TemplateBgEstFit : public edm::EDAnalyzer
 
   RooAbsPdf* fitModel_;
   RooFitResult* fitResult_;
+  TVectorD fitResultMean_;
+  TMatrixD fitResultCov_;
 
   int error_;
 };
