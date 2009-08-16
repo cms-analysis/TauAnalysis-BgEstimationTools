@@ -78,7 +78,7 @@ void BinGridHistManager::bookHistograms()
   }
 }
 
-void BinGridHistManager::fillHistograms(const edm::Event& evt, const edm::EventSetup& es)
+void BinGridHistManager::fillHistograms(const edm::Event& evt, const edm::EventSetup& es, double evtWeight)
 
 {  
   //std::cout << "<BinGridHistManager::fillHistograms>:" << std::endl; 
@@ -108,7 +108,7 @@ void BinGridHistManager::fillHistograms(const edm::Event& evt, const edm::EventS
 
   for ( vHistManager::iterator histManager = histManagerList->second.begin();
 	histManager != histManagerList->second.end(); ++histManager ) {
-    (*histManager)->analyze(evt, es);
+    (*histManager)->analyze(evt, es, evtWeight);
   }
 }
 

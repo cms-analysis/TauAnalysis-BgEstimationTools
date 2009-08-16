@@ -35,9 +35,9 @@ BinnerBase::~BinnerBase()
 //-----------------------------------------------------------------------------------------------------------------------
 //
 
-void BinnerBase::analyze(const edm::Event& evt, const edm::EventSetup& es) 
+void BinnerBase::analyze(const edm::Event& evt, const edm::EventSetup& es, double evtWeight) 
 { 
-  bin(evt, es); 
+  bin(evt, es, evtWeight); 
 }
 
 void BinnerBase::endJob() 
@@ -53,7 +53,7 @@ void BinnerBase::endJob()
 //-----------------------------------------------------------------------------------------------------------------------
 //
 
-void BinnerBase::bin(const edm::Event& evt, const edm::EventSetup& es) 
+void BinnerBase::bin(const edm::Event& evt, const edm::EventSetup& es, double evtWeight) 
 {
   if ( !binning_ ) {
     edm::LogError ("BinnerBase::bin") << " No binning object defined --> skipping !!";
@@ -62,7 +62,7 @@ void BinnerBase::bin(const edm::Event& evt, const edm::EventSetup& es)
 
   std::vector<double> x = (*objValExtractor_)(evt);
 
-  binning_->bin(x);
+  binning_->bin(x, evtWeight);
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

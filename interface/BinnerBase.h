@@ -10,9 +10,9 @@
  * \author Christian Veelken, UC Davis
  *         (inspired by code written for H1 by Paul Laycock, University of Liverpool)
  *
- * \version $Revision: 1.2 $
+ * \version $Revision: 1.3 $
  *
- * $Id: BinnerBase.h,v 1.2 2009/06/17 12:39:10 veelken Exp $
+ * $Id: BinnerBase.h,v 1.3 2009/06/22 08:19:14 veelken Exp $
  *
  */
 
@@ -37,11 +37,11 @@ class BinnerBase : public AnalyzerPluginBase
   const BinningBase* getBinning() const { return binning_; }
 
   virtual void beginJob() {}
-  virtual void analyze(const edm::Event&, const edm::EventSetup&);
+  virtual void analyze(const edm::Event&, const edm::EventSetup&, double);
   virtual void endJob();
 
  protected:
-  virtual void bin(const edm::Event&, const edm::EventSetup&);
+  virtual void bin(const edm::Event&, const edm::EventSetup&, double);
 
   ObjValVectorExtractorBase* objValExtractor_;
 
