@@ -1396,9 +1396,14 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
       dataEntry_->fluctuate(true, false);
 
 //--- fluctuate template histograms fitted to the (pseudo)data  
+//
+//    CV: treat statistical uncertainties on template histograms
+//        as systematic uncertainties of background estimation
+//
       for ( processEntryMap::iterator processEntry = processEntries_.begin();
-	    processEntry != processEntries_.end(); ++processEntry ) {
-	processEntry->second->fluctuate(fluctStat, fluctSys);
+            processEntry != processEntries_.end(); ++processEntry ) {
+        //processEntry->second->fluctuate(fluctStat, fluctSys);
+	processEntry->second->fluctuate(fluctSys, fluctSys);
       }
 
       delete fitModel_;
