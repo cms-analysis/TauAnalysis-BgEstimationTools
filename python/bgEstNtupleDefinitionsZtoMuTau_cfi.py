@@ -61,7 +61,9 @@ fileNames_qcdSum = cms.vstring(
     #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_InclusivePPmuX.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part01.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part02.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part03.root'
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part03.root',
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part04.root',
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part05.root'
 )
 
 #--------------------------------------------------------------------------------

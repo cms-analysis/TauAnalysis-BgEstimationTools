@@ -41,13 +41,13 @@ submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample =
               replFunction = makeReplacementsBgEstSkim, replacements = "maxEvents = -1; applyFactorization = true",
               job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
 
-for i in range(35):
+for i in range(26):
     submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "PPmuXptGt20_part%(i)02d" % {"i" : (i + 1)},
                   replFunction = makeReplacementsBgEstSkim, replacements = "maxEvents = -1; applyFactorization = true",
                   job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
 
 # W/Z + jets jobs
-for i in range(6):
+for i in range(11):
     submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "WplusJets_part%(i)02d" % {"i" : (i + 1)},
                   replFunction = makeReplacementsBgEstSkim, replacements = "maxEvents = -1; applyFactorization = true",
                   job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
