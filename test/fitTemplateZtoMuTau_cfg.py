@@ -400,8 +400,8 @@ process.plotTemplateHistZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
     ),
 
     drawOptionEntries = cms.PSet(
-        bgEstData = copy.deepcopy(drawOption_black_points),
-        bgEstPure = copy.deepcopy(drawOption_darkBlue_eff),
+        bgEstData = copy.deepcopy(drawOption_darkBlue_eff),
+        bgEstPure = copy.deepcopy(drawOption_lightBlue_eff),
         finalEvtSel = copy.deepcopy(drawOption_red_eff)
     ),
 
