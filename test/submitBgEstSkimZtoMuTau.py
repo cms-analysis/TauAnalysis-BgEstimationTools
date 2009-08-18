@@ -41,7 +41,7 @@ submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample =
               replFunction = makeReplacementsBgEstSkim, replacements = "maxEvents = -1; applyFactorization = true",
               job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
 
-for i in range(26):
+for i in range(51):
     submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "PPmuXptGt20_part%(i)02d" % {"i" : (i + 1)},
                   replFunction = makeReplacementsBgEstSkim, replacements = "maxEvents = -1; applyFactorization = true",
                   job = "bgEstSkim", queue = "1nd", outputDirectory = outputDirectory)
