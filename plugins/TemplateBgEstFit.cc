@@ -10,6 +10,7 @@
 
 #include "TauAnalysis/BgEstimationTools/interface/histogramAuxFunctions.h"
 #include "TauAnalysis/BgEstimationTools/interface/BgEstMean.h"
+#include "TauAnalysis/BgEstimationTools/interface/BgEstMedian.h"
 #include "TauAnalysis/BgEstimationTools/interface/BgEstCovMatrix.h"
 
 #include <TCanvas.h>
@@ -1382,6 +1383,7 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
   int numProcesses = processEntries_.size();
   TVectorD fitValues(numProcesses);
   BgEstMean mean(numProcesses);
+  BgEstMedian median(numProcesses);
   BgEstCovMatrix cov(numProcesses);
 
   unsigned numTotFits = 0;
@@ -1427,6 +1429,7 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
       if ( !(chi2red < chi2redMax) ) continue;
 
       mean.update(fitValues);
+      median.update(fitValues);
       cov.update(fitValues);
 
       ++numGoodFits;
@@ -1438,10 +1441,15 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
 
   std::cout << "Mean:" << std::endl;
   mean.print(std::cout, &processNames_);
+  std::cout << "Median:" << std::endl;
+  median.print(std::cout, &processNames_);
   std::cout << "Covariance Matrix:" << std::endl;
   cov.print(std::cout, &processNames_);
   
-  if ( controlPlotsFileName_ != "" ) makeCovariancePlots(fitResultMean_, mean(), cov(), processNames_, controlPlotsFileName_, type);
+  if ( controlPlotsFileName_ != "" ) {
+    //makeCovariancePlots(fitResultMean_, median(), cov(), processNames_, controlPlotsFileName_, type);
+    makeCovariancePlots(fitResultMean_, fitResultMean_, cov(), processNames_, controlPlotsFileName_, type);
+  }
 }
 
 //
