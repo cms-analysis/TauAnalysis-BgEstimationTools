@@ -217,12 +217,18 @@ bgEstSampleFileNamesTTplusJets_part01  = cms.untracked.vstring(
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part02.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part03.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part04.root',
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part05.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part05.root'
+)
+
+bgEstSampleFileNamesTTplusJets_part02  = cms.untracked.vstring(
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part06.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part07.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part08.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part09.root',
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part10.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part10.root'
+)
+
+bgEstSampleFileNamesTTplusJets_part03  = cms.untracked.vstring(
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part11.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part12.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_TTplusJets_part13.root',

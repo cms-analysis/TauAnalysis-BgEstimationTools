@@ -70,7 +70,9 @@ fileNames_qcdSum = cms.vstring(
 
 # ttbar + jets sample
 fileNames_TTplusJets = cms.vstring(
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_TTplusJets.root'
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_TTplusJets_part01.root',
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_TTplusJets_part02.root',
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_TTplusJets_part03.root'
 )
 
 #--------------------------------------------------------------------------------
@@ -80,4 +82,5 @@ fileNames_pseudoData = cms.vstring()
 fileNames_pseudoData.extend(fileNames_Ztautau)
 fileNames_pseudoData.extend(fileNames_ZmumuPlusJets)
 fileNames_pseudoData.extend(fileNames_WplusJets)
+fileNames_pseudoData.extend(fileNames_TTplusJets)
 fileNames_pseudoData.extend(fileNames_qcdSum)
