@@ -5,7 +5,9 @@
 BgEstMedian::BgEstMedian(unsigned d)
 {
   numVar_ = d;
+  values_.resize(numVar_);
   isSorted_ = false;
+  auxMedian_.ResizeTo(numVar_);
 }
 
 void BgEstMedian::update(const TVectorD& value)
