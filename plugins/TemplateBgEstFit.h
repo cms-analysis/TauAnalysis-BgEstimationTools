@@ -26,9 +26,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.5 $
+ * \version $Revision: 1.6 $
  *
- * $Id: TemplateBgEstFit.h,v 1.5 2009/08/12 14:34:12 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.6 2009/08/13 14:22:24 veelken Exp $
  *
  */
 
@@ -115,13 +115,17 @@ class TemplateBgEstFit : public edm::EDAnalyzer
 
   struct modelTemplateNdType
   {
-    modelTemplateNdType(const std::string&, const edm::ParameterSet&, int, bool);
+    modelTemplateNdType(const std::string&, const edm::ParameterSet&, int, bool, bool, double, double);
     ~modelTemplateNdType();
     void addElement(const std::string&, RooRealVar*, const std::string&);
     void initialize();
     void buildPdf();
     void fluctuate(bool, bool);
     std::string processName_;
+    bool applyNormConstraint_;
+    RooAbsPdf* pdfNormConstraint_;
+    RooRealVar* meanNormConstraint_;
+    RooRealVar* sigmaNormConstraint_;
     std::string pdfName_;
     RooAbsPdf* pdf_;
     bool pdfIsOwned_;
@@ -136,8 +140,8 @@ class TemplateBgEstFit : public edm::EDAnalyzer
     int lineStyle_;
     int lineWidth_;
     TH1* auxHistogram_;
-    std::string auxDataHistName_;
     RooDataHist* auxDataHist_;
+    RooAbsPdf* auxPdf_;
     int error_;
   };
 

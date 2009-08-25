@@ -27,6 +27,7 @@
 #include <TRandom3.h>
 
 #include <RooAddPdf.h>
+#include <RooGaussian.h>
 #include <RooProdPdf.h>
 #include <RooArgSet.h>
 #include <RooGlobalFunc.h>
@@ -53,6 +54,7 @@ enum { k1dPlus, kNd };
 TRandom3 gRndNum;
 
 const double epsilon = 1.e-3;
+const double epsilon_integral = 5.e-2;
 
 const int fitStatus_converged = 0;
 
@@ -467,7 +469,7 @@ void TemplateBgEstFit::dataDistrNdType::buildFitData()
 	TArrayD binning_2 = getBinning(histogram_2);
 	double integral_2 = getIntegral(histogram_2);
 
-	if ( TMath::Abs(integral_1 - integral_2) > epsilon ) {
+	if ( TMath::Abs(integral_1 - integral_2) > epsilon_integral*0.5*(integral_1 + integral_2) ) {
 	  static bool isFirstWarning = true;
 	  if ( isFirstWarning )	
 	    edm::LogWarning ("buildFitData") << " Difference in integrals between first (" << varName_1 << " = " << integral_1 << ")"
@@ -506,8 +508,8 @@ void TemplateBgEstFit::dataDistrNdType::buildFitData()
 	  }
 	}
 
-	//std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << std::endl;
-	assert(TMath::Abs(getIntegral(auxHistogram_) - integral_1) < epsilon);
+	std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << ", integral_1 = " << integral_1 << std::endl;
+	assert(TMath::Abs(getIntegral(auxHistogram_) - integral_1) < epsilon_integral*0.5*(getIntegral(auxHistogram_) + integral_1));
       } else if ( numDimensions_ == 3 ) {
 	const std::string& varName_1 = varNames_[0];
 	TH1* histogram_1 = dataEntries1d_[varName_1]->histogram_;
@@ -527,9 +529,9 @@ void TemplateBgEstFit::dataDistrNdType::buildFitData()
 	TArrayD binning_3 = getBinning(histogram_3);
 	double integral_3 = getIntegral(histogram_3);
 	
-	if ( TMath::Abs(integral_1 - integral_2) > epsilon ||
-	     TMath::Abs(integral_1 - integral_3) > epsilon ||
-	     TMath::Abs(integral_2 - integral_3) > epsilon ) {
+	if ( TMath::Abs(integral_1 - integral_2) > epsilon_integral*0.5*(integral_1 + integral_2) ||
+	     TMath::Abs(integral_1 - integral_3) > epsilon_integral*0.5*(integral_1 + integral_3) ||
+	     TMath::Abs(integral_2 - integral_3) > epsilon_integral*0.5*(integral_2 + integral_3) ) {
 	  static bool isFirstWarning = true;
 	  if ( isFirstWarning )	
 	    edm::LogWarning ("buildFitData") << " Difference in integrals between first (" << varName_1 << " = " << integral_1 << "),"
@@ -573,8 +575,8 @@ void TemplateBgEstFit::dataDistrNdType::buildFitData()
 	  }
 	}
 	
-	//std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << std::endl;
-        assert(TMath::Abs(getIntegral(auxHistogram_) - integral_1) < epsilon);
+	std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << ", integral_1 = " << integral_1 << std::endl;
+        assert(TMath::Abs(getIntegral(auxHistogram_) - integral_1) < epsilon_integral*0.5*(getIntegral(auxHistogram_) + integral_1));
       } else {
 	edm::LogError ("buildFitData") << " Number of Dimensions = " << numDimensions_ << " exceed maximum" 
 				       << " supported for fitMode = " << fitMode_ << " !!";
@@ -605,6 +607,7 @@ void TemplateBgEstFit::dataDistrNdType::fluctuate(bool, bool)
     dataEntry1d->second->fluctuate(true, false);
   }
 
+  delete fitData_;
   buildFitData();
 }
 
@@ -692,8 +695,13 @@ void TemplateBgEstFit::modelTemplate1dType::fluctuate(bool fluctStat, bool fluct
 //
 
 TemplateBgEstFit::modelTemplateNdType::modelTemplateNdType(const std::string& processName, const edm::ParameterSet& cfgProcess,
-							   int fitMode, bool cutUnfittedRegion)
+							   int fitMode, bool cutUnfittedRegion, bool applyNormConstraint, 
+							   double valueNormConstraint, double sigmaNormConstraint)
   : processName_(processName),
+    applyNormConstraint_(applyNormConstraint),
+    pdfNormConstraint_(0), 
+    meanNormConstraint_(0),
+    sigmaNormConstraint_(0),
     pdf_(0),
     numDimensions_(0),
     fitMode_(fitMode),
@@ -701,6 +709,7 @@ TemplateBgEstFit::modelTemplateNdType::modelTemplateNdType(const std::string& pr
     normCorrFactor_(1.),
     auxHistogram_(0),
     auxDataHist_(0),
+    auxPdf_(0),
     error_(0)
 {
   edm::ParameterSet cfgDrawOptions_process = cfgProcess.getParameter<edm::ParameterSet>("drawOptions");
@@ -710,6 +719,20 @@ TemplateBgEstFit::modelTemplateNdType::modelTemplateNdType(const std::string& pr
 
   std::string normName = std::string(processName_).append("_").append("norm");
   norm_ = new RooRealVar(normName.data(), normName.data(), 0., maxNorm);
+
+  if ( applyNormConstraint_ ) {
+    std::cout << "<modelTemplateNdType>: constraining norm = " << valueNormConstraint << " +/- " << sigmaNormConstraint << ","
+	      << " process = " << processName_ << std::endl;
+    
+    std::string meanNormConstraintName = std::string(processName_).append("_").append("meanNormConstraint");
+    meanNormConstraint_ = new RooRealVar(meanNormConstraintName.data(), meanNormConstraintName.data(), valueNormConstraint);
+    std::string sigmaNormConstraintName = std::string(processName_).append("_").append("sigmaNormConstraint");
+    sigmaNormConstraint_ = new RooRealVar(sigmaNormConstraintName.data(), sigmaNormConstraintName.data(), sigmaNormConstraint);
+
+    std::string pdfNormConstraintName = std::string(processName_).append("_").append("pdfNormConstraint");
+    pdfNormConstraint_ = new RooGaussian(pdfNormConstraintName.data(), pdfNormConstraintName.data(), 
+					 *norm_, *meanNormConstraint_, *sigmaNormConstraint_);
+  }
 }
 
 TemplateBgEstFit::modelTemplateNdType::~modelTemplateNdType()
@@ -721,10 +744,15 @@ TemplateBgEstFit::modelTemplateNdType::~modelTemplateNdType()
 
   delete auxHistogram_;
   delete auxDataHist_;
+  delete auxPdf_;
 
   if ( pdfIsOwned_ ) delete pdf_;
 
   delete norm_;
+
+  delete pdfNormConstraint_;
+  delete meanNormConstraint_;
+  delete sigmaNormConstraint_;
 }
 
 void TemplateBgEstFit::modelTemplateNdType::addElement(const std::string& varName, RooRealVar* x, const std::string& meName)
@@ -771,10 +799,28 @@ void TemplateBgEstFit::modelTemplateNdType::buildPdf()
   assert(fitMode_ == k1dPlus || fitMode_ == kNd);
 
   if ( numDimensions_ == 1 ) {
-    const std::string varName = varNames_.front();
-    pdfName_ = processEntries1d_[varName]->pdf1dName_;
-    pdf_ = processEntries1d_[varName]->pdf1d_;
-    pdfIsOwned_ = false;
+    if ( !applyNormConstraint_ ) {
+      const std::string varName = varNames_.front();
+      pdfName_ = processEntries1d_[varName]->pdf1dName_;
+      pdf_ = processEntries1d_[varName]->pdf1d_;
+      pdfIsOwned_ = false;
+    } else {
+      const std::string varName = varNames_.front();
+
+      pdfName_ = std::string(processName_).append("_").append("pdf");
+
+      TObjArray pdf1dCollection;
+      pdf1dCollection.Add(processEntries1d_[varName]->pdf1d_);
+      pdf1dCollection.Add(pdfNormConstraint_);
+
+      std::string pdfArgName = std::string(processName_).append("_pdfArgs");
+      RooArgList pdfArgs(pdf1dCollection, pdfArgName.data());
+      
+      //std::cout << "--> creating RooProdPdf with name = " << pdfName_ << std::endl;
+      pdf_ = new RooProdPdf(pdfName_.data(), pdfName_.data(), pdfArgs);
+
+      pdfIsOwned_ = true;
+    }
   } else {
     if ( fitMode_ == k1dPlus ) {
       std::vector<TH1*> histograms;
@@ -799,14 +845,32 @@ void TemplateBgEstFit::modelTemplateNdType::buildPdf()
       xRef_aux->setMin(auxHistogram_->GetXaxis()->GetXmin());
       xRef_aux->setMax(auxHistogram_->GetXaxis()->GetXmax());
 
-      auxDataHistName_ = std::string(processName_).append("_").append(varName).append("_rooDataHist");
+      std::string auxDataHistName = std::string(processName_).append("_").append(varName).append("_rooDataHist");
       delete auxDataHist_;
-      auxDataHist_ = new RooDataHist(auxDataHistName_.data(), auxDataHistName_.data(), *xRef_aux, auxHistogram_);
+      auxDataHist_ = new RooDataHist(auxDataHistName.data(), auxDataHistName.data(), *xRef_aux, auxHistogram_);
 
-      delete pdf_;
-      pdf_ = new RooHistPdf(pdfName_.data(), pdfName_.data(), *xRef_aux, *auxDataHist_);
+      std::string auxPdfName = std::string(processName_).append("_").append(varName).append("_rooHistPdf");
+      delete auxPdf_;
+      auxPdf_ = new RooHistPdf(auxPdfName.data(), auxPdfName.data(), *xRef_aux, *auxDataHist_);
 
-      pdfIsOwned_ = true;
+      if ( !applyNormConstraint_ ) {
+	pdf_ = auxPdf_;
+	pdfIsOwned_ = false;
+      } else {	
+	pdfName_ = std::string(processName_).append("_").append("pdf");
+
+	TObjArray pdf1dCollection;
+	pdf1dCollection.Add(auxPdf_);
+	pdf1dCollection.Add(pdfNormConstraint_);
+
+	std::string pdfArgName = std::string(processName_).append("_pdfArgs");
+	RooArgList pdfArgs(pdf1dCollection, pdfArgName.data());
+      
+	//std::cout << "--> creating RooProdPdf with name = " << pdfName_ << std::endl;
+	pdf_ = new RooProdPdf(pdfName_.data(), pdfName_.data(), pdfArgs);
+
+	pdfIsOwned_ = true;
+      }
     } else if ( fitMode_ == kNd ) {
       pdfName_ = std::string(processName_).append("_").append("pdf");
 
@@ -815,6 +879,8 @@ void TemplateBgEstFit::modelTemplateNdType::buildPdf()
 	    processEntry1d != processEntries1d_.end(); ++processEntry1d ) {
 	pdf1dCollection.Add(processEntry1d->second->pdf1d_);
       }
+
+      pdf1dCollection.Add(pdfNormConstraint_);
 
       std::string pdfArgName = std::string(processName_).append("_pdfArgs");
       RooArgList pdfArgs(pdf1dCollection, pdfArgName.data());
@@ -861,6 +927,22 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 
   //std::cout << " fitMode = " << fitMode_string << std::endl;
 
+  std::map<std::string, bool> applyNormConstraints;
+  std::map<std::string, double> meanNormConstraints;
+  std::map<std::string, double> sigmaNormConstraints;
+  if ( cfgFit.exists("constraints") ) {
+    edm::ParameterSet cfgProcesses = cfgFit.getParameter<edm::ParameterSet>("constraints");
+    vstring processNames = cfgProcesses.getParameterNamesForType<edm::ParameterSet>();
+    for ( vstring::const_iterator processName = processNames.begin(); 
+	  processName != processNames.end(); ++processName ) {
+      edm::ParameterSet cfgProcess = cfgProcesses.getParameter<edm::ParameterSet>(*processName);
+      
+      applyNormConstraints[*processName] = true;
+      meanNormConstraints[*processName] = cfgProcess.getParameter<double>("norm");
+      sigmaNormConstraints[*processName] = cfgProcess.getParameter<double>("uncertainty");
+    }
+  }
+
   cutUnfittedRegion_ = ( cfgFit.exists("cutUnfittedRegion") ) ? cfgFit.getParameter<bool>("cutUnfittedRegion") : false;
 
   printLevel_ = ( cfgFit.exists("printLevel") ) ? cfgFit.getParameter<int>("printLevel") : 1;
@@ -895,8 +977,10 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 
     processNames_.push_back(*processName);
 
-    modelTemplateNdType* processEntry = new modelTemplateNdType(*processName, cfgProcess, fitMode_, cutUnfittedRegion_);
-
+    modelTemplateNdType* processEntry = new modelTemplateNdType(*processName, cfgProcess, fitMode_, cutUnfittedRegion_,
+								applyNormConstraints[*processName], 
+								meanNormConstraints[*processName], sigmaNormConstraints[*processName]);
+    
     edm::ParameterSet cfgMonitorElements = cfgProcess.getParameter<edm::ParameterSet>("meNames");
     for ( vstring::const_iterator varName = varNames_.begin();
 	  varName != varNames_.end(); ++varName ) {
@@ -1410,8 +1494,6 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
 
       delete fitModel_;
       buildFitModel();
-      delete dataEntry_->fitData_;
-      dataEntry_->buildFitData();
 
       fitModel_->fitTo(*dataEntry_->fitData_, RooFit::Extended(),
 		       RooFit::PrintLevel(printLevel) /* , RooFit::Warnings(printWarnings) */ );
