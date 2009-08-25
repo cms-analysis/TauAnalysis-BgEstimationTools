@@ -53,25 +53,29 @@ bgEstEventSelection_Zmumu = (
 print("bgEstEventSelection_Zmumu = " + bgEstEventSelection_Zmumu)
 
 bgEstEventSelection_WplusJets = (
-    "((numSelDiTaus >= 1 && selMuonTrackIso_0 < 1. && selMuonEcalIso_0 < 1. && selTauDiscrAgainstMuons_0 > 0.5"
+    "((numSelDiTaus >= 1 && selMuonTrackIso_0 < 2. && selMuonEcalIso_0 < 2. && selTauDiscrAgainstMuons_0 > 0.5"
     " && selDiTauMt1MET_0 > 40. && selDiTauPzetaDiff_0 < -25.)"
-    " || (numSelDiTaus >= 2 && selMuonTrackIso_1 < 1. && selMuonEcalIso_1 < 1. && selTauDiscrAgainstMuons_1 > 0.5"
+#    " && selDiTauMt1MET_0 > 40. && selDiTauPzetaDiff_0 > -20.)"
+    " || (numSelDiTaus >= 2 && selMuonTrackIso_1 < 2. && selMuonEcalIso_1 < 2. && selTauDiscrAgainstMuons_1 > 0.5"
     " && selDiTauMt1MET_1 > 40. && selDiTauPzetaDiff_1 < -25.))"
+#    " && selDiTauMt1MET_1 > 40. && selDiTauPzetaDiff_1 > -20.))"
     " && numGlobalMuons < 2"
+    " && !(numCentralJetsEt40 >= 1 && selCentralJetEt40bTaggingDiscrTrackCountingHighEff_0 > 2.5)"
+    " && !(numCentralJetsEt40 >= 2 && selCentralJetEt40bTaggingDiscrTrackCountingHighEff_1 > 2.5)"
+    " && !(numCentralJetsEt40 >= 3 && selCentralJetEt40bTaggingDiscrTrackCountingHighEff_2 > 2.5)"
+    " && numCentralJetsEt40 < 2 && numCentralJetsEt60 < 1"
 )
 
 print("bgEstEventSelection_WplusJets = " + bgEstEventSelection_WplusJets)
 
 bgEstEventSelection_TTplusJets = (
-    "((numSelDiTaus >= 1 && selMuonTrackIso_0 < 1. && selMuonEcalIso_0 < 1. && selTauDiscrAgainstMuons_0 > 0.5"
-    " && selDiTauMt1MET_0 > 40. && selDiTauPzetaDiff_0 < -25.)"
-    " || (numSelDiTaus >= 2 && selMuonTrackIso_1 < 1. && selMuonEcalIso_1 < 1. && selTauDiscrAgainstMuons_1 > 0.5"
-    " && selDiTauMt1MET_1 > 40. && selDiTauPzetaDiff_1 < -25.))"
+    "((numSelDiTaus >= 1 && selMuonTrackIso_0 < 2. && selMuonEcalIso_0 < 2. && selTauDiscrAgainstMuons_0 > 0.5)"
+    " || (numSelDiTaus >= 2 && selMuonTrackIso_1 < 2. && selMuonEcalIso_1 < 2. && selTauDiscrAgainstMuons_1 > 0.5))"
     " && numGlobalMuons < 2"
-    " && ((numCentralJetsEt40 >= 2"
-    " && (selCentralJetEt40bTaggingDiscrTrackCountingHighEff_0 > 2.5 || selCentralJetEt40bTaggingDiscrTrackCountingHighEff_1 > 2.5))"
-    " || (numCentralJetsEt40 >= 3 && selCentralJetEt40bTaggingDiscrTrackCountingHighEff_2 > 2.5))"
-    " && numCentralJetsEt60 >= 1"
+    " && ((numCentralJetsEt40 >= 1 && selCentralJetEt40bTaggingDiscrTrackCountingHighEff_0 > 4.5)"
+    " || (numCentralJetsEt40 >= 2 && selCentralJetEt40bTaggingDiscrTrackCountingHighEff_1 > 4.5)"
+    " || (numCentralJetsEt40 >= 3 && selCentralJetEt40bTaggingDiscrTrackCountingHighEff_2 > 4.5))"
+    " && numCentralJetsEt40 >= 2 && numCentralJetsEt60 >= 1"
 )
 
 print("bgEstEventSelection_TTplusJets = " + bgEstEventSelection_TTplusJets)
@@ -124,12 +128,17 @@ meName_diTauMvis12_norm = "VisMassShape"
 meName_diTauMt1MET = "Mt1MET"
 meName_diTauMt1MET_norm = "Mt1METshape"
 
+meName_numJets = "numJetsEtGt20_0EtaLt2_1AlphaGt0_3"
+meName_numJets_norm = "numJetsEtGt20_0EtaLt2_1AlphaGt0_3Shape"
+
 #--------------------------------------------------------------------------------
 # define names of branches in Ntuple from which template histograms get produced
 #--------------------------------------------------------------------------------
 
 branchName_diTauMvis12 = "selDiTauMvis12_0"
 branchName_diTauMt1MET = "selDiTauMt1MET_0"
+#branchName_numJets = "numCentralJetsAlpha0_3"
+branchName_numJets = "numCentralJetsEt20"
 
 #--------------------------------------------------------------------------------
 # produce template histograms 
@@ -148,6 +157,7 @@ prodTemplateHistConfiguratorZtoMuTau.addSelection("QCD", bgEstEventSelection_QCD
 prodTemplateHistConfiguratorZtoMuTau.addProcess("data", fileNames_pseudoData)
 prodTemplateHistConfiguratorZtoMuTau.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12, 40, 0., 200.)
 prodTemplateHistConfiguratorZtoMuTau.addTemplate(meName_diTauMt1MET_norm, branchName_diTauMt1MET, 40, 0., 200.)
+prodTemplateHistConfiguratorZtoMuTau.addTemplate(meName_numJets_norm, branchName_numJets, 50, -0.5, 49.5)
 
 process.prodTemplateHistZtoMuTau = prodTemplateHistConfiguratorZtoMuTau.configure(process)
 
@@ -178,6 +188,10 @@ process.normalizeTemplateHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMHistNormalize
         cms.PSet(
             meNameInput = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET),
             meNameOutput = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+            meNameInput = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "JetQuantities" + "/" + meName_numJets),
+            meNameOutput = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "JetQuantities" + "/" + meName_numJets_norm)
         )
     ),   
     norm = cms.double(1.)
@@ -211,6 +225,10 @@ process.normalizeAnalysisHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMHistNormalize
         cms.PSet(
              meNameInput = cms.string(dqmDirectory_Ztautau_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET),
              meNameOutput = cms.string(dqmDirectory_Ztautau_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+             meNameInput = cms.string(dqmDirectory_Ztautau_finalEvtSel + "JetQuantities" + "/" + meName_numJets),
+             meNameOutput = cms.string(dqmDirectory_Ztautau_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm)
         )
     ),
     norm = cms.double(1.)
@@ -225,6 +243,10 @@ process.normalizeAnalysisHistZtoMuTau_Zmumu = cms.EDAnalyzer("DQMHistNormalizer"
         cms.PSet(
              meNameInput = cms.string(dqmDirectory_Zmumu_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET),
              meNameOutput = cms.string(dqmDirectory_Zmumu_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+             meNameInput = cms.string(dqmDirectory_Zmumu_finalEvtSel + "JetQuantities" + "/" + meName_numJets),
+             meNameOutput = cms.string(dqmDirectory_Zmumu_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm)
         )
     ),
     norm = cms.double(1.)
@@ -239,6 +261,10 @@ process.normalizeAnalysisHistZtoMuTau_WplusJets = cms.EDAnalyzer("DQMHistNormali
         cms.PSet(
              meNameInput = cms.string(dqmDirectory_WplusJets_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET),
              meNameOutput = cms.string(dqmDirectory_WplusJets_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+             meNameInput = cms.string(dqmDirectory_WplusJets_finalEvtSel + "JetQuantities" + "/" + meName_numJets),
+             meNameOutput = cms.string(dqmDirectory_WplusJets_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm)
         )
     ),
     norm = cms.double(1.)
@@ -253,6 +279,10 @@ process.normalizeAnalysisHistZtoMuTau_TTplusJets = cms.EDAnalyzer("DQMHistNormal
         cms.PSet(
              meNameInput = cms.string(dqmDirectory_TTplusJets_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET),
              meNameOutput = cms.string(dqmDirectory_TTplusJets_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+             meNameInput = cms.string(dqmDirectory_TTplusJets_finalEvtSel + "JetQuantities" + "/" + meName_numJets),
+             meNameOutput = cms.string(dqmDirectory_TTplusJets_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm)
         )
     ),
     norm = cms.double(1.)
@@ -267,6 +297,10 @@ process.normalizeAnalysisHistZtoMuTau_QCD = cms.EDAnalyzer("DQMHistNormalizer",
         cms.PSet(
              meNameInput = cms.string(dqmDirectory_QCD_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET),
              meNameOutput = cms.string(dqmDirectory_QCD_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+             meNameInput = cms.string(dqmDirectory_QCD_finalEvtSel + "JetQuantities" + "/" + meName_numJets),
+             meNameOutput = cms.string(dqmDirectory_QCD_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm)
         )
     ),
     norm = cms.double(1.)
@@ -318,6 +352,16 @@ drawTemplateHistConfiguratorZtoMuTau.add(
     title = "M_{T}^{#mu + MET} in Z #rightarrow #tau^{+} #tau^{-} Signal" 
 )
 
+drawTemplateHistConfiguratorZtoMuTau.add(
+    meNames = [
+        dqmDirectory_Ztautau_ZmumuTemplate + "JetQuantities" + "/" + meName_numJets_norm,
+        dqmDirectory_Ztautau_ZmumuTemplate + "JetQuantities" + "/" + meName_numJets_norm,
+        dqmDirectory_Ztautau_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm
+    ],
+    name = "Ztautau_numJets",
+    title = "N_{jets} with E_{T} > 20 GeV, |#eta| < 2.1"
+)
+
 #--------------------------------------------------------------------------------
 # define draw jobs for Z --> mu mu background
 #--------------------------------------------------------------------------------
@@ -340,6 +384,16 @@ drawTemplateHistConfiguratorZtoMuTau.add(
     ],
     name = "Zmumu_diTauMt1MET",
     title = "M_{T}^{#mu + MET} in Z #rightarrow #mu^{+} #mu^{-} Background" 
+)
+
+drawTemplateHistConfiguratorZtoMuTau.add(
+    meNames = [
+        dqmDirectory_Zmumu_bgEstEnriched_data + meName_numJets_norm,
+        dqmDirectory_Zmumu_bgEstEnriched_pure + meName_numJets_norm,
+        dqmDirectory_Zmumu_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm
+    ],
+    name = "Zmumu_numJets",
+    title = "N_{jets} with E_{T} > 20 GeV, |#eta| < 2.1"
 )
 
 #--------------------------------------------------------------------------------
@@ -366,6 +420,16 @@ drawTemplateHistConfiguratorZtoMuTau.add(
     title = "M_{T}^{#mu + MET} in W + jets Background" 
 )
 
+drawTemplateHistConfiguratorZtoMuTau.add(
+    meNames = [
+        dqmDirectory_WplusJets_bgEstEnriched_data + meName_numJets_norm,
+        dqmDirectory_WplusJets_bgEstEnriched_pure + meName_numJets_norm,
+        dqmDirectory_WplusJets_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm
+    ],
+    name = "WplusJets_numJets",
+    title = "N_{jets} with E_{T} > 20 GeV, |#eta| < 2.1"
+)
+
 #--------------------------------------------------------------------------------
 # define draw jobs for TTbar + jets background
 #--------------------------------------------------------------------------------
@@ -390,6 +454,16 @@ drawTemplateHistConfiguratorZtoMuTau.add(
     title = "M_{T}^{#mu + MET} in t#bar{t} + jets Background" 
 )
 
+drawTemplateHistConfiguratorZtoMuTau.add(
+    meNames = [
+        dqmDirectory_TTplusJets_bgEstEnriched_data + meName_numJets_norm,
+        dqmDirectory_TTplusJets_bgEstEnriched_pure + meName_numJets_norm,
+        dqmDirectory_TTplusJets_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm
+    ],
+    name = "TTplusJets_numJets",
+    title = "N_{jets} with E_{T} > 20 GeV, |#eta| < 2.1"
+)
+
 #--------------------------------------------------------------------------------
 # define draw jobs for QCD background
 #--------------------------------------------------------------------------------
@@ -412,6 +486,16 @@ drawTemplateHistConfiguratorZtoMuTau.add(
     ],
     name = "QCD_diTauMt1MET",
     title = "M_{T}^{#mu + MET} in QCD Background" 
+)
+
+drawTemplateHistConfiguratorZtoMuTau.add(
+    meNames = [
+        dqmDirectory_QCD_bgEstEnriched_data + meName_numJets_norm,
+        dqmDirectory_QCD_bgEstEnriched_pure + meName_numJets_norm,
+        dqmDirectory_QCD_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm
+    ],
+    name = "QCD_numJets",
+    title = "N_{jets} with E_{T} > 20 GeV, |#eta| < 2.1"
 )
 
 process.plotTemplateHistZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
@@ -472,7 +556,7 @@ process.plotTemplateHistZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
 
     outputFilePath = cms.string('./plots/'),
     #outputFileName = cms.string('plotsTemplateHistZtoMuTau.ps')
-    indOutputFileName = cms.string('plotTemplateHistZtoMuTau_#PLOT#.png')
+    indOutputFileName = cms.string('plotTemplateHistZtoMuTau_#PLOT#.eps')
 )
 
 #--------------------------------------------------------------------------------
@@ -505,6 +589,11 @@ process.prodSysBiasHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMHistSubtractor",
             meNameMinuend = cms.string(dqmDirectory_Ztautau_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm),
             meNameSubtrahend = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm),
             meNameDifference = cms.string(dqmDirectory_Ztautau_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_Ztautau_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "JetQuantities" + "/" + meName_numJets_norm),
+            meNameDifference = cms.string(dqmDirectory_Ztautau_systematics + "bias" + "/" + meName_numJets_norm)
         )
     )    
 )
@@ -520,6 +609,11 @@ process.prodSysBiasHistZtoMuTau_Zmumu = cms.EDAnalyzer("DQMHistSubtractor",
             meNameMinuend = cms.string(dqmDirectory_Zmumu_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm),
             meNameSubtrahend = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_diTauMt1MET_norm),
             meNameDifference = cms.string(dqmDirectory_Zmumu_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_Zmumu_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_numJets_norm),
+            meNameDifference = cms.string(dqmDirectory_Zmumu_systematics + "bias" + "/" + meName_numJets_norm)
         )
     )                                                       
 )
@@ -535,6 +629,11 @@ process.prodSysBiasHistZtoMuTau_WplusJets = cms.EDAnalyzer("DQMHistSubtractor",
             meNameMinuend = cms.string(dqmDirectory_WplusJets_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm),
             meNameSubtrahend = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMt1MET_norm),
             meNameDifference = cms.string(dqmDirectory_WplusJets_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_WplusJets_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_numJets_norm),
+            meNameDifference = cms.string(dqmDirectory_WplusJets_systematics + "bias" + "/" + meName_numJets_norm)
         )
     )                                                       
 )
@@ -550,6 +649,11 @@ process.prodSysBiasHistZtoMuTau_TTplusJets = cms.EDAnalyzer("DQMHistSubtractor",
             meNameMinuend = cms.string(dqmDirectory_TTplusJets_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm),
             meNameSubtrahend = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_data + meName_diTauMt1MET_norm),
             meNameDifference = cms.string(dqmDirectory_TTplusJets_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_TTplusJets_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_data + meName_numJets_norm),
+            meNameDifference = cms.string(dqmDirectory_TTplusJets_systematics + "bias" + "/" + meName_numJets_norm)
         )
     )                                                       
 )
@@ -565,6 +669,11 @@ process.prodSysBiasHistZtoMuTau_QCD = cms.EDAnalyzer("DQMHistSubtractor",
             meNameMinuend = cms.string(dqmDirectory_QCD_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm),
             meNameSubtrahend = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMt1MET_norm),
             meNameDifference = cms.string(dqmDirectory_QCD_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+        ),
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_QCD_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_numJets_norm),
+            meNameDifference = cms.string(dqmDirectory_QCD_systematics + "bias" + "/" + meName_numJets_norm)
         )
     )                                                       
 )
@@ -582,7 +691,7 @@ process.prodSysBiasHistZtoMuTau = cms.Sequence(
 #--------------------------------------------------------------------------------
 
 process.saveAllHistZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
-    outputFileName = cms.string('templatesZtoMuTau.root')
+    outputFileName = cms.string('bgEstTemplatesZtoMuTau.root')
 )
 
 #--------------------------------------------------------------------------------
@@ -594,35 +703,42 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
         Ztautau = cms.PSet(
             meNames = cms.PSet(
                 diTauMvis12 = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
-                diTauMt1MET = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm)
+                diTauMt1MET = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET_norm),
+                numJets = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "JetQuantities" + "/" + meName_numJets_norm)
             ),    
             drawOptions = drawOption_Ztautau
         ),
         Zmumu = cms.PSet(
             meNames = cms.PSet(
                 diTauMvis12 = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_diTauMvis12_norm),
-                diTauMt1MET = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_diTauMt1MET_norm)
+                diTauMt1MET = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_diTauMt1MET_norm),
+                numJets = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_numJets_norm)
             ),    
             drawOptions = drawOption_Zmumu
         ),
         WplusJets = cms.PSet(
             meNames = cms.PSet(
-                diTauMvis12 = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMvis12_norm),
-                diTauMt1MET = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMt1MET_norm)
+                #diTauMvis12 = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMvis12_norm),
+                diTauMvis12 = cms.string(dqmDirectory_WplusJets_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
+                diTauMt1MET = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMt1MET_norm),
+                numJets = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_numJets_norm)
             ),  
             drawOptions = drawOption_WplusJets
         ),
         TTplusJets = cms.PSet(
             meNames = cms.PSet(
                 diTauMvis12 = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_data + meName_diTauMvis12_norm),
-                diTauMt1MET = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_data + meName_diTauMt1MET_norm)
+                diTauMt1MET = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_data + meName_diTauMt1MET_norm),
+                #numJets = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_data + meName_numJets_norm)
+                numJets = cms.string(dqmDirectory_TTplusJets_finalEvtSel + "JetQuantities" + "/" + meName_numJets_norm)
             ),  
             drawOptions = drawOption_TTplusJets
         ),
         QCD = cms.PSet(
             meNames = cms.PSet(
                 diTauMvis12 = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMvis12_norm),
-                diTauMt1MET = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMt1MET_norm)
+                diTauMt1MET = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMt1MET_norm),
+                numJets = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_numJets_norm)
             ),  
             drawOptions = drawOption_QCD
         )
@@ -632,7 +748,8 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
     data = cms.PSet(
         meNames = cms.PSet(
             diTauMvis12 = cms.string(dqmDirectory_data_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12),
-            diTauMt1MET = cms.string(dqmDirectory_data_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET)
+            diTauMt1MET = cms.string(dqmDirectory_data_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMt1MET),
+            numJets = cms.string(dqmDirectory_data_finalEvtSel + "JetQuantities" + "/" + meName_numJets)
         )
     ),
 
@@ -650,6 +767,29 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
             #    title = cms.string("M_{T}^{#mu + MET}"),
             #    xMin = cms.double(40.),
             #    xMax = cms.double(50.)
+            ),
+            numJets = cms.PSet(
+                name = cms.string("numJets"),
+                title = cms.string("N_{jets}"),
+                xMin = cms.double(-0.5),
+                xMax = cms.double(+4.5)
+            )
+        ),
+        # constrain normalization of W + jets, ttbar + jets and QCD backgrounds
+        # to Monte Carlo expectation multiplied by "k-factors" determined
+        # in background enriched samples
+        constraints = cms.PSet(
+            WplusJets = cms.PSet(
+                norm = cms.double(1.*500.),
+                uncertainty = cms.double(250.)
+            ),
+            TTplusJets = cms.PSet(
+                norm = cms.double(1.*100.),
+                uncertainty = cms.double(100.)
+            ),
+            QCD = cms.PSet(
+                norm = cms.double(1.*100.),
+                uncertainty = cms.double(100.)
             )
         ),
         cutUnfittedRegion = cms.bool(False),
@@ -662,7 +802,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
 
     estStatUncertainties = cms.PSet(
         numSamplings = cms.PSet(
-            stat = cms.int32(1000)
+            stat = cms.int32(10000)
         ),
         chi2redMax = cms.double(3.),
         verbosity = cms.PSet(
@@ -677,23 +817,28 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
                 meNames = cms.PSet(
                     Ztautau = cms.PSet(
                         diTauMvis12 = cms.string(dqmDirectory_Ztautau_systematics + "bias" + "/" + meName_diTauMvis12_norm),
-                        diTauMt1MET = cms.string(dqmDirectory_Ztautau_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+                        diTauMt1MET = cms.string(dqmDirectory_Ztautau_systematics + "bias" + "/" + meName_diTauMt1MET_norm),
+                        numJets = cms.string(dqmDirectory_Ztautau_systematics + "bias" + "/" + meName_numJets_norm)
                     ),
                     Zmumu = cms.PSet(
                         diTauMvis12 = cms.string(dqmDirectory_Zmumu_systematics + "bias" + "/" + meName_diTauMvis12_norm),
-                        diTauMt1MET = cms.string(dqmDirectory_Zmumu_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+                        diTauMt1MET = cms.string(dqmDirectory_Zmumu_systematics + "bias" + "/" + meName_diTauMt1MET_norm),
+                        numJets = cms.string(dqmDirectory_Zmumu_systematics + "bias" + "/" + meName_numJets_norm)
                     ),
                     WplusJets = cms.PSet(
                         diTauMvis12 = cms.string(dqmDirectory_WplusJets_systematics + "bias" + "/" + meName_diTauMvis12_norm),
-                        diTauMt1MET = cms.string(dqmDirectory_WplusJets_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+                        diTauMt1MET = cms.string(dqmDirectory_WplusJets_systematics + "bias" + "/" + meName_diTauMt1MET_norm),
+                        numJets = cms.string(dqmDirectory_WplusJets_systematics + "bias" + "/" + meName_numJets_norm)
                     ),
                     TTplusJets = cms.PSet(
                         diTauMvis12 = cms.string(dqmDirectory_TTplusJets_systematics + "bias" + "/" + meName_diTauMvis12_norm),
-                        diTauMt1MET = cms.string(dqmDirectory_TTplusJets_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+                        diTauMt1MET = cms.string(dqmDirectory_TTplusJets_systematics + "bias" + "/" + meName_diTauMt1MET_norm),
+                        numJets = cms.string(dqmDirectory_TTplusJets_systematics + "bias" + "/" + meName_numJets_norm)
                     ),
                     QCD = cms.PSet(
                         diTauMvis12 = cms.string(dqmDirectory_QCD_systematics + "bias" + "/" + meName_diTauMvis12_norm),
-                        diTauMt1MET = cms.string(dqmDirectory_QCD_systematics + "bias" + "/" + meName_diTauMt1MET_norm)
+                        diTauMt1MET = cms.string(dqmDirectory_QCD_systematics + "bias" + "/" + meName_diTauMt1MET_norm),
+                        numJets = cms.string(dqmDirectory_QCD_systematics + "bias" + "/" + meName_numJets_norm)
                     )
                 ),
                 pullRMS = cms.double(1.),
@@ -715,7 +860,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
 
     output = cms.PSet(
         controlPlots = cms.PSet(
-            fileName = cms.string("./plots/fitTemplateZtoMuTau_#PLOT#.png")
+            fileName = cms.string("./plots/fitTemplateZtoMuTau_#PLOT#.eps")
         )
     )                                      
 )                          
@@ -726,14 +871,13 @@ process.prodAllHistZtoMuTau = cms.Sequence(
    + process.normalizeTemplateHistZtoMuTau_Ztautau 
    + process.loadAnalysisHistZtoMuTau
    + process.normalizeAnalysisHistZtoMuTau
-   + process.plotTemplateHistZtoMuTau
    + process.prodSysBiasHistZtoMuTau
-   + process.saveAllHistZtoMuTau
+  #+ process.saveAllHistZtoMuTau  
 )
 
 process.loadAllHistZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(
-        inputFileNames = cms.vstring('templatesZtoMuTau.root'),
+        inputFileNames = cms.vstring('bgEstTemplatesZtoMuTau.root'),
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
     )
@@ -741,12 +885,13 @@ process.loadAllHistZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
 
 process.p = cms.Path(
     process.prodAllHistZtoMuTau
-    #process.loadAllHistZtoMuTau
+   #process.loadAllHistZtoMuTau
+   + process.plotTemplateHistZtoMuTau
    + process.fitZtoMuTau
 )
 
 # print-out all python configuration parameter information
-#print process.dumpPython()
+print process.dumpPython()
 
 
   
