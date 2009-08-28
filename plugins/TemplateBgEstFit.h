@@ -26,9 +26,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.6 $
+ * \version $Revision: 1.7 $
  *
- * $Id: TemplateBgEstFit.h,v 1.6 2009/08/13 14:22:24 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.7 2009/08/25 13:36:12 veelken Exp $
  *
  */
 
@@ -46,6 +46,7 @@
 #include <RooDataHist.h>
 #include <RooHistPdf.h>
 #include <RooRealVar.h>
+#include <RooConstVar.h>
 #include <RooAbsPdf.h>
 #include <RooFitResult.h>
 
@@ -124,8 +125,8 @@ class TemplateBgEstFit : public edm::EDAnalyzer
     std::string processName_;
     bool applyNormConstraint_;
     RooAbsPdf* pdfNormConstraint_;
-    RooRealVar* meanNormConstraint_;
-    RooRealVar* sigmaNormConstraint_;
+    RooConstVar* meanNormConstraint_;
+    RooConstVar* sigmaNormConstraint_;
     std::string pdfName_;
     RooAbsPdf* pdf_;
     bool pdfIsOwned_;
@@ -158,6 +159,7 @@ class TemplateBgEstFit : public edm::EDAnalyzer
 
 //--- private auxiliary functions
   void buildFitModel();
+  void fit(bool, int, int);
   void print(std::ostream& stream);
   void makeControlPlots();
   double compChi2red();

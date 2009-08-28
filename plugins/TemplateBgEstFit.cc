@@ -33,13 +33,16 @@
 #include <RooGlobalFunc.h>
 #include <RooPlot.h>
 #include <RooFit.h>
+#include <RooLinkedList.h>
+#include <RooCmdArg.h>
 
 #include <iostream>
 
 const int defaultCanvasSizeX = 800;
 const int defaultCanvasSizeY = 600;
 
-const float maxNorm = 1.e+6;
+const double maxNorm = 1.e+6;
+const double normStartValue = 1.e+3;
 
 const std::string fluctMode_coherent = "coherent";
 const std::string fluctMode_incoherent = "incoherent";
@@ -166,11 +169,26 @@ double getIntegral(const TH1* histogram)
 //--- return total number of entries in histogram given as function argument
 //    (including underflow and overflow bins)
 
-  int numBins = histogram->GetNbinsX();
-  return histogram->Integral(0, numBins + 1);
+  if ( histogram->InheritsFrom(TH3::Class()) ) {
+    const TH3* histogram3d = dynamic_cast<const TH3*>(histogram);
+    assert(histogram3d);
+    int numBinsX = histogram3d->GetNbinsX();
+    int numBinsY = histogram3d->GetNbinsY();
+    int numBinsZ = histogram3d->GetNbinsZ();
+    return histogram3d->Integral(0, numBinsX + 1, 0, numBinsY + 1, 0, numBinsZ + 1);
+  } else if ( histogram->InheritsFrom(TH2::Class()) ) {
+    const TH2* histogram2d = dynamic_cast<const TH2*>(histogram);
+    assert(histogram2d);
+    int numBinsX = histogram2d->GetNbinsX();
+    int numBinsY = histogram2d->GetNbinsY();
+    return histogram2d->Integral(0, numBinsX + 1, 0, numBinsY + 1);
+  } else {
+    int numBins = histogram->GetNbinsX();
+    return histogram->Integral(0, numBins + 1);
+  }
 }
 
-double getIntegral(const TH1* histogram, double xMin, double xMax)
+double getIntegral1d(const TH1* histogram, double xMin, double xMax)
 {
 //--- return sum of entries in histogram given as function argument within range xMin...xMax
 
@@ -413,7 +431,7 @@ void TemplateBgEstFit::dataDistrNdType::initialize()
     const RooAbsBinning& xRange = dataEntry1d->second->xRef_->getBinning();
     double xMin = xRange.lowBound();
     double xMax = xRange.highBound();
-    double integral_fitted = getIntegral(dataEntry1d->second->histogram_, xMin, xMax);
+    double integral_fitted = getIntegral1d(dataEntry1d->second->histogram_, xMin, xMax);
     std::cout << " integral_fitted = " << integral_fitted << std::endl;
     
     double integral = getIntegral(dataEntry1d->second->me_->getTH1());
@@ -503,12 +521,12 @@ void TemplateBgEstFit::dataDistrNdType::buildFitData()
 	    auxHistogram_->SetBinError(iBin_aux, integral_1*TMath::Sqrt(binError2_combined));
 
 	    //std::cout << "setting binContent(" << varName_1 << " = " << binCenter_1 << ", " << varName_2 << " = " << binCenter_2 << ")"
-	    //	        << " = " << auxHistogram_->GetBinContent(iBin_aux)
+	    //  	<< " = " << auxHistogram_->GetBinContent(iBin_aux)
 	    //          << " +/- binError = " << auxHistogram_->GetBinError(iBin_aux) << std::endl;
 	  }
 	}
 
-	std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << ", integral_1 = " << integral_1 << std::endl;
+	//std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << ", integral_1 = " << integral_1 << std::endl;
 	assert(TMath::Abs(getIntegral(auxHistogram_) - integral_1) < epsilon_integral*0.5*(getIntegral(auxHistogram_) + integral_1));
       } else if ( numDimensions_ == 3 ) {
 	const std::string& varName_1 = varNames_[0];
@@ -575,7 +593,7 @@ void TemplateBgEstFit::dataDistrNdType::buildFitData()
 	  }
 	}
 	
-	std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << ", integral_1 = " << integral_1 << std::endl;
+	//std::cout << " integral(auxHistogram) = " << getIntegral(auxHistogram_) << ", integral_1 = " << integral_1 << std::endl;
         assert(TMath::Abs(getIntegral(auxHistogram_) - integral_1) < epsilon_integral*0.5*(getIntegral(auxHistogram_) + integral_1));
       } else {
 	edm::LogError ("buildFitData") << " Number of Dimensions = " << numDimensions_ << " exceed maximum" 
@@ -709,7 +727,6 @@ TemplateBgEstFit::modelTemplateNdType::modelTemplateNdType(const std::string& pr
     normCorrFactor_(1.),
     auxHistogram_(0),
     auxDataHist_(0),
-    auxPdf_(0),
     error_(0)
 {
   edm::ParameterSet cfgDrawOptions_process = cfgProcess.getParameter<edm::ParameterSet>("drawOptions");
@@ -718,17 +735,18 @@ TemplateBgEstFit::modelTemplateNdType::modelTemplateNdType(const std::string& pr
   lineWidth_ = cfgDrawOptions_process.getParameter<int>("lineWidth");
 
   std::string normName = std::string(processName_).append("_").append("norm");
-  norm_ = new RooRealVar(normName.data(), normName.data(), 0., maxNorm);
+  double norm0 = ( cfgProcess.exists("norm0") ) ? cfgProcess.getParameter<double>("norm0") : normStartValue;
+  norm_ = new RooRealVar(normName.data(), normName.data(), norm0, 0., maxNorm);
 
   if ( applyNormConstraint_ ) {
     std::cout << "<modelTemplateNdType>: constraining norm = " << valueNormConstraint << " +/- " << sigmaNormConstraint << ","
 	      << " process = " << processName_ << std::endl;
     
     std::string meanNormConstraintName = std::string(processName_).append("_").append("meanNormConstraint");
-    meanNormConstraint_ = new RooRealVar(meanNormConstraintName.data(), meanNormConstraintName.data(), valueNormConstraint);
+    meanNormConstraint_ = new RooConstVar(meanNormConstraintName.data(), meanNormConstraintName.data(), valueNormConstraint);
     std::string sigmaNormConstraintName = std::string(processName_).append("_").append("sigmaNormConstraint");
-    sigmaNormConstraint_ = new RooRealVar(sigmaNormConstraintName.data(), sigmaNormConstraintName.data(), sigmaNormConstraint);
-
+    sigmaNormConstraint_ = new RooConstVar(sigmaNormConstraintName.data(), sigmaNormConstraintName.data(), sigmaNormConstraint);
+    
     std::string pdfNormConstraintName = std::string(processName_).append("_").append("pdfNormConstraint");
     pdfNormConstraint_ = new RooGaussian(pdfNormConstraintName.data(), pdfNormConstraintName.data(), 
 					 *norm_, *meanNormConstraint_, *sigmaNormConstraint_);
@@ -744,7 +762,6 @@ TemplateBgEstFit::modelTemplateNdType::~modelTemplateNdType()
 
   delete auxHistogram_;
   delete auxDataHist_;
-  delete auxPdf_;
 
   if ( pdfIsOwned_ ) delete pdf_;
 
@@ -780,7 +797,7 @@ void TemplateBgEstFit::modelTemplateNdType::initialize()
     const RooAbsBinning& xRange = processEntry1d->second->xRef_->getBinning();
     double xMin = xRange.lowBound();
     double xMax = xRange.highBound();
-    double integral_fitted = getIntegral(processEntry1d->second->histogram_, xMin, xMax);
+    double integral_fitted = getIntegral1d(processEntry1d->second->histogram_, xMin, xMax);
     std::cout << " integral_fitted = " << integral_fitted << std::endl;
     
     double integral = getIntegral(processEntry1d->second->me_->getTH1());
@@ -799,28 +816,10 @@ void TemplateBgEstFit::modelTemplateNdType::buildPdf()
   assert(fitMode_ == k1dPlus || fitMode_ == kNd);
 
   if ( numDimensions_ == 1 ) {
-    if ( !applyNormConstraint_ ) {
-      const std::string varName = varNames_.front();
-      pdfName_ = processEntries1d_[varName]->pdf1dName_;
-      pdf_ = processEntries1d_[varName]->pdf1d_;
-      pdfIsOwned_ = false;
-    } else {
-      const std::string varName = varNames_.front();
-
-      pdfName_ = std::string(processName_).append("_").append("pdf");
-
-      TObjArray pdf1dCollection;
-      pdf1dCollection.Add(processEntries1d_[varName]->pdf1d_);
-      pdf1dCollection.Add(pdfNormConstraint_);
-
-      std::string pdfArgName = std::string(processName_).append("_pdfArgs");
-      RooArgList pdfArgs(pdf1dCollection, pdfArgName.data());
-      
-      //std::cout << "--> creating RooProdPdf with name = " << pdfName_ << std::endl;
-      pdf_ = new RooProdPdf(pdfName_.data(), pdfName_.data(), pdfArgs);
-
-      pdfIsOwned_ = true;
-    }
+    const std::string varName = varNames_.front();
+    pdfName_ = processEntries1d_[varName]->pdf1dName_;
+    pdf_ = processEntries1d_[varName]->pdf1d_;
+    pdfIsOwned_ = false;
   } else {
     if ( fitMode_ == k1dPlus ) {
       std::vector<TH1*> histograms;
@@ -849,28 +848,10 @@ void TemplateBgEstFit::modelTemplateNdType::buildPdf()
       delete auxDataHist_;
       auxDataHist_ = new RooDataHist(auxDataHistName.data(), auxDataHistName.data(), *xRef_aux, auxHistogram_);
 
-      std::string auxPdfName = std::string(processName_).append("_").append(varName).append("_rooHistPdf");
-      delete auxPdf_;
-      auxPdf_ = new RooHistPdf(auxPdfName.data(), auxPdfName.data(), *xRef_aux, *auxDataHist_);
-
-      if ( !applyNormConstraint_ ) {
-	pdf_ = auxPdf_;
-	pdfIsOwned_ = false;
-      } else {	
-	pdfName_ = std::string(processName_).append("_").append("pdf");
-
-	TObjArray pdf1dCollection;
-	pdf1dCollection.Add(auxPdf_);
-	pdf1dCollection.Add(pdfNormConstraint_);
-
-	std::string pdfArgName = std::string(processName_).append("_pdfArgs");
-	RooArgList pdfArgs(pdf1dCollection, pdfArgName.data());
+      std::string pdfName = std::string(processName_).append("_").append(varName).append("_rooHistPdf");
+      pdf_ = new RooHistPdf(pdfName.data(), pdfName.data(), *xRef_aux, *auxDataHist_);
       
-	//std::cout << "--> creating RooProdPdf with name = " << pdfName_ << std::endl;
-	pdf_ = new RooProdPdf(pdfName_.data(), pdfName_.data(), pdfArgs);
-
-	pdfIsOwned_ = true;
-      }
+      pdfIsOwned_ = true;
     } else if ( fitMode_ == kNd ) {
       pdfName_ = std::string(processName_).append("_").append("pdf");
 
@@ -879,8 +860,6 @@ void TemplateBgEstFit::modelTemplateNdType::buildPdf()
 	    processEntry1d != processEntries1d_.end(); ++processEntry1d ) {
 	pdf1dCollection.Add(processEntry1d->second->pdf1d_);
       }
-
-      pdf1dCollection.Add(pdfNormConstraint_);
 
       std::string pdfArgName = std::string(processName_).append("_pdfArgs");
       RooArgList pdfArgs(pdf1dCollection, pdfArgName.data());
@@ -956,6 +935,7 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 	varName != varNames.end(); ++varName ) {
     edm::ParameterSet cfgVariable = cfgVariables.getParameter<edm::ParameterSet>(*varName);
 
+    std::cout << "--> including variable = " << (*varName) << " in fit." << std::endl;
     varNames_.push_back(*varName);
 
     std::string name = cfgVariable.getParameter<std::string>("name");
@@ -1151,6 +1131,58 @@ void TemplateBgEstFit::buildFitModel()
 //-----------------------------------------------------------------------------------------------------------------------
 //
 
+void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings) 
+{
+//--- fit model to data
+
+//--- build list of fit options
+  RooLinkedList fitOptions;
+  
+//--- check if "external" constraints exist on normalization factors to be determined by fit
+//    (specified by Gaussian probability density functions with mean and sigma obtained
+//     e.g. by level of agreement between Monte Carlo simulation and number of events observed in background enriched samples)
+  TObjArray normConstraints_pdfCollection;
+  for ( processEntryMap::iterator processEntry = processEntries_.begin();
+	processEntry != processEntries_.end(); ++processEntry ) {
+    if ( processEntry->second->applyNormConstraint_ ) normConstraints_pdfCollection.Add(processEntry->second->pdfNormConstraint_);
+  }
+
+  if ( normConstraints_pdfCollection.GetEntries() > 0 ) {
+    std::string normConstraints_pdfArgName = std::string("normConstraints").append("_pdfArgs");
+    RooArgSet normConstraints_pdfArgs(normConstraints_pdfCollection, normConstraints_pdfArgName.data());
+    
+    //fitOptions.Add(new RooCmdArg(RooFit::ExternalConstraints(normConstraints_pdfArgs))); // only works with ROOT version 5.22 and newer
+  }
+
+//--- check if results of fit are to be saved for later analysis
+//    (only necessary when fitting for "central values", **not** when estimating statistical or systematic uncertainties)
+  if ( saveFitResult ) fitOptions.Add(new RooCmdArg(RooFit::Save(true)));
+
+//--- stop Minuit from printing lots of information 
+//    about progress on fit and warnings
+//
+//    NOTE: RooFit::Warnings not implemented in RooFit version 
+//          included in ROOT 5.18/00a linked against CMSSW_2_2_13
+//
+  fitOptions.Add(new RooCmdArg(RooFit::PrintLevel(printLevel)));
+  //fitOptions.Add(new RooCmdArg(RooFit::PrintEvalErrors(printWarnings)));
+  //fitOptions.Add(new RooCmdArg(RooFit::Warnings(printWarnings_));
+
+  RooFitResult* fitResult = fitModel_->fitTo(*dataEntry_->fitData_, fitOptions);
+  
+  if ( saveFitResult ) fitResult_ = fitResult;
+
+//--- delete fit option objects
+  int numCmdArgs = fitOptions.GetSize();
+  for ( int iCmdArg = 0; iCmdArg < numCmdArgs; ++iCmdArg ) {
+    delete fitOptions.At(iCmdArg);
+  }
+}
+
+//
+//-----------------------------------------------------------------------------------------------------------------------
+//
+
 void TemplateBgEstFit::endJob()
 {
   std::cout << "<TemplateBgEstFit::endJob>:" << std::endl;
@@ -1206,12 +1238,7 @@ void TemplateBgEstFit::endJob()
 
 //--- fit template shapes of different signal and background processes
 //    to distribution observed in (pseudo)data
-//
-//    NOTE: RooFit::Warnings not implemented in RooFit version 
-//          included in ROOT 5.18/00a linked against CMSSW_2_2_13
-//
-  fitResult_ = fitModel_->fitTo(*dataEntry_->fitData_, RooFit::Extended(), RooFit::Save(true), 
-				RooFit::PrintLevel(printLevel_) /* , RooFit::Warnings(printWarnings_) */ );
+  fit(true, printLevel_, printWarnings_);
   assert(fitResult_ != NULL);
 
 //--- print-out fit results
@@ -1495,8 +1522,7 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
       delete fitModel_;
       buildFitModel();
 
-      fitModel_->fitTo(*dataEntry_->fitData_, RooFit::Extended(),
-		       RooFit::PrintLevel(printLevel) /* , RooFit::Warnings(printWarnings) */ );
+      fit(false, printLevel, printWarnings);
       ++numTotFits;
 
       for ( int iProcess = 0; iProcess < numProcesses; ++iProcess ) {
