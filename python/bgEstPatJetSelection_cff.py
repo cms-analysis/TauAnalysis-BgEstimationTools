@@ -35,20 +35,20 @@ bgEstSelectLayer1JetsEt = bgEstPatJetSelConfiguratorEt.configure(namespace = loc
 # select jets with quantity alpha > 0.1
 # (defined as ratio of sum of charged particle transverse momenta 
 #  to sum of charged plus neutral particle transverse momenta)
-bgEstSelectedLayer1JetsAlpha0_1 = cms.EDFilter("PATJetAlphaSelector",
+bgEstSelectedLayer1JetsAlpha0point1 = cms.EDFilter("PATJetAlphaSelector",
     alphaMin = cms.double(0.1),
     filter = cms.bool(False)
 )
 
 # select jets with quantity alpha > 0.3
-bgEstSelectedLayer1JetsAlpha0_3 = cms.EDFilter("PATJetAlphaSelector",
+bgEstSelectedLayer1JetsAlpha0point3 = cms.EDFilter("PATJetAlphaSelector",
     alphaMin = cms.double(0.3),
     filter = cms.bool(False)
 )
 
 bgEstPatJetSelConfiguratorAlpha = objSelConfigurator(
-    [ bgEstSelectedLayer1JetsAlpha0_1,
-      bgEstSelectedLayer1JetsAlpha0_3 ],
+    [ bgEstSelectedLayer1JetsAlpha0point1,
+      bgEstSelectedLayer1JetsAlpha0point3 ],
     src = "selectedLayer1JetsEt20Cumulative",
     pyModuleName = __name__,
     doSelIndividual = False
