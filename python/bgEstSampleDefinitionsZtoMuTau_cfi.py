@@ -4,7 +4,7 @@ import copy
 # define configuration parameters for submission of Z --> mu + tau-jet jobs to CERN batch system
 # (running over skimmed samples stored on CASTOR)
 
-bgEstSampleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstSkim/ZtoMuTau/")
+bgEstSampleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstSkim/ZtoMuTau_looseTauSel/")
 
 # definitions for producing skimmed samples
 bgEstSampleOutputFileNameZtautau = cms.untracked.string('bgEstSampleZtoMuTau_Ztautau_partXX.root')
@@ -110,22 +110,28 @@ bgEstNtupleOutputFileNameZeePlusJets = cms.string('bgEstNtupleZtoMuTau_ZeePlusJe
 bgEstSampleOutputFileNameWplusJets = cms.untracked.string('bgEstSampleZtoMuTau_WplusJets_partXX.root')
 
 # definitions for reading skimmed samples
-bgEstSampleFileNamesWplusJets = cms.untracked.vstring(
+bgEstSampleFileNamesWplusJets_part01 = cms.untracked.vstring(
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part01.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part02.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part03.root',
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part04.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part04.root'
+)
+
+bgEstSampleFileNamesWplusJets_part02 = cms.untracked.vstring(
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part05.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part06.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part07.root',
-    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part08.root',
+    bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part08.root'
+)
+
+bgEstSampleFileNamesWplusJets_part03 = cms.untracked.vstring(
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part09.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part10.root',
     bgEstSampleDirectoryName.value() + 'bgEstSampleZtoMuTau_WplusJets_part11.root'
 )
 
 # definitions for producing ntuples
-bgEstNtupleOutputFileNameWplusJets = cms.string('bgEstNtupleZtoMuTau_WplusJets.root')
+bgEstNtupleOutputFileNameWplusJets = cms.string('bgEstNtupleZtoMuTau_WplusJets_partXX.root')
 
 #--------------------------------------------------------------------------------
 

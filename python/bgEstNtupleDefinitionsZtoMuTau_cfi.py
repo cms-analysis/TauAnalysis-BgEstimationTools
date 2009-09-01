@@ -4,7 +4,7 @@ import copy
 # define Ntuple files used for data-driven background estimation methods
 # in Z --> mu + tau-jet channel
 
-bgEstNtupleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau/")
+bgEstNtupleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau_looseTauSel/")
 
 # Z --> tau tau sample
 fileNames_Ztautau = cms.vstring(
@@ -35,11 +35,11 @@ fileNames_ZtautauPlusJets = cms.vstring(
 # Z --> mu mu + jets sample
 fileNames_ZmumuPlusJets = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01a.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01b.root',
+    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01b.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part02a.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part02b.root',
+    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part02b.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part03a.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part03b.root'    
+    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part03b.root'    
 )
 
 # Z --> e e + jets sample
@@ -51,7 +51,9 @@ fileNames_ZeePlusJets = cms.vstring(
 
 # W + jets sample
 fileNames_WplusJets = cms.vstring(
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_WplusJets.root'
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_WplusJets_part01.root',
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_WplusJets_part02.root',
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_WplusJets_part03.root'
 )
 
 #--------------------------------------------------------------------------------
