@@ -47,13 +47,14 @@ process.source = cms.Source("EmptySource")
 
 bgEstEventSelection_Zmumu = (
     "numDiTausZmumu >= 1 && muonTrackIsoZmumu_0 < 1. && muonEcalIsoZmumu_0 < 1. && tauDiscrAgainstMuonsZmumu_0 < 0.5"
-    " && diTauAbsChargeZmumu < 0.5"
+    " && diTauAbsChargeZmumu_0 < 0.5"
 )
 
 print("bgEstEventSelection_Zmumu = " + bgEstEventSelection_Zmumu)
 
 bgEstEventSelection_WplusJets = (
     "numDiTausWplusJets >= 1 && muonPtWplusJets_0 > 20. && muonTrackIsoWplusJets_0 < 2. && muonEcalIsoWplusJets_0 < 2."
+    #"numDiTausWplusJets >= 1 && muonPtWplusJets_0 > 25. && muonTrackIsoWplusJets_0 < 1. && muonEcalIsoWplusJets_0 < 1."
     " && tauTrackIsoDiscrWplusJets_0 < 0.5 && tauTrackIsoWplusJets_0 > 2. && tauDiscrAgainstMuonsWplusJets_0 > 0.5"
     " && diTauMt1MEtWplusJets_0 > 30."
     " && numGlobalMuons < 2"
@@ -533,49 +534,116 @@ process.saveAllHistZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
 # fit template histograms to distribution of visible muon + tau-jet mass in (pseudo)Data,
 # in order to determine normalization factors of individual background processes
 #--------------------------------------------------------------------------------
+
+diTauMvis12_smoothing = cms.PSet(
+    pluginName = cms.string("Landau convoluted with Gaussian")
+    pluginType = cms.string("TF1landauXgausWrapper"), # defaults to TF1Wrapper
+    xMin = cms.double(0.),
+    xMax = cms.double(200.),
+    parameter = cms.PSet(
+        par0 = cms.PSet( # width (scale) parameter of Landau density
+            initial = cms.double(5.),
+            min = cms.double(1.),
+            max = cms.double(50.)
+        ),
+        par1 = cms.PSet( # most probable (MP, location) parameter of Landau density
+            initial = cms.double(50.),
+            min = cms.double(20.),
+            max = cms.double(150.)
+        ),
+        par2 = cms.PSet( # total area (integral from -inf to +inf, normalization constant)
+            initial = cms.double(1.),
+            min = cms.double(0.1),
+            max = cms.double(2.)
+        ),
+        par3 = cms.PSet( # width (sigma) of convoluted Gaussian function
+            initial = cms.double(10.),
+            min = cms.double(1.),
+            max = cms.double(50.)
+        )
+    )
+)
+
 process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",                                          
     processes = cms.PSet(
         Ztautau = cms.PSet(
-            meNames = cms.PSet(
-                diTauMvis12 = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm)
+            templates = cms.PSet(
+                diTauMvis12 = cms.PSet(
+                    meName = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
+                    smoothing = diTauMvis12_smoothing.clone(
+                        pluginName = cms.string("diTauMvis12SmoothingZtautau")
+                    )
+                )
             ),    
-            drawOptions = drawOption_Ztautau,
-            norm0 = cms.double(1000.)
+            norm = cms.PSet(
+                initial = cms.double(1000.)
+            ),
+            drawOptions = drawOption_Ztautau                
         ),
         Zmumu = cms.PSet(
-            meNames = cms.PSet(
-                diTauMvis12 = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_diTauMvis12_norm)
+            templates = cms.PSet(
+                diTauMvis12 = cms.PSet(
+                    meName = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_diTauMvis12_norm),
+                    smoothing = diTauMvis12_smoothing.clone(
+                        pluginName = cms.string("diTauMvis12SmoothingZmumu")
+                    )
+                )
             ),    
-            drawOptions = drawOption_Zmumu,
-            norm0 = cms.double(25.)
+            norm = cms.PSet(
+                initial = cms.double(25.)
+            ),
+            drawOptions = drawOption_Zmumu
         ),
         WplusJets = cms.PSet(
-            meNames = cms.PSet(
-                diTauMvis12 = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMvis12_norm)
-            ),  
-            drawOptions = drawOption_WplusJets,
-            norm0 = cms.double(500.)
+            templates = cms.PSet(
+                diTauMvis12 = cms.PSet(
+                    meName = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMvis12_norm),
+                    smoothing = diTauMvis12_smoothing.clone(
+                        pluginName = cms.string("diTauMvis12SmoothingWplusJets")
+                    )
+                )
+            ),    
+            norm = cms.PSet(
+                initial = cms.double(500.)
+            ),
+            drawOptions = drawOption_WplusJets
         ),
         TTplusJets = cms.PSet(
-            meNames = cms.PSet(
-                diTauMvis12 = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_data + meName_diTauMvis12_norm)
-            ),  
-            drawOptions = drawOption_TTplusJets,
-            norm0 = cms.double(100.)
+            templates = cms.PSet(
+                diTauMvis12 = cms.PSet(
+                    meName = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_data + meName_diTauMvis12_norm),
+                    smoothing = diTauMvis12_smoothing.clone(
+                        pluginName = cms.string("diTauMvis12SmoothingTTplusJets")
+                    )
+                )
+            ),    
+            norm = cms.PSet(
+                initial = cms.double(100.)
+            ),
+            drawOptions = drawOption_TTplusJets
         ),
         QCD = cms.PSet(
-            meNames = cms.PSet(
-                diTauMvis12 = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMvis12_norm)
-            ),  
+            templates = cms.PSet(
+                diTauMvis12 = cms.PSet(
+                    meName = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMvis12_norm),
+                    smoothing = diTauMvis12_smoothing.clone(
+                        pluginName = cms.string("diTauMvis12SmoothingQCD")
+                    )
+                )
+            ),    
+            norm = cms.PSet(
+                initial = cms.double(100.)
+            ),
             drawOptions = drawOption_QCD,
-            norm0 = cms.double(100.)
         )
     ),
 
     # use "pseudo" data-samples consisting of all Monte Carlo processes for testing                      
     data = cms.PSet(
-        meNames = cms.PSet(
-            diTauMvis12 = cms.string(dqmDirectory_data_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12)
+        distributions = cms.PSet(
+            diTauMvis12 = cms.PSet(
+                meName = cms.string(dqmDirectory_data_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12)
+            )
         )
     ),
 
