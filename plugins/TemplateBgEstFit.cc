@@ -25,6 +25,8 @@
 #include <TArrayD.h>
 #include <TLegend.h>
 #include <TRandom3.h>
+#include <TF1.h>
+#include <TStyle.h>
 
 #include <RooAddPdf.h>
 #include <RooGaussian.h>
@@ -35,6 +37,7 @@
 #include <RooFit.h>
 #include <RooLinkedList.h>
 #include <RooCmdArg.h>
+#include <RooTFnPdfBinding.h>
 
 #include <iostream>
 
@@ -61,11 +64,7 @@ const double epsilon_integral = 5.e-2;
 
 const int fitStatus_converged = 0;
 
-typedef std::vector<std::string> vstring;
 typedef std::pair<double, double> double_pair;
-
-void drawErrorEllipse(double, double, double, double, double, const char*, const char*, const char*);
-void makeCovariancePlots(TVectorD, TVectorD, TMatrixD, const vstring&, const std::string&, const char*);
 
 double getSampledPull(double pullRMS, double pullMin, double pullMax)
 {
@@ -367,17 +366,22 @@ void TemplateBgEstFit::dataDistr1dType::initialize()
   fluctHistogram_ = (TH1*)histogram_->Clone();
 
   dataHistName_ = std::string(processName_).append("_").append(varName_).append("_rooDataHist");
+  buildFitData();
+}
+
+void TemplateBgEstFit::dataDistr1dType::buildFitData()
+{
   dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, fluctHistogram_);
 }
 
 void TemplateBgEstFit::dataDistr1dType::fluctuate(bool, bool)
 {  
   sampleHistogram_stat(histogram_, fluctHistogram_);
-
+  
   makeHistogramPositive(fluctHistogram_);
-
+  
   delete dataHist_;
-  dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, fluctHistogram_);
+  buildFitData();
 }
 
 //
@@ -634,14 +638,18 @@ void TemplateBgEstFit::dataDistrNdType::fluctuate(bool, bool)
 //
 
 TemplateBgEstFit::modelTemplate1dType::modelTemplate1dType(const std::string& processName, const std::string& varName,
-							   const std::string& meName, RooRealVar* x, bool cutUnfittedRegion)
+							   const std::string& meName, RooRealVar* x, bool cutUnfittedRegion,
+							   bool applySmoothing, const edm::ParameterSet& cfgSmoothing)
   : dataDistr1dType(processName, varName, meName, x, cutUnfittedRegion),
-    pdf1d_(0)
+    pdf1d_(0),
+    applySmoothing_(applySmoothing), cfgSmoothing_(cfgSmoothing),
+    auxTF1Wrapper_(0)
 {}
 
 TemplateBgEstFit::modelTemplate1dType::~modelTemplate1dType()
 {
   delete pdf1d_;
+  delete auxTF1Wrapper_;
 }
 
 void TemplateBgEstFit::modelTemplate1dType::initialize()
@@ -653,7 +661,7 @@ void TemplateBgEstFit::modelTemplate1dType::initialize()
   if ( error_ ) return;
  
   pdf1dName_ = std::string(processName_).append("_").append(varName_).append("_").append("pdf");
-  pdf1d_ = new RooHistPdf(pdf1dName_.data(), pdf1dName_.data(), *xRef_, *dataHist_);
+  buildPdf();
 
   DQMStore& dqmStore = (*edm::Service<DQMStore>());
   for ( std::vector<sysFluctDefType>::iterator sysErrFluctuation = sysErrFluctuations_.begin();
@@ -674,6 +682,35 @@ void TemplateBgEstFit::modelTemplate1dType::initialize()
       continue;
     }
   }
+}
+
+void TemplateBgEstFit::modelTemplate1dType::buildPdf()
+{
+  if ( !applySmoothing_ ) {
+    pdf1d_ = new RooHistPdf(pdf1dName_.data(), pdf1dName_.data(), *xRef_, *dataHist_);
+  } else {
+
+    bool isFirstFit = (!auxTF1Wrapper_);
+
+    if ( isFirstFit ) {
+      std::string pluginTypeTF1Wrapper = cfgSmoothing_.getParameter<std::string>("pluginType");
+      auxTF1Wrapper_ = TF1WrapperPluginFactory::get()->create(pluginTypeTF1Wrapper, cfgSmoothing_);
+    } else {
+      auxTF1Wrapper_->reinitializeTF1Parameter();
+    }
+
+    std::string fitOption = ( isFirstFit ) ? "RB0" : "RB0Q";
+
+    fluctHistogram_->Fit(auxTF1Wrapper_->getTF1(), fitOption.data());
+
+    edm::LogError ("modelTemplate1dType::buildPdf") << " Smoothing not yet supported in CMSSW_2_2_x !!";
+    return;
+/*
+    // RooTFnPdfBinding requires ROOT version 5.22 (or higher),
+    // only available for CMSSW_3_1_x
+    if ( !pdf1d_ ) pdf1d_ = new RooTFnPdfBinding(pdf1dName_.data(), pdf1dName_.data(), auxTF1Wrapper_->getTF1(), RooArgList(*xRef_));
+ */
+  } 
 }
 
 void TemplateBgEstFit::modelTemplate1dType::fluctuate(bool fluctStat, bool fluctSys)
@@ -702,10 +739,13 @@ void TemplateBgEstFit::modelTemplate1dType::fluctuate(bool fluctStat, bool fluct
 
   makeHistogramPositive(fluctHistogram_);
 
-  delete dataHist_;
-  dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, fluctHistogram_);
+  if ( !applySmoothing_ ) {
+    delete dataHist_;
+    buildFitData();
+  }
+  
   delete pdf1d_;
-  pdf1d_ = new RooHistPdf(pdf1dName_.data(), pdf1dName_.data(), *xRef_, *dataHist_);
+  buildPdf();
 }
 
 //
@@ -735,8 +775,9 @@ TemplateBgEstFit::modelTemplateNdType::modelTemplateNdType(const std::string& pr
   lineWidth_ = cfgDrawOptions_process.getParameter<int>("lineWidth");
 
   std::string normName = std::string(processName_).append("_").append("norm");
-  double norm0 = ( cfgProcess.exists("norm0") ) ? cfgProcess.getParameter<double>("norm0") : normStartValue;
-  norm_ = new RooRealVar(normName.data(), normName.data(), norm0, 0., maxNorm);
+  double norm_initial = ( cfgProcess.exists("norm") ) ? 
+    cfgProcess.getParameter<edm::ParameterSet>("norm").getParameter<double>("initial") : normStartValue;
+  norm_ = new RooRealVar(normName.data(), normName.data(), norm_initial, 0., maxNorm);
 
   if ( applyNormConstraint_ ) {
     std::cout << "<modelTemplateNdType>: constraining norm = " << valueNormConstraint << " +/- " << sigmaNormConstraint << ","
@@ -772,11 +813,13 @@ TemplateBgEstFit::modelTemplateNdType::~modelTemplateNdType()
   delete sigmaNormConstraint_;
 }
 
-void TemplateBgEstFit::modelTemplateNdType::addElement(const std::string& varName, RooRealVar* x, const std::string& meName)
+void TemplateBgEstFit::modelTemplateNdType::addElement(const std::string& varName, RooRealVar* x, const std::string& meName,
+						       bool applySmoothing, const edm::ParameterSet& cfgSmoothing)
 {
   varNames_.push_back(varName);
   
-  modelTemplate1dType* processEntry1d = new modelTemplate1dType(processName_, varName, meName, x, cutUnfittedRegion_);
+  modelTemplate1dType* processEntry1d = new modelTemplate1dType(processName_, varName, meName, x, cutUnfittedRegion_,
+								applySmoothing, cfgSmoothing);
   if ( processEntry1d->error_ ) error_ = 1;
   processEntries1d_[varName] = processEntry1d;
   
@@ -961,19 +1004,25 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 								applyNormConstraints[*processName], 
 								meanNormConstraints[*processName], sigmaNormConstraints[*processName]);
     
-    edm::ParameterSet cfgMonitorElements = cfgProcess.getParameter<edm::ParameterSet>("meNames");
+    edm::ParameterSet cfgTemplates = cfgProcess.getParameter<edm::ParameterSet>("templates");
     for ( vstring::const_iterator varName = varNames_.begin();
 	  varName != varNames_.end(); ++varName ) {
-      if ( !cfgMonitorElements.exists(*varName) ) {
+      if ( !cfgTemplates.exists(*varName) ) {
 	edm::LogError ("TemplateBgEstFit") << " No Template of variable = " << (*varName) 
 					   << " defined for process = " << (*processName) << " !!";
 	error_ = 1;
 	continue;
       }
 
-      std::string meName = cfgMonitorElements.getParameter<std::string>(*varName);
+      edm::ParameterSet cfgTemplate = cfgTemplates.getParameter<edm::ParameterSet>(*varName);
 
-      processEntry->addElement(*varName, x_[*varName], meName);
+      std::string meName = cfgTemplate.getParameter<std::string>("meName");
+
+      bool applySmoothing = cfgTemplate.exists("smoothing");
+      edm::ParameterSet cfgSmoothing = ( applySmoothing ) ? 
+	cfgTemplate.getParameter<edm::ParameterSet>("smoothing") : edm::ParameterSet();
+
+      processEntry->addElement(*varName, x_[*varName], meName, applySmoothing, cfgSmoothing);
     }
 
     processEntries_[*processName] = processEntry;
@@ -990,16 +1039,18 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 
   dataEntry_ = new dataDistrNdType(fitMode_, cutUnfittedRegion_);
 
-  edm::ParameterSet cfgMonitorElements = cfgData.getParameter<edm::ParameterSet>("meNames");
+  edm::ParameterSet cfgDistributions = cfgData.getParameter<edm::ParameterSet>("distributions");
   for ( vstring::const_iterator varName = varNames_.begin();
         varName != varNames_.end(); ++varName ) {
-    if ( !cfgMonitorElements.exists(*varName) ) {
+    if ( !cfgDistributions.exists(*varName) ) {
       edm::LogError ("TemplateBgEstFit") << " No Template of variable = " << (*varName) << " defined for data !!";
       error_ = 1;
       continue;
     }
 
-    std::string meName = cfgMonitorElements.getParameter<std::string>(*varName);
+    edm::ParameterSet cfgDistribution = cfgDistributions.getParameter<edm::ParameterSet>(*varName);
+
+    std::string meName = cfgDistribution.getParameter<std::string>("meName");
 
     dataEntry_->addElement(*varName, x_[*varName], meName);
   }
@@ -1312,6 +1363,258 @@ void TemplateBgEstFit::makeControlPlots()
 //    (in order to be able to run in batch mode) 
   gROOT->SetBatch(true);
 
+//--- produce control plots of smoothing functions
+//    fitted to shape templates in order to reduce effect of statistical fluctuations
+//    of shape templates on fit results
+//    (and in particular effect of different statistical precision with which shape templates
+//     are determined for different background processes in background enriched samples)
+  makeControlPlotsSmoothing();
+
+//--- produce control plots of one and two sigma error contours 
+//    showing correlation of estimated normalization factors
+  const RooArgList& fitParameter = fitResult_->floatParsFinal();
+  int numFitParameter = fitParameter.getSize();
+  vstring labels(numFitParameter);
+  for ( int iX = 0; iX < numFitParameter; ++iX ) {
+    const RooAbsArg* paramX_arg = fitParameter.at(iX);
+    labels[iX] = paramX_arg->GetName();
+  }
+
+  makeControlPlotsCovariance(fitResultMean_, fitResultMean_, fitResultCov_, labels, controlPlotsFileName_, "");
+
+//--- produce control plots of distributions observed in (pseudo)data
+//    compared to sum of signal and background templates
+//    scaled by normalization factors determined by the fit
+  makeControlPlotsObsDistribution();
+}
+
+void TemplateBgEstFit::makeControlPlotsSmoothing()
+{
+  TCanvas canvas("TemplateBgEstFit", "TemplateBgEstFit", defaultCanvasSizeX, defaultCanvasSizeY);
+  canvas.SetFillColor(10);
+
+  int defStyle_optStat = gStyle->GetOptStat();
+  int defStyle_optFit = gStyle->GetOptStat();
+  float defStyle_labelSizeX = gStyle->GetLabelSize("x");
+  float defStyle_labelSizeY = gStyle->GetLabelSize("y");
+
+  gStyle->SetOptStat(1111);
+  gStyle->SetOptFit(111);
+  gStyle->SetLabelSize(0.03, "x");
+  gStyle->SetLabelSize(0.03, "y");
+  
+  for ( processEntryMap::iterator processEntry = processEntries_.begin();
+	processEntry != processEntries_.end(); ++processEntry ) {
+    const std::string& processName = processEntry->first;
+    
+    for ( vstring::const_iterator varName = varNames_.begin(); 
+	  varName != varNames_.end(); ++varName ) {
+
+      modelTemplate1dType* processEntry1d = processEntry->second->processEntries1d_[*varName];
+
+      if ( !processEntry1d->applySmoothing_ ) continue;
+
+      std::string histogramName = std::string(processEntry1d->histogram_->GetName()).append("_cloned");
+      TH1* histogram_cloned = (TH1*)processEntry1d->histogram_->Clone(histogramName.data());
+      histogram_cloned->GetXaxis()->SetTitle(varName->data());
+      histogram_cloned->SetLineStyle(1);
+      histogram_cloned->SetLineColor(1);
+      histogram_cloned->SetLineWidth(2);
+
+      std::string tf1Name = std::string(processEntry1d->auxTF1Wrapper_->getTF1()->GetName()).append("_cloned");
+      TF1* tf1_cloned = (TF1*)processEntry1d->auxTF1Wrapper_->getTF1()->Clone(tf1Name.data());
+      tf1_cloned->SetLineStyle(1);
+      tf1_cloned->SetLineColor(2);
+      tf1_cloned->SetLineWidth(2);
+      
+      double yMax = histogram_cloned->GetMaximum();
+      histogram_cloned->SetMaximum(1.3*yMax);
+
+      TLegend legend(0.67, 0.63, 0.89, 0.89);
+      legend.SetBorderSize(0);
+      legend.SetFillColor(0);
+
+      legend.AddEntry(histogram_cloned, "Template Histogram", "p");
+      legend.AddEntry(tf1_cloned, "Smoothing Function", "l");
+
+      histogram_cloned->Draw("e1p");
+      tf1_cloned->Draw("lsame");
+      
+      legend.Draw();
+
+      canvas.Update();
+
+      int errorFlag = 0;
+      std::string fileNameParam = std::string(processName).append("_").append(*varName).append("_smoothing");
+      std::string fileName = replace_string(controlPlotsFileName_, plotKeyword, fileNameParam, 1, 1, errorFlag);
+      if ( !errorFlag ) {
+	canvas.Print(fileName.data());
+      } else {
+	edm::LogError("TemplateBgEstFit::makeControlPlotsSmoothing") << " Failed to decode controlPlotsFileName = " 
+								     << controlPlotsFileName_ << " --> skipping !!";
+	return;
+      }
+
+      delete histogram_cloned;
+      delete tf1_cloned;
+    }
+  }
+
+  gStyle->SetOptStat(defStyle_optStat);
+  gStyle->SetOptFit(defStyle_optFit);
+  gStyle->SetLabelSize(defStyle_labelSizeX, "x");
+  gStyle->SetLabelSize(defStyle_labelSizeY, "y");
+}
+
+void drawErrorEllipse(double x0, double y0, double errX0, double errY0, double Sxx, double Sxy, double Syy, 
+		      const char* labelX, const char* labelY, const char* fileName)
+{
+//--- draw best fit estimate (x0,y0) 
+//    plus one and two sigma error contours centered at (errX0,errY0) 
+//    and with (correlated) uncertainties estimated by elements Sxx, Sxy, Syy of covariance matrix 
+//    passed as function arguments
+//    (note that since the covariance matrix is symmetric, 
+//     there is no need to pass element Syx of the covariance matrix)
+
+  TCanvas canvas("drawErrorEllipse", "drawErrorEllipse", 600, 600);
+  canvas.SetFillColor(10);
+
+//--- compute angle between first principal axis of error ellipse
+//    and x-axis
+  double alpha = 0.5*TMath::ATan2(-2*Sxy, Sxx - Syy);
+
+  //std::cout << "alpha = " << alpha*180./TMath::Pi() << std::endl;
+
+  double sinAlpha = TMath::Sin(alpha);
+  double cosAlpha = TMath::Cos(alpha);
+
+//--- compute covariance axis in coordinate system
+//    defined by principal axes of error ellipse
+  double Suu = Sxx*sinAlpha*sinAlpha + 2*Sxy*sinAlpha*cosAlpha + Syy*cosAlpha*cosAlpha;
+  double Svv = Sxx*cosAlpha*cosAlpha + 2*Sxy*sinAlpha*cosAlpha + Syy*sinAlpha*sinAlpha;
+  
+//--- resolve ambiguity which axis represents the first principal axis
+//    and which represents the second principal axis
+//
+//    NOTE: in case Sxy > 0. (correlation of variables X and Y), 
+//          the principal axis needs to point in direction of either the first or the third quadrant;
+//          in case Sxy < 0. (anti-correlation of variables X and Y), 
+//          the principal axis needs to point in direction of either the second or the fourth quadrant.
+  double sigmaX_transformed = 0.;
+  double sigmaY_transformed = 0.;
+  if ( (Sxy >= 0. && TMath::Abs(alpha) <= 0.5*TMath::Pi()) || 
+       (Sxy <  0. && TMath::Abs(alpha) >  0.5*TMath::Pi()) ) {
+    sigmaX_transformed = TMath::Sqrt(TMath::Max(Suu, Svv));
+    sigmaY_transformed = TMath::Sqrt(TMath::Min(Suu, Svv));
+  } else {
+    sigmaX_transformed = TMath::Sqrt(TMath::Min(Suu, Svv));
+    sigmaY_transformed = TMath::Sqrt(TMath::Max(Suu, Svv));
+  }
+
+  TEllipse oneSigmaErrorEllipse(errX0, errY0, sigmaX_transformed*1., sigmaY_transformed*1., 0., 360., alpha*180./TMath::Pi()); 
+  oneSigmaErrorEllipse.SetFillColor(5);
+  oneSigmaErrorEllipse.SetLineColor(44);
+  oneSigmaErrorEllipse.SetLineWidth(1);
+  TEllipse twoSigmaErrorEllipse(errX0, errY0, sigmaX_transformed*2., sigmaY_transformed*2., 0., 360., alpha*180./TMath::Pi()); 
+  TSeqCollection* colors = gROOT->GetListOfColors();
+  if ( colors && colors->At(42) ) {
+    TColor* orange = (TColor*)colors->At(42);
+    orange->SetRGB(1.00,0.80,0.00);
+  } else {
+    edm::LogWarning ("drawErrorEllipse") << " Failed to access list of Colors from gROOT object"
+					 << " --> skipping definition of Color 'orange' !!";
+  }
+  twoSigmaErrorEllipse.SetFillColor(42);
+  twoSigmaErrorEllipse.SetLineColor(44);
+  twoSigmaErrorEllipse.SetLineWidth(1);
+
+  TMarker centralValueMarker(x0, y0, 5);
+  centralValueMarker.SetMarkerSize(2);
+
+//--- create dummy histogram  
+//    defining region to be plotted
+  double minX = TMath::Min(errX0 - 2.2*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)),
+			   x0 - 0.2*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)));
+  double maxX = TMath::Max(errX0 + 2.8*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)),
+			   x0 + 0.2*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)));
+  double minY = TMath::Min(errY0 - 2.2*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)),
+			   y0 - 0.2*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)));
+  double maxY = TMath::Max(errY0 + 2.8*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)),
+			   y0 + 0.2*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)));
+			   
+  if ( TMath::Abs(maxX - minX) < epsilon || 
+       TMath::Abs(maxY - minY) < epsilon ) {
+    if ( TMath::Abs(maxX - minX) < epsilon ) edm::LogWarning ("drawErrorEllipse") << " Invalid x-range: minX = maxX = " << minX;
+    if ( TMath::Abs(maxY - minY) < epsilon ) edm::LogWarning ("drawErrorEllipse") << " Invalid y-range: minY = maxY = " << minY;
+    edm::LogWarning ("drawErrorEllipse") << " --> skipping drawing of Error ellipse for labelX = " << labelX << ","
+					 << " labelY = " << labelY << " !!";
+    return;
+  }
+
+//--- create dummy histogram  
+  TH2F dummyHistogram("dummyHistogram", "dummyHistogram", 5, minX, maxX, 5, minY, maxY);
+  dummyHistogram.SetTitle("");
+  dummyHistogram.SetStats(false);
+  dummyHistogram.SetXTitle(labelX);
+  dummyHistogram.SetYTitle(labelY);
+  dummyHistogram.SetTitleOffset(1.35, "Y");
+
+  dummyHistogram.Draw("AXIS");
+  
+  twoSigmaErrorEllipse.Draw();
+  oneSigmaErrorEllipse.Draw();
+
+  centralValueMarker.Draw();
+
+  TLegend legend(0.70, 0.70, 0.89, 0.89);
+  legend.SetBorderSize(0);
+  legend.SetFillColor(0);
+  legend.AddEntry(&centralValueMarker, "best Fit value", "p");
+  legend.AddEntry(&oneSigmaErrorEllipse, "1#sigma Contour", "f");
+  legend.AddEntry(&twoSigmaErrorEllipse, "2#sigma Contour", "f");
+
+  legend.Draw();
+
+  canvas.Print(fileName);
+}
+
+void TemplateBgEstFit::makeControlPlotsCovariance(TVectorD estimate, TVectorD errMean, TMatrixD errCov, const vstring& labels, 
+						  const std::string& controlPlotsFileName, const char* type)
+{
+  int numFitParameter = estimate.GetNoElements();
+  assert(errMean.GetNoElements() == numFitParameter);
+  assert(errCov.GetNrows() == numFitParameter && errCov.GetNcols() == numFitParameter);
+  for ( int iX = 0; iX < numFitParameter; ++iX ) {
+    double x0 = estimate(iX);
+    double errX0 = errMean(iX);
+    double Sxx = errCov(iX, iX);
+    const char* labelX = labels[iX].data();
+
+    for ( int iY = 0; iY < iX; ++iY ) {
+      double y0 = estimate(iY);
+      double errY0 = errMean(iY);
+      double Syy = errCov(iY, iY);
+      const char* labelY = labels[iY].data();
+
+      double Sxy = errCov(iX, iY);
+      std::string fileNameParam = std::string("corr_").append(labelX).append("_vs_").append(labelY);
+      if ( type != "" ) fileNameParam.append("_").append(type);
+      
+      int errorFlag = 0;
+      std::string fileName = replace_string(controlPlotsFileName, plotKeyword, fileNameParam, 1, 1, errorFlag);
+      if ( !errorFlag ) {
+	drawErrorEllipse(x0, y0, errX0, errY0, Sxx, Sxy, Syy, labelX, labelY, fileName.data());
+      } else {
+	edm::LogError("drawErrorEllipses") << " Failed to decode controlPlotsFileName = " << controlPlotsFileName 
+					   << " --> skipping !!";
+	return;
+      }
+    }
+  }
+}
+
+void TemplateBgEstFit::makeControlPlotsObsDistribution()
+{
   TCanvas canvas("TemplateBgEstFit", "TemplateBgEstFit", defaultCanvasSizeX, defaultCanvasSizeY);
   canvas.SetFillColor(10);
 
@@ -1392,8 +1695,8 @@ void TemplateBgEstFit::makeControlPlots()
     if ( !errorFlag ) {
       canvas.Print(fileName.data());
     } else {
-      edm::LogError("TemplateBgEstFit::makeControlPlots") << " Failed to decode controlPlotsFileName = " << controlPlotsFileName_ 
-							  << " --> skipping !!";
+      edm::LogError("TemplateBgEstFit::makeControlPlotsObsDistribution") << " Failed to decode controlPlotsFileName = " 
+									 << controlPlotsFileName_ << " --> skipping !!";
       return;
     }
 
@@ -1403,18 +1706,6 @@ void TemplateBgEstFit::makeControlPlots()
       delete (*it);
     }
   }
-
-//--- produce control plots of one and two sigma error contours 
-//    showing correlation of estimated normalization factors
-  const RooArgList& fitParameter = fitResult_->floatParsFinal();
-  int numFitParameter = fitParameter.getSize();
-  vstring labels(numFitParameter);
-  for ( int iX = 0; iX < numFitParameter; ++iX ) {
-    const RooAbsArg* paramX_arg = fitParameter.at(iX);
-    labels[iX] = paramX_arg->GetName();
-  }
-
-  makeCovariancePlots(fitResultMean_, fitResultMean_, fitResultCov_, labels, controlPlotsFileName_, "");
 }
 
 double TemplateBgEstFit::compChi2red() 
@@ -1555,159 +1846,8 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
   cov.print(std::cout, &processNames_);
   
   if ( controlPlotsFileName_ != "" ) {
-    //makeCovariancePlots(fitResultMean_, median(), cov(), processNames_, controlPlotsFileName_, type);
-    makeCovariancePlots(fitResultMean_, fitResultMean_, cov(), processNames_, controlPlotsFileName_, type);
-  }
-}
-
-//
-//-----------------------------------------------------------------------------------------------------------------------
-//
-
-void drawErrorEllipse(double x0, double y0, double errX0, double errY0, double Sxx, double Sxy, double Syy, 
-		      const char* labelX, const char* labelY, const char* fileName)
-{
-//--- draw best fit estimate (x0,y0) 
-//    plus one and two sigma error contours centered at (errX0,errY0) 
-//    and with (correlated) uncertainties estimated by elements Sxx, Sxy, Syy of covariance matrix 
-//    passed as function arguments
-//    (note that since the covariance matrix is symmetric, 
-//     there is no need to pass element Syx of the covariance matrix)
-
-  TCanvas canvas("drawErrorEllipse", "drawErrorEllipse", 600, 600);
-  canvas.SetFillColor(10);
-
-//--- compute angle between first principal axis of error ellipse
-//    and x-axis
-  double alpha = 0.5*TMath::ATan2(-2*Sxy, Sxx - Syy);
-
-  //std::cout << "alpha = " << alpha*180./TMath::Pi() << std::endl;
-
-  double sinAlpha = TMath::Sin(alpha);
-  double cosAlpha = TMath::Cos(alpha);
-
-//--- compute covariance axis in coordinate system
-//    defined by principal axes of error ellipse
-  double Suu = Sxx*sinAlpha*sinAlpha + 2*Sxy*sinAlpha*cosAlpha + Syy*cosAlpha*cosAlpha;
-  double Svv = Sxx*cosAlpha*cosAlpha + 2*Sxy*sinAlpha*cosAlpha + Syy*sinAlpha*sinAlpha;
-  
-//--- resolve ambiguity which axis represents the first principal axis
-//    and which represents the second principal axis
-//
-//    NOTE: in case Sxy > 0. (correlation of variables X and Y), 
-//          the principal axis needs to point in direction of either the first or the third quadrant;
-//          in case Sxy < 0. (anti-correlation of variables X and Y), 
-//          the principal axis needs to point in direction of either the second or the fourth quadrant.
-  double sigmaX_transformed = 0.;
-  double sigmaY_transformed = 0.;
-  if ( (Sxy >= 0. && TMath::Abs(alpha) <= 0.5*TMath::Pi()) || 
-       (Sxy <  0. && TMath::Abs(alpha) >  0.5*TMath::Pi()) ) {
-    sigmaX_transformed = TMath::Sqrt(TMath::Max(Suu, Svv));
-    sigmaY_transformed = TMath::Sqrt(TMath::Min(Suu, Svv));
-  } else {
-    sigmaX_transformed = TMath::Sqrt(TMath::Min(Suu, Svv));
-    sigmaY_transformed = TMath::Sqrt(TMath::Max(Suu, Svv));
-  }
-
-  TEllipse oneSigmaErrorEllipse(errX0, errY0, sigmaX_transformed*1., sigmaY_transformed*1., 0., 360., alpha*180./TMath::Pi()); 
-  oneSigmaErrorEllipse.SetFillColor(5);
-  oneSigmaErrorEllipse.SetLineColor(44);
-  oneSigmaErrorEllipse.SetLineWidth(1);
-  TEllipse twoSigmaErrorEllipse(errX0, errY0, sigmaX_transformed*2., sigmaY_transformed*2., 0., 360., alpha*180./TMath::Pi()); 
-  TSeqCollection* colors = gROOT->GetListOfColors();
-  if ( colors && colors->At(42) ) {
-    TColor* orange = (TColor*)colors->At(42);
-    orange->SetRGB(1.00,0.80,0.00);
-  } else {
-    edm::LogWarning ("drawErrorEllipse") << " Failed to access list of Colors from gROOT object"
-					 << " --> skipping definition of Color 'orange' !!";
-  }
-  twoSigmaErrorEllipse.SetFillColor(42);
-  twoSigmaErrorEllipse.SetLineColor(44);
-  twoSigmaErrorEllipse.SetLineWidth(1);
-
-  TMarker centralValueMarker(x0, y0, 5);
-  centralValueMarker.SetMarkerSize(2);
-
-//--- create dummy histogram  
-//    defining region to be plotted
-  double minX = TMath::Min(errX0 - 2.2*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)),
-			   x0 - 0.2*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)));
-  double maxX = TMath::Max(errX0 + 2.8*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)),
-			   x0 + 0.2*(TMath::Abs(cosAlpha*sigmaX_transformed) + TMath::Abs(sinAlpha*sigmaY_transformed)));
-  double minY = TMath::Min(errY0 - 2.2*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)),
-			   y0 - 0.2*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)));
-  double maxY = TMath::Max(errY0 + 2.8*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)),
-			   y0 + 0.2*(TMath::Abs(sinAlpha*sigmaX_transformed) + TMath::Abs(cosAlpha*sigmaY_transformed)));
-			   
-  if ( TMath::Abs(maxX - minX) < epsilon || 
-       TMath::Abs(maxY - minY) < epsilon ) {
-    if ( TMath::Abs(maxX - minX) < epsilon ) edm::LogWarning ("drawErrorEllipse") << " Invalid x-range: minX = maxX = " << minX;
-    if ( TMath::Abs(maxY - minY) < epsilon ) edm::LogWarning ("drawErrorEllipse") << " Invalid y-range: minY = maxY = " << minY;
-    edm::LogWarning ("drawErrorEllipse") << " --> skipping drawing of Error ellipse for labelX = " << labelX << ","
-					 << " labelY = " << labelY << " !!";
-    return;
-  }
-
-//--- create dummy histogram  
-  TH2F dummyHistogram("dummyHistogram", "dummyHistogram", 5, minX, maxX, 5, minY, maxY);
-  dummyHistogram.SetTitle("");
-  dummyHistogram.SetStats(false);
-  dummyHistogram.SetXTitle(labelX);
-  dummyHistogram.SetYTitle(labelY);
-  dummyHistogram.SetTitleOffset(1.35, "Y");
-
-  dummyHistogram.Draw("AXIS");
-  
-  twoSigmaErrorEllipse.Draw();
-  oneSigmaErrorEllipse.Draw();
-
-  centralValueMarker.Draw();
-
-  TLegend legend(0.70, 0.70, 0.89, 0.89);
-  legend.SetBorderSize(0);
-  legend.SetFillColor(0);
-  legend.AddEntry(&centralValueMarker, "best Fit value", "p");
-  legend.AddEntry(&oneSigmaErrorEllipse, "1#sigma Contour", "f");
-  legend.AddEntry(&twoSigmaErrorEllipse, "2#sigma Contour", "f");
-
-  legend.Draw();
-
-  canvas.Print(fileName);
-}
-
-void makeCovariancePlots(TVectorD estimate, TVectorD errMean, TMatrixD errCov, const vstring& labels, 
-			 const std::string& controlPlotsFileName, const char* type)
-{
-  int numFitParameter = estimate.GetNoElements();
-  assert(errMean.GetNoElements() == numFitParameter);
-  assert(errCov.GetNrows() == numFitParameter && errCov.GetNcols() == numFitParameter);
-  for ( int iX = 0; iX < numFitParameter; ++iX ) {
-    double x0 = estimate(iX);
-    double errX0 = errMean(iX);
-    double Sxx = errCov(iX, iX);
-    const char* labelX = labels[iX].data();
-
-    for ( int iY = 0; iY < iX; ++iY ) {
-      double y0 = estimate(iY);
-      double errY0 = errMean(iY);
-      double Syy = errCov(iY, iY);
-      const char* labelY = labels[iY].data();
-
-      double Sxy = errCov(iX, iY);
-      std::string fileNameParam = std::string("corr_").append(labelX).append("_vs_").append(labelY);
-      if ( type != "" ) fileNameParam.append("_").append(type);
-      
-      int errorFlag = 0;
-      std::string fileName = replace_string(controlPlotsFileName, plotKeyword, fileNameParam, 1, 1, errorFlag);
-      if ( !errorFlag ) {
-	drawErrorEllipse(x0, y0, errX0, errY0, Sxx, Sxy, Syy, labelX, labelY, fileName.data());
-      } else {
-	edm::LogError("drawErrorEllipses") << " Failed to decode controlPlotsFileName = " << controlPlotsFileName 
-					   << " --> skipping !!";
-	return;
-      }
-    }
+    //makeControlPlotsCovariance(fitResultMean_, median(), cov(), processNames_, controlPlotsFileName_, type);
+    makeControlPlotsCovariance(fitResultMean_, fitResultMean_, cov(), processNames_, controlPlotsFileName_, type);
   }
 }
 

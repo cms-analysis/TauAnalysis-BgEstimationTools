@@ -26,9 +26,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.7 $
+ * \version $Revision: 1.8 $
  *
- * $Id: TemplateBgEstFit.h,v 1.7 2009/08/25 13:36:12 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.8 2009/08/28 13:22:24 veelken Exp $
  *
  */
 
@@ -39,6 +39,8 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "DQMServices/Core/interface/MonitorElement.h"
+
+#include "TauAnalysis/BgEstimationTools/interface/TF1WrapperBase.h"
 
 #include <TVectorD.h>
 #include <TMatrixD.h>
@@ -59,6 +61,7 @@ class TemplateBgEstFit : public edm::EDAnalyzer
     dataDistr1dType(const std::string&, const std::string&, const std::string&, RooRealVar*, bool);
     virtual ~dataDistr1dType();
     virtual void initialize();
+    void buildFitData();
     virtual void fluctuate(bool, bool);
     std::string processName_;
     std::string varName_;
@@ -105,12 +108,16 @@ class TemplateBgEstFit : public edm::EDAnalyzer
 
   struct modelTemplate1dType : public dataDistr1dType
   {
-    modelTemplate1dType(const std::string&, const std::string&, const std::string&, RooRealVar*, bool);
+    modelTemplate1dType(const std::string&, const std::string&, const std::string&, RooRealVar*, bool, bool, const edm::ParameterSet&);
     virtual ~modelTemplate1dType();
     void initialize();
+    void buildPdf();
     void fluctuate(bool, bool);
     std::string pdf1dName_;
-    RooHistPdf* pdf1d_;
+    RooAbsPdf* pdf1d_;
+    bool applySmoothing_;
+    edm::ParameterSet cfgSmoothing_;
+    TF1WrapperBase* auxTF1Wrapper_;
     std::vector<sysFluctDefType> sysErrFluctuations_;
   };
 
@@ -118,7 +125,7 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   {
     modelTemplateNdType(const std::string&, const edm::ParameterSet&, int, bool, bool, double, double);
     ~modelTemplateNdType();
-    void addElement(const std::string&, RooRealVar*, const std::string&);
+    void addElement(const std::string&, RooRealVar*, const std::string&, bool, const edm::ParameterSet&);
     void initialize();
     void buildPdf();
     void fluctuate(bool, bool);
@@ -162,6 +169,10 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   void fit(bool, int, int);
   void print(std::ostream& stream);
   void makeControlPlots();
+  void makeControlPlotsSmoothing();
+  typedef std::vector<std::string> vstring;
+  void makeControlPlotsCovariance(TVectorD, TVectorD, TMatrixD, const vstring&, const std::string&, const char*);
+  void makeControlPlotsObsDistribution();
   double compChi2red();
   void estimateUncertainties(bool, int, bool, int, double, const char*, int, bool);
 
