@@ -53,8 +53,7 @@ bgEstEventSelection_Zmumu = (
 print("bgEstEventSelection_Zmumu = " + bgEstEventSelection_Zmumu)
 
 bgEstEventSelection_WplusJets = (
-    "numDiTausWplusJets >= 1 && muonPtWplusJets_0 > 20. && muonTrackIsoWplusJets_0 < 2. && muonEcalIsoWplusJets_0 < 2."
-    #"numDiTausWplusJets >= 1 && muonPtWplusJets_0 > 25. && muonTrackIsoWplusJets_0 < 1. && muonEcalIsoWplusJets_0 < 1."
+    "numDiTausWplusJets >= 1 && muonPtWplusJets_0 > 25. && muonTrackIsoWplusJets_0 < 1. && muonEcalIsoWplusJets_0 < 1."
     " && tauTrackIsoDiscrWplusJets_0 < 0.5 && tauTrackIsoWplusJets_0 > 2. && tauDiscrAgainstMuonsWplusJets_0 > 0.5"
     " && diTauMt1MEtWplusJets_0 > 30."
     " && numGlobalMuons < 2"
@@ -157,7 +156,8 @@ prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("WplusJets", fileNames_
 prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("TTplusJets", fileNames_TTplusJets)
 prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("QCD", fileNames_qcdSum)
 prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("data", fileNames_pseudoData)
-prodTemplateHistConfiguratorWplusJetsEnriched.addSelection("WplusJets", bgEstEventSelection_WplusJets)
+prodTemplateHistConfiguratorWplusJetsEnriched.addSelection("WplusJets", bgEstEventSelection_WplusJets,
+                                                           kineEventReweight = "kineEventReweightWplusJets")
 prodTemplateHistConfiguratorWplusJetsEnriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_WplusJets, 40, 0., 200.)
 
 process.prodTemplateHistBgEstWplusJetsEnriched = prodTemplateHistConfiguratorWplusJetsEnriched.configure(process)
@@ -171,7 +171,8 @@ prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("WplusJets", fileNames
 prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("TTplusJets", fileNames_TTplusJets)
 prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("QCD", fileNames_qcdSum)
 prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("data", fileNames_pseudoData)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addSelection("TTplusJets", bgEstEventSelection_TTplusJets)
+prodTemplateHistConfiguratorTTplusJetsEnriched.addSelection("TTplusJets", bgEstEventSelection_TTplusJets,
+                                                            kineEventReweight = "kineEventReweightTTplusJets")
 prodTemplateHistConfiguratorTTplusJetsEnriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_TTplusJets, 40, 0., 200.)
 
 process.prodTemplateHistBgEstTTplusJetsEnriched = prodTemplateHistConfiguratorTTplusJetsEnriched.configure(process)
@@ -185,7 +186,8 @@ prodTemplateHistConfiguratorQCDenriched.addProcess("WplusJets", fileNames_WplusJ
 prodTemplateHistConfiguratorQCDenriched.addProcess("TTplusJets", fileNames_TTplusJets)
 prodTemplateHistConfiguratorQCDenriched.addProcess("QCD", fileNames_qcdSum)
 prodTemplateHistConfiguratorQCDenriched.addProcess("data", fileNames_pseudoData)
-prodTemplateHistConfiguratorQCDenriched.addSelection("QCD", bgEstEventSelection_QCD)
+prodTemplateHistConfiguratorQCDenriched.addSelection("QCD", bgEstEventSelection_QCD,
+                                                     kineEventReweight = "kineEventReweightQCD")
 prodTemplateHistConfiguratorQCDenriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_QCD, 40, 0., 200.)
 
 process.prodTemplateHistBgEstQCDenriched = prodTemplateHistConfiguratorQCDenriched.configure(process)
