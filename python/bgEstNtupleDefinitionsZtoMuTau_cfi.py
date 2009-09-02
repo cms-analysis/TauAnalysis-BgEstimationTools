@@ -34,12 +34,12 @@ fileNames_ZtautauPlusJets = cms.vstring(
 
 # Z --> mu mu + jets sample
 fileNames_ZmumuPlusJets = cms.vstring(
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01a.root',
-    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01b.root',
+    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01a.root',
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01b.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part02a.root',
-    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part02b.root',
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part02b.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part03a.root',
-    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part03b.root'    
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part03b.root'    
 )
 
 # Z --> e e + jets sample
