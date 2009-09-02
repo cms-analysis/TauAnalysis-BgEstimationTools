@@ -9,13 +9,15 @@
  *
  * \version $Revision: 1.1 $
  *
- * $Id: TF1WrapperBase.h,v 1.1 2009/06/11 07:23:28 veelken Exp $
+ * $Id: TF1WrapperBase.h,v 1.1 2009/09/01 14:17:42 veelken Exp $
  *
  */
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include <TF1.h>
+
+#include <map>
 
 class TF1WrapperBase
 {
@@ -25,6 +27,9 @@ class TF1WrapperBase
   
   // destructor
   virtual ~TF1WrapperBase();
+
+  // set parameter values of TF1 object to initial values
+  void reinitializeTF1Parameter();
 
   // method for accessing TF1 object
   const TF1* getTF1() const { return ( !cfgError_ ) ? tf1_ : 0; }
@@ -39,6 +44,10 @@ class TF1WrapperBase
 
   // auxiliary function to initialize parameter of TF1 object
   virtual void setTF1Parameter(const edm::ParameterSet&);
+
+  // set of initial parameter values of TF1 object
+  // (needed by reinitializeTF1Parameter function)
+  std::map<int, double> tf1InitialValues_;
 
   // pointer to TF1 object
   TF1* tf1_;

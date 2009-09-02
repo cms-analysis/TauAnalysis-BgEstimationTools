@@ -56,6 +56,16 @@ void TF1WrapperBase::setTF1Parameter(const edm::ParameterSet& cfg)
 
     tf1_->SetParameter(parId, parValue_initial);
     tf1_->SetParLimits(parId, parValue_min, parValue_max);
+
+    tf1InitialValues_[parId] = parValue_initial;
+  }
+}
+
+void TF1WrapperBase::reinitializeTF1Parameter()
+{
+  for ( std::map<int, double>::const_iterator tf1InitialValue = tf1InitialValues_.begin();
+	tf1InitialValue != tf1InitialValues_.end(); ++tf1InitialValue ) {
+    tf1_->SetParameter(tf1InitialValue->first, tf1InitialValue->second);
   }
 }
 
