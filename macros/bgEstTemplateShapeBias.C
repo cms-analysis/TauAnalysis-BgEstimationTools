@@ -1,6 +1,6 @@
 void bgEstTemplateShapeBias()
 {
-  TString dqmDirectoryName = "DQMData/harvested/TTplusJets/zMuTauAnalyzer/";
+  TString dqmDirectoryName = "DQMData/harvested/WplusJets/zMuTauAnalyzer/";
 
   TObjArray dqmSubDirectoryNames;
   dqmSubDirectoryNames.Add(new TObjString("afterEvtSelDiTauCandidateForMuTauAcoplanarity12_beforeEvtSelDiTauCandidateForMuTauMt1MET/"));
@@ -27,7 +27,7 @@ void bgEstTemplateShapeBias()
   TString outputFileName_unnormalized = "bgEstTemplateShapeBias_unnormalized.ps";
   TString outputFileName_normalized = "bgEstTemplateShapeBias_normalized.ps";
 
-  TString inputFileName = "../../Configuration/test/plotsZtoMuTau_all_shrinkingCone.root";
+  TString inputFileName = "rfio:/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoMuTau/plotsZtoMuTau_all_shrinkingCone.root";
 
   showTemplateShapeBiasAll(inputFileName, dqmDirectoryName, dqmSubDirectoryNames, labels, dqmMonitorElementNames, 
 			   false, outputFileName_unnormalized);
@@ -51,7 +51,7 @@ void showTemplateShapeBiasAll(const TString& inputFileName, const TString& dqmDi
 
   TPostScript* ps = new TPostScript(outputFileName, 112);
   
-  TFile inputFile(inputFileName);
+  TFile* inputFile = TFile::Open(inputFileName);
 
   int numPlots = dqmMonitorElementNames.GetEntries();
   for ( int iPlot = 0; iPlot < numPlots; ++iPlot ) {
@@ -66,7 +66,7 @@ void showTemplateShapeBiasAll(const TString& inputFileName, const TString& dqmDi
       TString dqmMonitorElementName_full = TString(dqmDirectoryName).Append(dqmSubDirectoryName).Append(dqmMonitorElementName);
       std::cout << "dqmMonitorElementName_full = " << dqmMonitorElementName_full << std::endl;
 
-      TH1* dqmMonitorElement = (TH1*)inputFile.Get(dqmMonitorElementName_full);
+      TH1* dqmMonitorElement = (TH1*)inputFile->Get(dqmMonitorElementName_full);
       std::cout << "dqmMonitorElement = " << dqmMonitorElement <<  std::endl;
 
       TH1* dqmMonitorElement_cloned = (TH1*)dqmMonitorElement->Clone();
@@ -78,6 +78,8 @@ void showTemplateShapeBiasAll(const TString& inputFileName, const TString& dqmDi
 
     showTemplateShapeBiasOne(canvas, ps, dqmMonitorElements, labels);
   }
+
+  delete inputFile;
 
   delete ps;
 
