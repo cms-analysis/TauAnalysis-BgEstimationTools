@@ -33,7 +33,7 @@ process.loadZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     )
 )
 
-meName = 'DiTauCandidateQuantities/DPhi12'
+meName = 'DiTauCandidateQuantities/VisMass'
 meName_numerator = 'zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauPzetaDiff/' + meName
 meName_denominator = 'zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauAcoplanarity12_beforeEvtSelDiTauCandidateForMuTauMt1MET/' + meName
 
@@ -42,29 +42,29 @@ process.prodKineEventReweightsZtoMuTau = cms.EDAnalyzer("DQMHistEffProducer",
         diTauDPhi12Reweight_Ztautau = cms.PSet(
             numerator = cms.string('harvested/Ztautau/' + meName_numerator),
             denominator = cms.string('harvested/Ztautau/' + meName_denominator),
-            efficiency = cms.string("bgEstKineEventReweights/Ztautau/diTauDPhi12")
+            efficiency = cms.string("bgEstKineEventReweights/Ztautau/diTauMvis")
         ),
         diTauDPhi12Reweight_WplusJets = cms.PSet(
             numerator = cms.string('harvested/WplusJets/' + meName_numerator),
             denominator = cms.string('harvested/WplusJets/' + meName_denominator),
-            efficiency = cms.string("bgEstKineEventReweights/WplusJets/diTauDPhi12")
+            efficiency = cms.string("bgEstKineEventReweights/WplusJets/diTauMvis")
         ),
         diTauDPhi12Reweight_TTplusJets = cms.PSet(
             numerator = cms.string('harvested/TTplusJets/' + meName_numerator),
             denominator = cms.string('harvested/TTplusJets/' + meName_denominator),
-            efficiency = cms.string("bgEstKineEventReweights/TTplusJets/diTauDPhi12")
+            efficiency = cms.string("bgEstKineEventReweights/TTplusJets/diTauMvis")
         ),
         diTauDPhi12Reweight_QCD = cms.PSet(
             numerator = cms.string('harvested/qcdSum/' + meName_numerator),
             denominator = cms.string('harvested/qcdSum/' + meName_denominator),
-            efficiency = cms.string("bgEstKineEventReweights/QCD/diTauDPhi12")
+            efficiency = cms.string("bgEstKineEventReweights/QCD/diTauMvis")
         )
     )                                                     
 )
 
 
 process.saveKineEventReweightsZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
-    outputFileName = cms.string('bgEstKineEventReweightsZtoMuTau.root'),
+    outputFileName = cms.string('bgEstKineEventReweightsZtoMuTauII.root'),
     drop = cms.vstring('harvested')
 )
 
