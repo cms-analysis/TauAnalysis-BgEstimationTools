@@ -46,15 +46,35 @@ process.source = cms.Source("EmptySource")
 #--------------------------------------------------------------------------------
 
 bgEstEventSelection_Zmumu = (
-    "numDiTausZmumu >= 1 && muonTrackIsoZmumu_0 < 1. && muonEcalIsoZmumu_0 < 1. && tauDiscrAgainstMuonsZmumu_0 < 0.5"
-    " && diTauAbsChargeZmumu_0 < 0.5"
+    "numDiTausZmumu >= 1 && muonTrackIsoZmumu_0 < 1. && muonEcalIsoZmumu_0 < 1."
+#   " && tauDiscrAgainstMuonsZmumu_0 > 0.5 && numGlobalMuons >= 2 && numJetsAlpha0point1Zmumu < 1"
+    " && (tauDiscrAgainstMuonsZmumu_0 < 0.5 || numGlobalMuons >= 2)"
+#   " && diTauAbsChargeZmumu_0 < 0.5"
 )
 
 print("bgEstEventSelection_Zmumu = " + bgEstEventSelection_Zmumu)
 
 bgEstEventSelection_WplusJets = (
-    "numDiTausWplusJets >= 1 && muonPtWplusJets_0 > 25. && muonTrackIsoWplusJets_0 < 1. && muonEcalIsoWplusJets_0 < 1."
-    " && tauTrackIsoDiscrWplusJets_0 < 0.5 && tauTrackIsoWplusJets_0 > 2. && tauDiscrAgainstMuonsWplusJets_0 > 0.5"
+#   "numDiTausWplusJets >= 1 && muonPtWplusJets_0 > 25. && muonTrackIsoWplusJets_0 < 1. && muonEcalIsoWplusJets_0 < 1."
+#
+# Note: muonPt cut improves WplusJets/QCD ratio by about a factor five,
+#       but significantly shifts the muon + tau-jet visible invariant mass distribution towards higher values.
+#       In order to supress QCD background contamination (on a statistical basis),
+#       could extract W + jets template shape from difference in muon + tau-jet visible invariant mass distributions
+#       of opposite sign - same sign muon and tau-jet combinations.
+#      (SS/OS ratio is close to one for QCD background; significant charge asymmetry expected for W + jets background)
+#    
+    "numDiTausWplusJets >= 1 && muonTrackIsoWplusJets_0 < 1. && muonEcalIsoWplusJets_0 < 1."
+#   " && tauTrackIsoDiscrWplusJets_0 < 0.5 && tauTrackIsoWplusJets_0 > 2. && tauDiscrAgainstMuonsWplusJets_0 > 0.5"
+#
+# Note: probability for quark/gluon jets to pass tau track and ECAL isolation criteria
+#       is higher for low Pt than for high Pt jets; the consequence is that muon + tau-jet visible invariant mass distribution
+#       gets shifted towards higher values in case tau track and ECAL isolation criteria are not applied.
+#       For this reason, either need to apply tau track and ECAL isolation criteria in selection of W + jets background enriched sample
+#       or correct for template shape distortion by reweighting
+#      (would gain a factor of about 2.5 in event statistics; reweighting of tauPt distribution not implemented yet, however)
+#    
+    " && tauTrackIsoDiscrWplusJets_0 > 0.5 && tauEcalIsoDiscrWplusJets_0 > 0.5 && tauDiscrAgainstMuonsWplusJets_0 > 0.5"
     " && diTauMt1MEtWplusJets_0 > 30."
     " && numGlobalMuons < 2"
     " && numJetsAlpha0point1WplusJets < 1"
@@ -171,8 +191,7 @@ prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("WplusJets", fileNames
 prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("TTplusJets", fileNames_TTplusJets)
 prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("QCD", fileNames_qcdSum)
 prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("data", fileNames_pseudoData)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addSelection("TTplusJets", bgEstEventSelection_TTplusJets,
-                                                            kineEventReweight = "kineEventReweightTTplusJets")
+prodTemplateHistConfiguratorTTplusJetsEnriched.addSelection("TTplusJets", bgEstEventSelection_TTplusJets)
 prodTemplateHistConfiguratorTTplusJetsEnriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_TTplusJets, 40, 0., 200.)
 
 process.prodTemplateHistBgEstTTplusJetsEnriched = prodTemplateHistConfiguratorTTplusJetsEnriched.configure(process)
@@ -186,8 +205,7 @@ prodTemplateHistConfiguratorQCDenriched.addProcess("WplusJets", fileNames_WplusJ
 prodTemplateHistConfiguratorQCDenriched.addProcess("TTplusJets", fileNames_TTplusJets)
 prodTemplateHistConfiguratorQCDenriched.addProcess("QCD", fileNames_qcdSum)
 prodTemplateHistConfiguratorQCDenriched.addProcess("data", fileNames_pseudoData)
-prodTemplateHistConfiguratorQCDenriched.addSelection("QCD", bgEstEventSelection_QCD,
-                                                     kineEventReweight = "kineEventReweightQCD")
+prodTemplateHistConfiguratorQCDenriched.addSelection("QCD", bgEstEventSelection_QCD)
 prodTemplateHistConfiguratorQCDenriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_QCD, 40, 0., 200.)
 
 process.prodTemplateHistBgEstQCDenriched = prodTemplateHistConfiguratorQCDenriched.configure(process)
@@ -538,25 +556,25 @@ process.saveAllHistZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
 #--------------------------------------------------------------------------------
 
 diTauMvis12_smoothing = cms.PSet(
-    pluginName = cms.string("Landau convoluted with Gaussian")
+    pluginName = cms.string("Landau convoluted with Gaussian"),
     pluginType = cms.string("TF1landauXgausWrapper"), # defaults to TF1Wrapper
-    xMin = cms.double(0.),
+    xMin = cms.double(20.),
     xMax = cms.double(200.),
     parameter = cms.PSet(
         par0 = cms.PSet( # width (scale) parameter of Landau density
             initial = cms.double(5.),
-            min = cms.double(1.),
+            min = cms.double(0.01),
             max = cms.double(50.)
         ),
         par1 = cms.PSet( # most probable (MP, location) parameter of Landau density
             initial = cms.double(50.),
-            min = cms.double(20.),
+            min = cms.double(30.),
             max = cms.double(150.)
         ),
         par2 = cms.PSet( # total area (integral from -inf to +inf, normalization constant)
             initial = cms.double(1.),
             min = cms.double(0.1),
-            max = cms.double(2.)
+            max = cms.double(10.)
         ),
         par3 = cms.PSet( # width (sigma) of convoluted Gaussian function
             initial = cms.double(10.),
@@ -571,10 +589,11 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
         Ztautau = cms.PSet(
             templates = cms.PSet(
                 diTauMvis12 = cms.PSet(
-                    meName = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
-                    smoothing = diTauMvis12_smoothing.clone(
-                        pluginName = cms.string("diTauMvis12SmoothingZtautau")
-                    )
+                    #meName = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
+                    meName = cms.string(dqmDirectory_Ztautau_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
+                    #smoothing = diTauMvis12_smoothing.clone(
+                    #    pluginName = cms.string("diTauMvis12SmoothingZtautau")
+                    #)
                 )
             ),    
             norm = cms.PSet(
@@ -586,9 +605,9 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
             templates = cms.PSet(
                 diTauMvis12 = cms.PSet(
                     meName = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_diTauMvis12_norm),
-                    smoothing = diTauMvis12_smoothing.clone(
-                        pluginName = cms.string("diTauMvis12SmoothingZmumu")
-                    )
+                    #smoothing = diTauMvis12_smoothing.clone(
+                    #    pluginName = cms.string("diTauMvis12SmoothingZmumu")
+                    #)
                 )
             ),    
             norm = cms.PSet(
@@ -599,7 +618,8 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
         WplusJets = cms.PSet(
             templates = cms.PSet(
                 diTauMvis12 = cms.PSet(
-                    meName = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMvis12_norm),
+                    #meName = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMvis12_norm),
+                    meName = cms.string(dqmDirectory_WplusJets_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
                     smoothing = diTauMvis12_smoothing.clone(
                         pluginName = cms.string("diTauMvis12SmoothingWplusJets")
                     )
@@ -628,6 +648,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
             templates = cms.PSet(
                 diTauMvis12 = cms.PSet(
                     meName = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMvis12_norm),
+                    #meName = cms.string(dqmDirectory_QCD_finalEvtSel + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
                     smoothing = diTauMvis12_smoothing.clone(
                         pluginName = cms.string("diTauMvis12SmoothingQCD")
                     )
@@ -655,8 +676,8 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
             diTauMvis12 = cms.PSet(
                name = cms.string("diTauMvis12"),
                title = cms.string("M_{vis}^{#mu + #tau-jet}"),
-               xMin = cms.double(0.),
-               xMax = cms.double(150.)
+               xMin = cms.double(20.),
+               xMax = cms.double(200.)
             )
         ),
         # constrain normalization of W + jets, ttbar + jets and QCD backgrounds
@@ -750,7 +771,7 @@ process.prodAllHistZtoMuTau = cms.Sequence(
    + process.loadAnalysisHistZtoMuTau
    + process.normalizeAnalysisHistZtoMuTau
    + process.prodSysBiasHistZtoMuTau
-  #+ process.saveAllHistZtoMuTau  
+   + process.saveAllHistZtoMuTau  
 )
 
 process.loadAllHistZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
@@ -762,14 +783,14 @@ process.loadAllHistZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
 )
 
 process.p = cms.Path(
-    process.prodAllHistZtoMuTau
-   #process.loadAllHistZtoMuTau
+   #process.prodAllHistZtoMuTau
+    process.loadAllHistZtoMuTau
    + process.plotTemplateHistZtoMuTau
    + process.fitZtoMuTau
 )
 
 # print-out all python configuration parameter information
-print process.dumpPython()
+#print process.dumpPython()
 
 
   
