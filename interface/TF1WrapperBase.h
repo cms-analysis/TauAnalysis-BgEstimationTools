@@ -7,9 +7,9 @@
  * 
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.1 $
+ * \version $Revision: 1.2 $
  *
- * $Id: TF1WrapperBase.h,v 1.1 2009/09/01 14:17:42 veelken Exp $
+ * $Id: TF1WrapperBase.h,v 1.2 2009/09/02 09:47:01 veelken Exp $
  *
  */
 
@@ -36,12 +36,6 @@ class TF1WrapperBase
   TF1* getTF1() { return ( !cfgError_ ) ? tf1_ : 0; }
   
  protected:
-  // auxiliary function to create TF1 object
-  // (enforce function to be implemented in derrived classes,
-  //  cannot make it a pure virtual function, because it is called from the TF1WrapperBase constructor,
-  //  so use an assert instead)
-  virtual void makeTF1(const edm::ParameterSet&) { assert(0); } 
-
   // auxiliary function to initialize parameter of TF1 object
   virtual void setTF1Parameter(const edm::ParameterSet&);
 

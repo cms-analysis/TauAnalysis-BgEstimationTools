@@ -4,7 +4,8 @@
 
 #include <string>
 
-void TF1Wrapper::makeTF1(const edm::ParameterSet& cfg)
+TF1Wrapper::TF1Wrapper(const edm::ParameterSet& cfg)
+  : TF1WrapperBase(cfg) 
 {
   std::string pluginName = ( cfg.exists("pluginName") ) ? cfg.getParameter<std::string>("pluginName") : "TF1Wrapper::tf1_";
   
@@ -14,6 +15,8 @@ void TF1Wrapper::makeTF1(const edm::ParameterSet& cfg)
   double xMax = cfg.getParameter<double>("xMax");
   
   tf1_ = new TF1(pluginName.data(), formula.data(), xMin, xMax);
+
+  setTF1Parameter(cfg.getParameter<edm::ParameterSet>("parameter"));
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

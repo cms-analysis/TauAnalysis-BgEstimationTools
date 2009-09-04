@@ -72,16 +72,19 @@ Double_t langaufun(Double_t* x, Double_t* par)
   return (par[2] * step * sum * invsq2pi / par[3]);
 }
 
-void TF1landauXgausWrapper::makeTF1(const edm::ParameterSet& cfg)
+TF1landauXgausWrapper::TF1landauXgausWrapper(const edm::ParameterSet& cfg)
+  : TF1WrapperBase(cfg) 
 {
   std::string pluginName = ( cfg.exists("pluginName") ) ? cfg.getParameter<std::string>("pluginName") : "TF1landauXgausWrapper::tf1_";
   
   double xMin = cfg.getParameter<double>("xMin");
   double xMax = cfg.getParameter<double>("xMax");
   
-  tf1_ = new TF1(pluginName.data(), langaufun, xMin, xMax);
-
+  tf1_ = new TF1(pluginName.data(), langaufun, xMin, xMax, 4);
+  
   tf1_->SetParNames("Width", "MP", "Area", "GSigma");
+
+  setTF1Parameter(cfg.getParameter<edm::ParameterSet>("parameter"));
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

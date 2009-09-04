@@ -13,10 +13,7 @@
 TF1WrapperBase::TF1WrapperBase(const edm::ParameterSet& cfg)
   : tf1_(0),
     cfgError_(0)
-{
-  makeTF1(cfg);
-  setTF1Parameter(cfg.getParameter<edm::ParameterSet>("parameter"));
-}
+{}
 
 TF1WrapperBase::~TF1WrapperBase()
 {
@@ -48,7 +45,7 @@ void TF1WrapperBase::setTF1Parameter(const edm::ParameterSet& cfg)
 //     the first match refers to the entire parameter name)
     TObjArray* subStrings = regexpParser_parName.MatchS(parName_tstring);
     int parId = ((TObjString*)subStrings->At(1))->GetString().Atoi();
-    std::cout << "parName = " << (*parName) << ": parId = " << parId << std::endl;
+    //std::cout << "parName = " << (*parName) << ": parId = " << parId << std::endl;
 
     double parValue_initial = cfgParameter.getParameter<double>("initial");
     double parValue_min = cfgParameter.getParameter<double>("min");

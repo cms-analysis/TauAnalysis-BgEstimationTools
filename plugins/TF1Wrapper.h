@@ -9,7 +9,7 @@
  *
  * \version $Revision: 1.1 $
  *
- * $Id: TF1Wrapper.h,v 1.1 2009/06/11 07:23:28 veelken Exp $
+ * $Id: TF1Wrapper.h,v 1.1 2009/09/01 14:17:42 veelken Exp $
  *
  */
 
@@ -21,15 +21,10 @@ class TF1Wrapper : public TF1WrapperBase
 {
  public:
   // constructor 
-  explicit TF1Wrapper(const edm::ParameterSet& cfg)
-    : TF1WrapperBase(cfg) {}
+  explicit TF1Wrapper(const edm::ParameterSet& cfg);
   
   // destructor
   virtual ~TF1Wrapper() {}
-  
- protected:
-  // auxiliary function to create TF1 object
-  void makeTF1(const edm::ParameterSet&);
 };
 
 #endif  
