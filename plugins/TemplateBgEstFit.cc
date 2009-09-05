@@ -371,7 +371,10 @@ void TemplateBgEstFit::dataDistr1dType::initialize()
 
 void TemplateBgEstFit::dataDistr1dType::buildFitData()
 {
+  //std::cout << "<dataDistr1dType::buildFitData>:" << std::endl;
+  //std::cout << " dataHistName = " << dataHistName_ << std::endl;
   dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, fluctHistogram_);
+  //std::cout << " dataHist = " << dataHist_ << std::endl;
 }
 
 void TemplateBgEstFit::dataDistr1dType::fluctuate(bool, bool)
@@ -380,6 +383,10 @@ void TemplateBgEstFit::dataDistr1dType::fluctuate(bool, bool)
   
   makeHistogramPositive(fluctHistogram_);
   
+  //std::cout << "<dataDistr1dType::fluctuate>:" << std::endl;
+  //std::cout << "--> deleting dataHist..." << std::endl;
+  //std::cout << " dataHist = " << dataHist_ << std::endl;
+
   delete dataHist_;
   buildFitData();
 }
@@ -400,6 +407,8 @@ TemplateBgEstFit::dataDistrNdType::dataDistrNdType(int fitMode, bool cutUnfitted
 
 TemplateBgEstFit::dataDistrNdType::~dataDistrNdType()
 {
+  //std::cout << "<dataDistrNdType::~dataDistrNdType>:" << std::endl;
+
   for ( std::map<std::string, dataDistr1dType*>::iterator it = dataEntries1d_.begin();
 	it != dataEntries1d_.end(); ++it ) {
     delete it->second;
@@ -451,15 +460,20 @@ void TemplateBgEstFit::dataDistrNdType::initialize()
 
 void TemplateBgEstFit::dataDistrNdType::buildFitData()
 {
+  //std::cout << "<dataDistrNdType::buildFitData>:" << std::endl;
+  //std::cout << " numDimensions = " << numDimensions_ << std::endl;
+
   assert(fitMode_ == k1dPlus || fitMode_ == kNd);
 
   if ( numDimensions_ == 1 ) {
     std::string varName_1 = varNames_.front();
-    RooDataHist* histogram_1 = dataEntries1d_[varName_1]->dataHist_;
-    
-    std::string fitDataName = "fitData_rooDataHist";
+    dataDistr1dType* dataEntry1d = dataEntries1d_[varName_1];
 
-    fitData_ = (RooDataHist*)histogram_1->Clone(fitDataName.data());
+    std::string fitDataName = "fitData_rooDataHist";
+    //std::cout << " fitDataName = " << fitDataName << std::endl;
+
+    fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), *dataEntry1d->xRef_, dataEntry1d->fluctHistogram_);
+    //std::cout << " fitData = " << fitData_ << std::endl;
   } else {
     if ( fitMode_ == k1dPlus ) {
       std::vector<TH1*> histograms;
@@ -618,7 +632,7 @@ void TemplateBgEstFit::dataDistrNdType::buildFitData()
     std::string fitData_varsArgName = std::string("fitData").append("_varsArgs");
     RooArgList fitData_varsArgs(fitData_varsCollection, fitData_varsArgName.data());
     
-    fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), fitData_varsArgs, auxHistogram_);
+    fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), fitData_varsArgs, auxHistogram_);    
   } 
 }
 
@@ -629,6 +643,9 @@ void TemplateBgEstFit::dataDistrNdType::fluctuate(bool, bool)
     dataEntry1d->second->fluctuate(true, false);
   }
 
+  //std::cout << "<dataDistrNdType::fluctuate>:" << std::endl;
+  //std::cout << "--> deleting fitData..." << std::endl;
+  //std::cout << " fitData = " << fitData_ << std::endl;
   delete fitData_;
   buildFitData();
 }
@@ -694,17 +711,18 @@ void TemplateBgEstFit::modelTemplate1dType::buildPdf()
 
     if ( isFirstFit ) {
       std::string pluginTypeTF1Wrapper = cfgSmoothing_.getParameter<std::string>("pluginType");
+      delete auxTF1Wrapper_;
       auxTF1Wrapper_ = TF1WrapperPluginFactory::get()->create(pluginTypeTF1Wrapper, cfgSmoothing_);
     } else {
       auxTF1Wrapper_->reinitializeTF1Parameter();
     }
 
     std::string fitOption = ( isFirstFit ) ? "RB0" : "RB0Q";
-
+    
     fluctHistogram_->Fit(auxTF1Wrapper_->getTF1(), fitOption.data());
 
     // CMSSW_3_1_x only (because needs ROOT version 5.22)
-    if ( !pdf1d_ ) pdf1d_ = new RooTFnPdfBinding(pdf1dName_.data(), pdf1dName_.data(), auxTF1Wrapper_->getTF1(), RooArgList(*xRef_));
+    pdf1d_ = new RooTFnPdfBinding(pdf1dName_.data(), pdf1dName_.data(), auxTF1Wrapper_->getTF1(), RooArgList(*xRef_));
   } 
 }
 
@@ -735,6 +753,9 @@ void TemplateBgEstFit::modelTemplate1dType::fluctuate(bool fluctStat, bool fluct
   makeHistogramPositive(fluctHistogram_);
 
   if ( !applySmoothing_ ) {
+    //std::cout << "<modelTemplate1dType::fluctuate>:" << std::endl;
+    //std::cout << "--> deleting dataHist..." << std::endl;
+    //std::cout << " dataHist = " << dataHist_ << std::endl;
     delete dataHist_;
     buildFitData();
   }
@@ -1183,7 +1204,7 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
 
 //--- build list of fit options
   RooLinkedList fitOptions;
-  
+
 //--- check if "external" constraints exist on normalization factors to be determined by fit
 //    (specified by Gaussian probability density functions with mean and sigma obtained
 //     e.g. by level of agreement between Monte Carlo simulation and number of events observed in background enriched samples)
@@ -1197,7 +1218,8 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
     std::string normConstraints_pdfArgName = std::string("normConstraints").append("_pdfArgs");
     RooArgSet normConstraints_pdfArgs(normConstraints_pdfCollection, normConstraints_pdfArgName.data());
     
-    //fitOptions.Add(new RooCmdArg(RooFit::ExternalConstraints(normConstraints_pdfArgs))); // only works with ROOT version 5.22 and newer
+    // CMSSW_3_1_x only (because needs ROOT version 5.22)
+    fitOptions.Add(new RooCmdArg(RooFit::ExternalConstraints(normConstraints_pdfArgs)));
   }
 
 //--- check if results of fit are to be saved for later analysis
@@ -1206,16 +1228,11 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
 
 //--- stop Minuit from printing lots of information 
 //    about progress on fit and warnings
-//
-//    NOTE: RooFit::Warnings not implemented in RooFit version 
-//          included in ROOT 5.18/00a linked against CMSSW_2_2_13
-//
   fitOptions.Add(new RooCmdArg(RooFit::PrintLevel(printLevel)));
-  //fitOptions.Add(new RooCmdArg(RooFit::PrintEvalErrors(printWarnings)));
-  //fitOptions.Add(new RooCmdArg(RooFit::Warnings(printWarnings_));
+  fitOptions.Add(new RooCmdArg(RooFit::PrintEvalErrors(printWarnings)));
+  fitOptions.Add(new RooCmdArg(RooFit::Warnings(printWarnings_)));
 
   RooFitResult* fitResult = fitModel_->fitTo(*dataEntry_->fitData_, fitOptions);
-  
   if ( saveFitResult ) fitResult_ = fitResult;
 
 //--- delete fit option objects
@@ -1339,10 +1356,10 @@ void TemplateBgEstFit::print(std::ostream& stream)
 	   << " (within fitted region = " << processNorm->getVal() << ")";
 
     if ( processNorm->hasAsymError() ) {
-      stream << " + " << normCorrFactor*processNorm->getAsymErrorHi() << "(" << processNorm->getAsymErrorHi() << ")"
-	     << " - " << fabs(normCorrFactor*processNorm->getAsymErrorLo()) << "(" << fabs(processNorm->getAsymErrorLo()) << ")";
+      stream << " + " << normCorrFactor*processNorm->getAsymErrorHi() << " (" << processNorm->getAsymErrorHi() << ")"
+	     << " - " << fabs(normCorrFactor*processNorm->getAsymErrorLo()) << " (" << fabs(processNorm->getAsymErrorLo()) << ")";
     } else if ( processNorm->hasError() ) {
-      stream << " +/- " << normCorrFactor*processNorm->getError() << "(" << processNorm->getError() << ")";
+      stream << " +/- " << normCorrFactor*processNorm->getError() << " (" << processNorm->getError() << ")";
     }
 
     stream << std::endl;
@@ -1363,7 +1380,7 @@ void TemplateBgEstFit::makeControlPlots()
 //    of shape templates on fit results
 //    (and in particular effect of different statistical precision with which shape templates
 //     are determined for different background processes in background enriched samples)
-  makeControlPlotsSmoothing();
+  //makeControlPlotsSmoothing();
 
 //--- produce control plots of one and two sigma error contours 
 //    showing correlation of estimated normalization factors
@@ -1409,8 +1426,8 @@ void TemplateBgEstFit::makeControlPlotsSmoothing()
 
       if ( !processEntry1d->applySmoothing_ ) continue;
 
-      std::string histogramName = std::string(processEntry1d->histogram_->GetName()).append("_cloned");
-      TH1* histogram_cloned = (TH1*)processEntry1d->histogram_->Clone(histogramName.data());
+      std::string histogramName = std::string(processEntry1d->fluctHistogram_->GetName()).append("_cloned");
+      TH1* histogram_cloned = (TH1*)processEntry1d->fluctHistogram_->Clone(histogramName.data());
       histogram_cloned->GetXaxis()->SetTitle(varName->data());
       histogram_cloned->SetLineStyle(1);
       histogram_cloned->SetLineColor(1);
@@ -1425,7 +1442,7 @@ void TemplateBgEstFit::makeControlPlotsSmoothing()
       double yMax = histogram_cloned->GetMaximum();
       histogram_cloned->SetMaximum(1.3*yMax);
 
-      TLegend legend(0.67, 0.63, 0.89, 0.89);
+      TLegend legend(0.63, 0.38, 0.89, 0.54);
       legend.SetBorderSize(0);
       legend.SetFillColor(0);
 
@@ -1435,7 +1452,7 @@ void TemplateBgEstFit::makeControlPlotsSmoothing()
       histogram_cloned->Draw("e1p");
       tf1_cloned->Draw("lsame");
       
-      legend.Draw();
+      //legend.Draw();
 
       canvas.Update();
 
