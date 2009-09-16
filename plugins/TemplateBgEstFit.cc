@@ -1078,7 +1078,7 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 //--- read configuration parameters specifying how statistical and systematic uncertainties 
 //    on normalization factors determined by fit get estimated
   edm::ParameterSet cfgStatErr = cfg.getParameter<edm::ParameterSet>("estStatUncertainties");
-  statErrNumSamplings_ = cfgStatErr.getParameter<edm::ParameterSet>("numSamplings").getParameter<int>("stat");
+  statErrNumSamplings_ = cfgStatErr.getParameter<int>("numSamplings");
   statErrChi2redMax_ = cfgStatErr.getParameter<double>("chi2redMax");  
   statErrPrintLevel_ = cfgStatErr.getParameter<edm::ParameterSet>("verbosity").getParameter<int>("printLevel");
   statErrPrintWarnings_ = cfgStatErr.getParameter<edm::ParameterSet>("verbosity").getParameter<bool>("printWarnings");
@@ -1140,8 +1140,7 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
       }
     }
   }
-  sysErrNumStatSamplings_ = cfgSysErr.getParameter<edm::ParameterSet>("numSamplings").getParameter<int>("stat");
-  sysErrNumSysSamplings_ = cfgSysErr.getParameter<edm::ParameterSet>("numSamplings").getParameter<int>("sys");
+  sysErrNumSamplings_ = cfgSysErr.getParameter<int>("numSamplings");
   sysErrChi2redMax_ = cfgSysErr.getParameter<double>("chi2redMax");  
   sysErrPrintLevel_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<int>("printLevel");
   sysErrPrintWarnings_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<bool>("printWarnings");
@@ -1320,12 +1319,12 @@ void TemplateBgEstFit::endJob()
 
 //--- estimate statistical uncertainties
   std::cout << ">>> Statistical Uncertainties <<<" << std::endl;
-  estimateUncertainties(true, statErrNumSamplings_, false, 1, statErrChi2redMax_, 
+  estimateUncertainties(true, false, statErrNumSamplings_, statErrChi2redMax_, 
 			"estStatUncertainties", statErrPrintLevel_, statErrPrintWarnings_);
  
 //--- estimate systematic uncertainties
   std::cout << ">>> Systematic Uncertainties <<<" << std::endl;
-  estimateUncertainties(false, sysErrNumStatSamplings_, true, sysErrNumSysSamplings_, sysErrChi2redMax_,
+  estimateUncertainties(false, true, sysErrNumSamplings_, sysErrChi2redMax_,
 			"estSysUncertainties", sysErrPrintLevel_, sysErrPrintWarnings_);
 
 //--- estimate total (statistical + systematic) uncertainties
@@ -1333,7 +1332,7 @@ void TemplateBgEstFit::endJob()
   double chi2redMax = TMath::Max(statErrChi2redMax_, sysErrChi2redMax_);
   int totErrPrintLevel = TMath::Min(statErrPrintLevel_, sysErrPrintLevel_);
   bool totErrPrintWarnings = (statErrPrintWarnings_ && sysErrPrintWarnings_);
-  estimateUncertainties(true, sysErrNumStatSamplings_, true, sysErrNumSysSamplings_, chi2redMax,
+  estimateUncertainties(true, true, sysErrNumSamplings_, chi2redMax,
 			"estTotUncertainties", totErrPrintLevel, totErrPrintWarnings);
   
   std::cout << "done." << std::endl;
@@ -1380,7 +1379,7 @@ void TemplateBgEstFit::makeControlPlots()
 //    of shape templates on fit results
 //    (and in particular effect of different statistical precision with which shape templates
 //     are determined for different background processes in background enriched samples)
-  //makeControlPlotsSmoothing();
+  makeControlPlotsSmoothing();
 
 //--- produce control plots of one and two sigma error contours 
 //    showing correlation of estimated normalization factors
@@ -1791,7 +1790,7 @@ double TemplateBgEstFit::compChi2red()
   }
 }
 
-void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSamplings, bool fluctSys, int numSysSamplings, 
+void TemplateBgEstFit::estimateUncertainties(bool fluctStat, bool fluctSys, int numSamplings, 
 					     double chi2redMax, const char* type, int printLevel, bool printWarnings)
 {
   int numProcesses = processEntries_.size();
@@ -1803,48 +1802,46 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
   unsigned numTotFits = 0;
   unsigned numGoodFits = 0;
 
-  for ( int iRndStat = 0; iRndStat < numStatSamplings; ++iRndStat ) {
-    for ( int iRndSys = 0; iRndSys < numSysSamplings; ++iRndSys ) {
+  for ( int iRndFluct = 0; iRndFluct < numSamplings; ++iRndFluct ) {
 
-      std::cout << "<TemplateBgEstFit::estimateUncertainties>: iRndStat = " << iRndStat << ", iRndSys = " << iRndSys << std::endl;
+    std::cout << "<TemplateBgEstFit::estimateUncertainties>: iRndFluct = " << iRndFluct << std::endl;
 
 //--- fluctuate distributions observed in (pseudo)data
-      dataEntry_->fluctuate(true, false);
+    dataEntry_->fluctuate(true, false);
 
 //--- fluctuate template histograms fitted to the (pseudo)data  
 //
 //    CV: treat statistical uncertainties on template histograms
 //        as systematic uncertainties of background estimation
 //
-      for ( processEntryMap::iterator processEntry = processEntries_.begin();
-            processEntry != processEntries_.end(); ++processEntry ) {
-        //processEntry->second->fluctuate(fluctStat, fluctSys);
-	processEntry->second->fluctuate(fluctSys, fluctSys);
-      }
-
-      delete fitModel_;
-      buildFitModel();
-
-      fit(false, printLevel, printWarnings);
-      ++numTotFits;
-
-      for ( int iProcess = 0; iProcess < numProcesses; ++iProcess ) {
-	const std::string& processName = processNames_[iProcess];
-	fitValues(iProcess) = processEntries_[processName]->norm_->getVal();
-	//std::cout << " fitValue(iProcess = " << iProcess << ", processName = " << processName << ")"
-	//	    << " = " << fitValues(iProcess) << std::endl;
-      }
-
-      double chi2red = compChi2red();
-      //std::cout << "Chi2red = " << chi2red << std::endl;
-      if ( !(chi2red < chi2redMax) ) continue;
-
-      mean.update(fitValues);
-      median.update(fitValues);
-      cov.update(fitValues);
-
-      ++numGoodFits;
+    for ( processEntryMap::iterator processEntry = processEntries_.begin();
+	  processEntry != processEntries_.end(); ++processEntry ) {
+      //processEntry->second->fluctuate(fluctStat, fluctSys);
+      processEntry->second->fluctuate(fluctSys, fluctSys);
     }
+
+    delete fitModel_;
+    buildFitModel();
+
+    fit(false, printLevel, printWarnings);
+    ++numTotFits;
+    
+    for ( int iProcess = 0; iProcess < numProcesses; ++iProcess ) {
+      const std::string& processName = processNames_[iProcess];
+      fitValues(iProcess) = processEntries_[processName]->norm_->getVal();
+      //std::cout << " fitValue(iProcess = " << iProcess << ", processName = " << processName << ")"
+      //	    << " = " << fitValues(iProcess) << std::endl;
+    }
+    
+    double chi2red = compChi2red();
+    //std::cout << "Chi2red = " << chi2red << std::endl;
+    if ( !(chi2red < chi2redMax) ) continue;
+    
+    mean.update(fitValues);
+    median.update(fitValues);
+    cov.update(fitValues);
+    
+    ++numGoodFits;
   }
 
   double badFitFraction = (numTotFits - numGoodFits)/((double)numTotFits);

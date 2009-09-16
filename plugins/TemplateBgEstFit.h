@@ -26,9 +26,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.9 $
+ * \version $Revision: 1.2.2.1 $
  *
- * $Id: TemplateBgEstFit.h,v 1.9 2009/09/02 10:16:01 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.2.2.1 2009/09/02 14:34:39 veelken Exp $
  *
  */
 
@@ -174,7 +174,7 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   void makeControlPlotsCovariance(TVectorD, TVectorD, TMatrixD, const vstring&, const std::string&, const char*);
   void makeControlPlotsObsDistribution();
   double compChi2red();
-  void estimateUncertainties(bool, int, bool, int, double, const char*, int, bool);
+  void estimateUncertainties(bool, bool, int, double, const char*, int, bool);
 
 //--- configuration parameters
   int fitMode_;
@@ -191,8 +191,7 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   int statErrPrintLevel_;
   bool statErrPrintWarnings_;
 
-  int sysErrNumStatSamplings_;
-  int sysErrNumSysSamplings_;
+  int sysErrNumSamplings_;
   double sysErrChi2redMax_;
   int sysErrPrintLevel_;
   bool sysErrPrintWarnings_;
