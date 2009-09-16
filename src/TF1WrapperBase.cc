@@ -48,11 +48,14 @@ void TF1WrapperBase::setTF1Parameter(const edm::ParameterSet& cfg)
     //std::cout << "parName = " << (*parName) << ": parId = " << parId << std::endl;
 
     double parValue_initial = cfgParameter.getParameter<double>("initial");
-    double parValue_min = cfgParameter.getParameter<double>("min");
-    double parValue_max = cfgParameter.getParameter<double>("max");
-
     tf1_->SetParameter(parId, parValue_initial);
-    tf1_->SetParLimits(parId, parValue_min, parValue_max);
+    
+    if ( cfgParameter.exists("min") &&
+	 cfgParameter.exists("max") ) {
+      double parValue_min = cfgParameter.getParameter<double>("min");
+      double parValue_max = cfgParameter.getParameter<double>("max");
+      tf1_->SetParLimits(parId, parValue_min, parValue_max);
+    }
 
     tf1InitialValues_[parId] = parValue_initial;
   }
