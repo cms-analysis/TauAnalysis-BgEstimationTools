@@ -109,7 +109,8 @@ print("bgEstEventSelection_QCD = " + bgEstEventSelection_QCD)
 
 dqmDirectory_Ztautau_finalEvtSel_orig = 'harvested/Ztautau/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauPzetaDiff/'
 dqmDirectory_Ztautau_finalEvtSel_norm = 'Ztautau/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauPzetaDiff/'
-dqmDirectory_Ztautau_ZmumuTemplate = 'Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/'
+#dqmDirectory_Ztautau_ZmumuTemplate = 'Ztautau_from_selZmumu/pure/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauMt1MET/'
+dqmDirectory_Ztautau_ZmumuTemplate = 'Ztautau_from_selZmumu/pure/harvested/Ztautau_from_selZmumu/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauPzetaDiff/'
 dqmDirectory_Ztautau_systematics = processName + '/Ztautau/systematics/'
 
 dqmDirectory_Zmumu_finalEvtSel_orig = 'harvested/ZmumuPlusJets/zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauPzetaDiff/'
@@ -228,9 +229,10 @@ process.prodTemplateHistZtoMuTau = cms.Sequence( process.prodTemplateHistBgEstZm
 
 process.loadTemplateHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMFileLoader",
     Ztautau = cms.PSet(
-        inputFileNames = cms.vstring('rfio:/castor/cern.ch/user/v/veelken/bgEstTemplates/ZtoMuTau_from_selZmumu.root'),
+        #inputFileNames = cms.vstring('rfio:/castor/cern.ch/user/v/veelken/bgEstTemplates/ZtoMuTau_from_selZmumu.root'),
+        inputFileNames = cms.vstring('rfio:/castor/cern.ch/user/v/veelken/bgEstTemplates/ZtoMuTau_from_selZmumuII.root'),
         scaleFactor = cms.double(1.),
-        dqmDirectory_store = cms.string('Ztautau_from_selZmumu/pure')
+        dqmDirectory_store = cms.string('Ztautau_from_selZmumu/pure/harvested')
     )
 )
 
@@ -568,6 +570,8 @@ process.saveAllHistZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
 # in order to determine normalization factors of individual background processes
 #--------------------------------------------------------------------------------
 
+# fit W + jets, ttbar + jets and QCD background templates
+# with Landau distribution convoluted with Gaussian
 diTauMvis12_smoothing = cms.PSet(
     pluginName = cms.string("Landau convoluted with Gaussian"),
     pluginType = cms.string("TF1landauXgausWrapper"), # defaults to TF1Wrapper
@@ -602,11 +606,53 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
         Ztautau = cms.PSet(
             templates = cms.PSet(
                 diTauMvis12 = cms.PSet(
-                    #meName = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
-                    meName = cms.string(dqmDirectory_Ztautau_finalEvtSel_norm + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
-                    #smoothing = diTauMvis12_smoothing.clone(
-                    #    pluginName = cms.string("diTauMvis12SmoothingZtautau")
-                    #)
+                    meName = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
+                    #meName = cms.string(dqmDirectory_Ztautau_finalEvtSel_norm + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
+                    smoothing = cms.PSet(
+                        pluginName = cms.string("diTauMvis12SmoothingZtautau"),
+                        pluginType = cms.string("TF1Wrapper"),
+                        # fit Z --> tau tau peak with sum of log-normal and skewed Gaussian distribution
+                        formula = cms.string("[0]*([1]*::ROOT::Math::lognormal_pdf(x, TMath::Log([4]), [2], [3])"
+                                             "+ (1 - [1])*TMath::Gaus(x, [5], [6])*(1 + TMath::Erf([7]*x)))"),
+                        xMin = cms.double(20.),
+                        xMax = cms.double(120.),
+                        parameter = cms.PSet(
+                            par0 = cms.PSet(
+                                initial = cms.double(1.)
+                            ),
+                            par1 = cms.PSet(
+                                initial = cms.double(0.75),
+                                min = cms.double(0.),
+                                max = cms.double(1.)
+                            ),
+                            par2 = cms.PSet(
+                                initial = cms.double(0.5),
+                                min = cms.double(0.),
+                                max = cms.double(10.)
+                            ),
+                            par3 = cms.PSet(
+                                initial = cms.double(40.),
+                                min = cms.double(0.),
+                                max = cms.double(100.)
+                            ),
+                            par4 = cms.PSet(
+                                initial = cms.double(10.),
+                                min = cms.double(0.),
+                                max = cms.double(100.)
+                            ),
+                            par5 = cms.PSet(
+                                initial = cms.double(55.)
+                            ),
+                            par6 = cms.PSet(
+                                initial = cms.double(10.),
+                                min = cms.double(0.),
+                                max = cms.double(100.)
+                            ),
+                            par7 = cms.PSet(
+                                initial = cms.double(0.0001)
+                            )
+                        )
+                    )
                 )
             ),    
             norm = cms.PSet(
@@ -618,9 +664,29 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
             templates = cms.PSet(
                 diTauMvis12 = cms.PSet(
                     meName = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_diTauMvis12_norm),
-                    #smoothing = diTauMvis12_smoothing.clone(
-                    #    pluginName = cms.string("diTauMvis12SmoothingZmumu")
-                    #)
+                    smoothing = cms.PSet(
+                        pluginName = cms.string("diTauMvis12SmoothingZmumu"),
+                        pluginType = cms.string("TF1Wrapper"),
+                        # fit Z --> mu mu peak with Voigt function,
+                        # the convolution of a Breit-Wigner profile with a Gaussian (smearing)
+                        formula = cms.string("[0]*TMath::Voigt(x - [1], [2], [3])"),
+                        xMin = cms.double(20.),
+                        xMax = cms.double(120.),
+                        parameter = cms.PSet(
+                            par0 = cms.PSet(
+                                initial = cms.double(10.)
+                            ),
+                            par1 = cms.PSet(
+                                initial = cms.double(90.)
+                            ),
+                            par3 = cms.PSet(
+                                initial = cms.double(0.1)
+                            ),
+                            par4 = cms.PSet(
+                                initial = cms.double(2.5)
+                            )
+                        )
+                    )
                 )
             ),    
             norm = cms.PSet(
@@ -660,8 +726,8 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
         QCD = cms.PSet(
             templates = cms.PSet(
                 diTauMvis12 = cms.PSet(
-                    #meName = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMvis12_norm),
-                    meName = cms.string(dqmDirectory_QCD_finalEvtSel_norm + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
+                    meName = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMvis12_norm),
+                    #meName = cms.string(dqmDirectory_QCD_finalEvtSel_norm + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
                     smoothing = diTauMvis12_smoothing.clone(
                         pluginName = cms.string("diTauMvis12SmoothingQCD")
                     )
@@ -723,9 +789,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
     ),
 
     estStatUncertainties = cms.PSet(
-        numSamplings = cms.PSet(
-            stat = cms.int32(10000)
-        ),
+        numSamplings = cms.int32(100),
         chi2redMax = cms.double(3.),
         verbosity = cms.PSet(
             printLevel = cms.int32(-1),
@@ -759,10 +823,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
                 mode = cms.string("coherent") # coherent/incoherent
             )
         ),       
-        numSamplings = cms.PSet(
-            stat = cms.int32(100),
-            sys = cms.int32(100)
-        ),
+        numSamplings = cms.int32(100),
         chi2redMax = cms.double(3.),
         verbosity = cms.PSet(
             printLevel = cms.int32(-1),
