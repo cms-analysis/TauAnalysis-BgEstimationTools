@@ -1403,14 +1403,15 @@ void TemplateBgEstFit::makeControlPlotsSmoothing()
 {
   TCanvas canvas("TemplateBgEstFit", "TemplateBgEstFit", defaultCanvasSizeX, defaultCanvasSizeY);
   canvas.SetFillColor(10);
+  canvas.SetFrameFillColor(10);
 
   int defStyle_optStat = gStyle->GetOptStat();
   int defStyle_optFit = gStyle->GetOptStat();
   float defStyle_labelSizeX = gStyle->GetLabelSize("x");
   float defStyle_labelSizeY = gStyle->GetLabelSize("y");
 
-  gStyle->SetOptStat(1111);
-  gStyle->SetOptFit(111);
+  //gStyle->SetOptStat(1111);
+  //gStyle->SetOptFit(111);
   gStyle->SetLabelSize(0.03, "x");
   gStyle->SetLabelSize(0.03, "y");
   
@@ -1427,6 +1428,7 @@ void TemplateBgEstFit::makeControlPlotsSmoothing()
 
       std::string histogramName = std::string(processEntry1d->fluctHistogram_->GetName()).append("_cloned");
       TH1* histogram_cloned = (TH1*)processEntry1d->fluctHistogram_->Clone(histogramName.data());
+      histogram_cloned->SetStats(false);
       histogram_cloned->GetXaxis()->SetTitle(varName->data());
       histogram_cloned->SetLineStyle(1);
       histogram_cloned->SetLineColor(1);
@@ -1489,6 +1491,7 @@ void drawErrorEllipse(double x0, double y0, double errX0, double errY0, double S
 
   TCanvas canvas("drawErrorEllipse", "drawErrorEllipse", 600, 600);
   canvas.SetFillColor(10);
+  canvas.SetFrameFillColor(10);
 
 //--- compute angle between first principal axis of error ellipse
 //    and x-axis
@@ -1628,6 +1631,7 @@ void TemplateBgEstFit::makeControlPlotsObsDistribution()
 {
   TCanvas canvas("TemplateBgEstFit", "TemplateBgEstFit", defaultCanvasSizeX, defaultCanvasSizeY);
   canvas.SetFillColor(10);
+  canvas.SetFrameFillColor(10);
 
   for ( vstring::const_iterator varName = varNames_.begin(); 
 	varName != varNames_.end(); ++varName ) {
