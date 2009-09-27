@@ -81,7 +81,7 @@ void showTemplateShapeBias_i(const TString& inputFileName, const TString& dqmDir
     if ( dqmMonitorElement->GetMaximum() > yMax ) yMax = dqmMonitorElement->GetMaximum();
   }
   
-  TLegend legend(0.53, 0.73, 0.88, 0.89);
+  TLegend legend(0.44, 0.69, 0.85, 0.89);
   legend.SetBorderSize(0);
   legend.SetFillColor(0);
   
