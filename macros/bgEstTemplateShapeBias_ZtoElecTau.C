@@ -1,40 +1,42 @@
 
 //Int_t lineColors[] = { 15, 13, 1 };
-Int_t lineColors[] = { 8, 4, 1 };
-Int_t lineStyles[] = { 4, 2, 1 };
+Int_t lineColors[] = { 8, 7, 4, 1 };
+Int_t lineStyles[] = { 4, 3, 2, 1 };
 
-void bgEstTemplateShapeBias()
+void bgEstTemplateShapeBias_ZtoElecTau()
 {
-  TString dqmDirectoryName = "DQMData/harvested/WplusJets/zMuTauAnalyzer/";
+  TString dqmDirectoryName = "DQMData/harvested/WplusJets/zElecTauAnalyzer/";
 
   TObjArray dqmSubDirectoryNames;
-  dqmSubDirectoryNames.Add(new TObjString("afterEvtSelDiTauCandidateForMuTauAcoplanarity12_beforeEvtSelDiTauCandidateForMuTauMt1MET/"));
-  dqmSubDirectoryNames.Add(new TObjString("afterEvtSelDiTauCandidateForMuTauMt1MET_beforeEvtSelDiTauCandidateForMuTauPzetaDiff/"));
-  dqmSubDirectoryNames.Add(new TObjString("afterEvtSelDiTauCandidateForMuTauPzetaDiff/"));
+  dqmSubDirectoryNames.Add(new TObjString("afterEvtSelDiTauCandidateForElecTauAcoplanarity12_beforeEvtSelDiTauCandidateForElecTauMt1MET/"));
+  dqmSubDirectoryNames.Add(new TObjString("afterEvtSelDiTauCandidateForElecTauMt1MET_beforeEvtSelDiTauCandidateForElecTauPzetaDiff/"));
+  dqmSubDirectoryNames.Add(new TObjString("afterEvtSelDiTauCandidateForElecTauPzetaDiff_beforeEvtSelElecTauPairZeeHypothesisVeto/"));
+  dqmSubDirectoryNames.Add(new TObjString("afterEvtSelElecTauPairZeeHypothesisVeto/"));
 
   TObjArray legendLabels;
   legendLabels.Add(new TObjString("before M_{T}^{#mu + MET} Cut"));
   legendLabels.Add(new TObjString("after M_{T}^{#mu + MET} Cut, before Cut on P_{#zeta} - 1.5*P_{#zeta}^{vis}"));
-  legendLabels.Add(new TObjString("after Cut on P_{#zeta} - 1.5*P_{#zeta}^{vis}"));
+  legendLabels.Add(new TObjString("after Cut on P_{#zeta} - 1.5*P_{#zeta}^{vis}, before Z #rightarrow e^{+}e^{-} Veto"));
+  legendLabels.Add(new TObjString("after Z #rightarrow e^{+}e^{-} Veto"));
 
   TString outputFileName_unnormalized = "bgEstTemplateShapeBias_unnormalized.ps";
   TString outputFileName_normalized = "bgEstTemplateShapeBias_normalized.ps";
 
-  TString inputFileName = "rfio:/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoMuTau/plotsZtoMuTau_all_shrinkingCone.root";
-  //TString inputFileName = "../../Configuration/test/plotsZtoMuTau_all.root";
+  //TString inputFileName = "rfio:/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoElecTau/plotsZtoElecTau_all.root";
+  TString inputFileName = "../../Configuration/test/plotsZtoElecTau_all.root";
 
   showTemplateShapeBias_i(inputFileName, dqmDirectoryName, dqmSubDirectoryNames, legendLabels, 
 			  "DiTauCandidateQuantities/DPhi12", "#Delta#phi_{#mu#tau}", false, 
-			  "bgEstTemplateShapeBias_WplusJets_DPhi12_unnormalized.eps");
+			  "bgEstTemplateShapeBias_ZtoElecTau_WplusJets_DPhi12_unnormalized.eps");
   showTemplateShapeBias_i(inputFileName, dqmDirectoryName, dqmSubDirectoryNames, legendLabels, 
 			  "DiTauCandidateQuantities/DPhi12", "#Delta#phi_{#mu#tau}", true, 
-			  "bgEstTemplateShapeBias_WplusJets_DPhi12_normalized.eps");
+			  "bgEstTemplateShapeBias_ZtoElecTau_WplusJets_DPhi12_normalized.eps");
   showTemplateShapeBias_i(inputFileName, dqmDirectoryName, dqmSubDirectoryNames, legendLabels, 
 			  "DiTauCandidateQuantities/VisMass", "M_{vis}^{#mu#tau}", false,
-			  "bgEstTemplateShapeBias_WplusJets_Mvis_unnormalized.eps");
+			  "bgEstTemplateShapeBias_ZtoElecTau_WplusJets_Mvis_unnormalized.eps");
   showTemplateShapeBias_i(inputFileName, dqmDirectoryName, dqmSubDirectoryNames, legendLabels, 
 			  "DiTauCandidateQuantities/VisMass", "M_{vis}^{#mu#tau}", true,
-			  "bgEstTemplateShapeBias_WplusJets_Mvis_normalized.eps");
+			  "bgEstTemplateShapeBias_ZtoElecTau_WplusJets_Mvis_normalized.eps");
 }
 
 void showTemplateShapeBias_i(const TString& inputFileName, const TString& dqmDirectoryName, 
