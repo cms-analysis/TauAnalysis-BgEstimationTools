@@ -37,7 +37,7 @@
 #include <RooFit.h>
 #include <RooLinkedList.h>
 #include <RooCmdArg.h>
-#include <RooTFnPdfBinding.h>
+//#include <RooTFnPdfBinding.h> // <-- CMSSW_3_1_x only (because needs ROOT version 5.22)
 
 #include <iostream>
 
@@ -371,7 +371,10 @@ void TemplateBgEstFit::dataDistr1dType::initialize()
 
 void TemplateBgEstFit::dataDistr1dType::buildFitData()
 {
+  //std::cout << "<dataDistr1dType::buildFitData>:" << std::endl;
+  //std::cout << " dataHistName = " << dataHistName_ << std::endl;
   dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, fluctHistogram_);
+  //std::cout << " dataHist = " << dataHist_ << std::endl;
 }
 
 void TemplateBgEstFit::dataDistr1dType::fluctuate(bool, bool)
@@ -380,6 +383,10 @@ void TemplateBgEstFit::dataDistr1dType::fluctuate(bool, bool)
   
   makeHistogramPositive(fluctHistogram_);
   
+  //std::cout << "<dataDistr1dType::fluctuate>:" << std::endl;
+  //std::cout << "--> deleting dataHist..." << std::endl;
+  //std::cout << " dataHist = " << dataHist_ << std::endl;
+
   delete dataHist_;
   buildFitData();
 }
@@ -400,6 +407,8 @@ TemplateBgEstFit::dataDistrNdType::dataDistrNdType(int fitMode, bool cutUnfitted
 
 TemplateBgEstFit::dataDistrNdType::~dataDistrNdType()
 {
+  //std::cout << "<dataDistrNdType::~dataDistrNdType>:" << std::endl;
+
   for ( std::map<std::string, dataDistr1dType*>::iterator it = dataEntries1d_.begin();
 	it != dataEntries1d_.end(); ++it ) {
     delete it->second;
@@ -451,15 +460,20 @@ void TemplateBgEstFit::dataDistrNdType::initialize()
 
 void TemplateBgEstFit::dataDistrNdType::buildFitData()
 {
+  //std::cout << "<dataDistrNdType::buildFitData>:" << std::endl;
+  //std::cout << " numDimensions = " << numDimensions_ << std::endl;
+
   assert(fitMode_ == k1dPlus || fitMode_ == kNd);
 
   if ( numDimensions_ == 1 ) {
     std::string varName_1 = varNames_.front();
-    RooDataHist* histogram_1 = dataEntries1d_[varName_1]->dataHist_;
-    
-    std::string fitDataName = "fitData_rooDataHist";
+    dataDistr1dType* dataEntry1d = dataEntries1d_[varName_1];
 
-    fitData_ = (RooDataHist*)histogram_1->Clone(fitDataName.data());
+    std::string fitDataName = "fitData_rooDataHist";
+    //std::cout << " fitDataName = " << fitDataName << std::endl;
+
+    fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), *dataEntry1d->xRef_, dataEntry1d->fluctHistogram_);
+    //std::cout << " fitData = " << fitData_ << std::endl;
   } else {
     if ( fitMode_ == k1dPlus ) {
       std::vector<TH1*> histograms;
@@ -618,7 +632,7 @@ void TemplateBgEstFit::dataDistrNdType::buildFitData()
     std::string fitData_varsArgName = std::string("fitData").append("_varsArgs");
     RooArgList fitData_varsArgs(fitData_varsCollection, fitData_varsArgName.data());
     
-    fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), fitData_varsArgs, auxHistogram_);
+    fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), fitData_varsArgs, auxHistogram_);    
   } 
 }
 
@@ -629,6 +643,9 @@ void TemplateBgEstFit::dataDistrNdType::fluctuate(bool, bool)
     dataEntry1d->second->fluctuate(true, false);
   }
 
+  //std::cout << "<dataDistrNdType::fluctuate>:" << std::endl;
+  //std::cout << "--> deleting fitData..." << std::endl;
+  //std::cout << " fitData = " << fitData_ << std::endl;
   delete fitData_;
   buildFitData();
 }
@@ -694,22 +711,20 @@ void TemplateBgEstFit::modelTemplate1dType::buildPdf()
 
     if ( isFirstFit ) {
       std::string pluginTypeTF1Wrapper = cfgSmoothing_.getParameter<std::string>("pluginType");
+      delete auxTF1Wrapper_;
       auxTF1Wrapper_ = TF1WrapperPluginFactory::get()->create(pluginTypeTF1Wrapper, cfgSmoothing_);
     } else {
       auxTF1Wrapper_->reinitializeTF1Parameter();
     }
 
     std::string fitOption = ( isFirstFit ) ? "RB0" : "RB0Q";
-
+    
     fluctHistogram_->Fit(auxTF1Wrapper_->getTF1(), fitOption.data());
 
-    edm::LogError ("modelTemplate1dType::buildPdf") << " Smoothing not yet supported in CMSSW_2_2_x !!";
-    return;
-/*
-    // RooTFnPdfBinding requires ROOT version 5.22 (or higher),
-    // only available for CMSSW_3_1_x
-    if ( !pdf1d_ ) pdf1d_ = new RooTFnPdfBinding(pdf1dName_.data(), pdf1dName_.data(), auxTF1Wrapper_->getTF1(), RooArgList(*xRef_));
- */
+    // CMSSW_3_1_x only (because needs ROOT version 5.22)
+    //pdf1d_ = new RooTFnPdfBinding(pdf1dName_.data(), pdf1dName_.data(), auxTF1Wrapper_->getTF1(), RooArgList(*xRef_));
+    edm::LogError ("modelTemplate1dType::buildPdf") << " Smoothing not supported in CMSSW_2_2_x !!";
+    assert(0);
   } 
 }
 
@@ -740,6 +755,9 @@ void TemplateBgEstFit::modelTemplate1dType::fluctuate(bool fluctStat, bool fluct
   makeHistogramPositive(fluctHistogram_);
 
   if ( !applySmoothing_ ) {
+    //std::cout << "<modelTemplate1dType::fluctuate>:" << std::endl;
+    //std::cout << "--> deleting dataHist..." << std::endl;
+    //std::cout << " dataHist = " << dataHist_ << std::endl;
     delete dataHist_;
     buildFitData();
   }
@@ -1062,7 +1080,7 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 //--- read configuration parameters specifying how statistical and systematic uncertainties 
 //    on normalization factors determined by fit get estimated
   edm::ParameterSet cfgStatErr = cfg.getParameter<edm::ParameterSet>("estStatUncertainties");
-  statErrNumSamplings_ = cfgStatErr.getParameter<edm::ParameterSet>("numSamplings").getParameter<int>("stat");
+  statErrNumSamplings_ = cfgStatErr.getParameter<int>("numSamplings");
   statErrChi2redMax_ = cfgStatErr.getParameter<double>("chi2redMax");  
   statErrPrintLevel_ = cfgStatErr.getParameter<edm::ParameterSet>("verbosity").getParameter<int>("printLevel");
   statErrPrintWarnings_ = cfgStatErr.getParameter<edm::ParameterSet>("verbosity").getParameter<bool>("printWarnings");
@@ -1124,8 +1142,7 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
       }
     }
   }
-  sysErrNumStatSamplings_ = cfgSysErr.getParameter<edm::ParameterSet>("numSamplings").getParameter<int>("stat");
-  sysErrNumSysSamplings_ = cfgSysErr.getParameter<edm::ParameterSet>("numSamplings").getParameter<int>("sys");
+  sysErrNumSamplings_ = cfgSysErr.getParameter<int>("numSamplings");
   sysErrChi2redMax_ = cfgSysErr.getParameter<double>("chi2redMax");  
   sysErrPrintLevel_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<int>("printLevel");
   sysErrPrintWarnings_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<bool>("printWarnings");
@@ -1188,7 +1205,7 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
 
 //--- build list of fit options
   RooLinkedList fitOptions;
-  
+
 //--- check if "external" constraints exist on normalization factors to be determined by fit
 //    (specified by Gaussian probability density functions with mean and sigma obtained
 //     e.g. by level of agreement between Monte Carlo simulation and number of events observed in background enriched samples)
@@ -1202,7 +1219,10 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
     std::string normConstraints_pdfArgName = std::string("normConstraints").append("_pdfArgs");
     RooArgSet normConstraints_pdfArgs(normConstraints_pdfCollection, normConstraints_pdfArgName.data());
     
-    //fitOptions.Add(new RooCmdArg(RooFit::ExternalConstraints(normConstraints_pdfArgs))); // only works with ROOT version 5.22 and newer
+    // CMSSW_3_1_x only (because needs ROOT version 5.22)
+    //fitOptions.Add(new RooCmdArg(RooFit::ExternalConstraints(normConstraints_pdfArgs)));
+    edm::LogError ("TemplateBgEstFit::fit") << " Norm constraints not supported in CMSSW_2_2_x !!";
+    assert(0);
   }
 
 //--- check if results of fit are to be saved for later analysis
@@ -1211,16 +1231,14 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
 
 //--- stop Minuit from printing lots of information 
 //    about progress on fit and warnings
-//
-//    NOTE: RooFit::Warnings not implemented in RooFit version 
-//          included in ROOT 5.18/00a linked against CMSSW_2_2_13
-//
   fitOptions.Add(new RooCmdArg(RooFit::PrintLevel(printLevel)));
+  // CMSSW_3_1_x only (because needs ROOT version 5.22)
   //fitOptions.Add(new RooCmdArg(RooFit::PrintEvalErrors(printWarnings)));
-  //fitOptions.Add(new RooCmdArg(RooFit::Warnings(printWarnings_));
+  //fitOptions.Add(new RooCmdArg(RooFit::Warnings(printWarnings_)));
 
-  RooFitResult* fitResult = fitModel_->fitTo(*dataEntry_->fitData_, fitOptions);
-  
+  //RooFitResult* fitResult = fitModel_->fitTo(*dataEntry_->fitData_, fitOptions); // <-- CMSSW_3_1_x only
+  RooFitResult* fitResult = fitModel_->fitTo(*dataEntry_->fitData_, RooFit::Extended(), RooFit::Save(true), 
+					     RooFit::PrintLevel(printLevel_)); // <-- CMSSW_2_2_x only
   if ( saveFitResult ) fitResult_ = fitResult;
 
 //--- delete fit option objects
@@ -1270,7 +1288,7 @@ void TemplateBgEstFit::endJob()
 //    print-out structure once configuration finished
   buildFitModel();
 
-  std::cout << ">>> RootFit model used for generalized Matrix method Fit <<<" << std::endl;
+  std::cout << ">>> RootFit model used for Template method Fit <<<" << std::endl;
   fitModel_->printCompactTree();
 
   std::cout << ">>> RootFit Parameters <<<" << std::endl;
@@ -1308,12 +1326,12 @@ void TemplateBgEstFit::endJob()
 
 //--- estimate statistical uncertainties
   std::cout << ">>> Statistical Uncertainties <<<" << std::endl;
-  estimateUncertainties(true, statErrNumSamplings_, false, 1, statErrChi2redMax_, 
+  estimateUncertainties(true, false, statErrNumSamplings_, statErrChi2redMax_, 
 			"estStatUncertainties", statErrPrintLevel_, statErrPrintWarnings_);
  
 //--- estimate systematic uncertainties
   std::cout << ">>> Systematic Uncertainties <<<" << std::endl;
-  estimateUncertainties(false, sysErrNumStatSamplings_, true, sysErrNumSysSamplings_, sysErrChi2redMax_,
+  estimateUncertainties(false, true, sysErrNumSamplings_, sysErrChi2redMax_,
 			"estSysUncertainties", sysErrPrintLevel_, sysErrPrintWarnings_);
 
 //--- estimate total (statistical + systematic) uncertainties
@@ -1321,7 +1339,7 @@ void TemplateBgEstFit::endJob()
   double chi2redMax = TMath::Max(statErrChi2redMax_, sysErrChi2redMax_);
   int totErrPrintLevel = TMath::Min(statErrPrintLevel_, sysErrPrintLevel_);
   bool totErrPrintWarnings = (statErrPrintWarnings_ && sysErrPrintWarnings_);
-  estimateUncertainties(true, sysErrNumStatSamplings_, true, sysErrNumSysSamplings_, chi2redMax,
+  estimateUncertainties(true, true, sysErrNumSamplings_, chi2redMax,
 			"estTotUncertainties", totErrPrintLevel, totErrPrintWarnings);
   
   std::cout << "done." << std::endl;
@@ -1344,10 +1362,10 @@ void TemplateBgEstFit::print(std::ostream& stream)
 	   << " (within fitted region = " << processNorm->getVal() << ")";
 
     if ( processNorm->hasAsymError() ) {
-      stream << " + " << normCorrFactor*processNorm->getAsymErrorHi() << "(" << processNorm->getAsymErrorHi() << ")"
-	     << " - " << fabs(normCorrFactor*processNorm->getAsymErrorLo()) << "(" << fabs(processNorm->getAsymErrorLo()) << ")";
+      stream << " + " << normCorrFactor*processNorm->getAsymErrorHi() << " (" << processNorm->getAsymErrorHi() << ")"
+	     << " - " << fabs(normCorrFactor*processNorm->getAsymErrorLo()) << " (" << fabs(processNorm->getAsymErrorLo()) << ")";
     } else if ( processNorm->hasError() ) {
-      stream << " +/- " << normCorrFactor*processNorm->getError() << "(" << processNorm->getError() << ")";
+      stream << " +/- " << normCorrFactor*processNorm->getError() << " (" << processNorm->getError() << ")";
     }
 
     stream << std::endl;
@@ -1392,14 +1410,15 @@ void TemplateBgEstFit::makeControlPlotsSmoothing()
 {
   TCanvas canvas("TemplateBgEstFit", "TemplateBgEstFit", defaultCanvasSizeX, defaultCanvasSizeY);
   canvas.SetFillColor(10);
+  canvas.SetFrameFillColor(10);
 
   int defStyle_optStat = gStyle->GetOptStat();
   int defStyle_optFit = gStyle->GetOptStat();
   float defStyle_labelSizeX = gStyle->GetLabelSize("x");
   float defStyle_labelSizeY = gStyle->GetLabelSize("y");
 
-  gStyle->SetOptStat(1111);
-  gStyle->SetOptFit(111);
+  //gStyle->SetOptStat(1111);
+  //gStyle->SetOptFit(111);
   gStyle->SetLabelSize(0.03, "x");
   gStyle->SetLabelSize(0.03, "y");
   
@@ -1414,8 +1433,9 @@ void TemplateBgEstFit::makeControlPlotsSmoothing()
 
       if ( !processEntry1d->applySmoothing_ ) continue;
 
-      std::string histogramName = std::string(processEntry1d->histogram_->GetName()).append("_cloned");
-      TH1* histogram_cloned = (TH1*)processEntry1d->histogram_->Clone(histogramName.data());
+      std::string histogramName = std::string(processEntry1d->fluctHistogram_->GetName()).append("_cloned");
+      TH1* histogram_cloned = (TH1*)processEntry1d->fluctHistogram_->Clone(histogramName.data());
+      histogram_cloned->SetStats(false);
       histogram_cloned->GetXaxis()->SetTitle(varName->data());
       histogram_cloned->SetLineStyle(1);
       histogram_cloned->SetLineColor(1);
@@ -1430,7 +1450,7 @@ void TemplateBgEstFit::makeControlPlotsSmoothing()
       double yMax = histogram_cloned->GetMaximum();
       histogram_cloned->SetMaximum(1.3*yMax);
 
-      TLegend legend(0.67, 0.63, 0.89, 0.89);
+      TLegend legend(0.63, 0.38, 0.89, 0.54);
       legend.SetBorderSize(0);
       legend.SetFillColor(0);
 
@@ -1440,7 +1460,7 @@ void TemplateBgEstFit::makeControlPlotsSmoothing()
       histogram_cloned->Draw("e1p");
       tf1_cloned->Draw("lsame");
       
-      legend.Draw();
+      //legend.Draw();
 
       canvas.Update();
 
@@ -1478,6 +1498,7 @@ void drawErrorEllipse(double x0, double y0, double errX0, double errY0, double S
 
   TCanvas canvas("drawErrorEllipse", "drawErrorEllipse", 600, 600);
   canvas.SetFillColor(10);
+  canvas.SetFrameFillColor(10);
 
 //--- compute angle between first principal axis of error ellipse
 //    and x-axis
@@ -1617,6 +1638,7 @@ void TemplateBgEstFit::makeControlPlotsObsDistribution()
 {
   TCanvas canvas("TemplateBgEstFit", "TemplateBgEstFit", defaultCanvasSizeX, defaultCanvasSizeY);
   canvas.SetFillColor(10);
+  canvas.SetFrameFillColor(10);
 
   for ( vstring::const_iterator varName = varNames_.begin(); 
 	varName != varNames_.end(); ++varName ) {
@@ -1779,7 +1801,7 @@ double TemplateBgEstFit::compChi2red()
   }
 }
 
-void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSamplings, bool fluctSys, int numSysSamplings, 
+void TemplateBgEstFit::estimateUncertainties(bool fluctStat, bool fluctSys, int numSamplings, 
 					     double chi2redMax, const char* type, int printLevel, bool printWarnings)
 {
   int numProcesses = processEntries_.size();
@@ -1791,48 +1813,46 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, int numStatSampling
   unsigned numTotFits = 0;
   unsigned numGoodFits = 0;
 
-  for ( int iRndStat = 0; iRndStat < numStatSamplings; ++iRndStat ) {
-    for ( int iRndSys = 0; iRndSys < numSysSamplings; ++iRndSys ) {
+  for ( int iRndFluct = 0; iRndFluct < numSamplings; ++iRndFluct ) {
 
-      std::cout << "<TemplateBgEstFit::estimateUncertainties>: iRndStat = " << iRndStat << ", iRndSys = " << iRndSys << std::endl;
+    std::cout << "<TemplateBgEstFit::estimateUncertainties>: iRndFluct = " << iRndFluct << std::endl;
 
 //--- fluctuate distributions observed in (pseudo)data
-      dataEntry_->fluctuate(true, false);
+    dataEntry_->fluctuate(true, false);
 
 //--- fluctuate template histograms fitted to the (pseudo)data  
 //
 //    CV: treat statistical uncertainties on template histograms
 //        as systematic uncertainties of background estimation
 //
-      for ( processEntryMap::iterator processEntry = processEntries_.begin();
-            processEntry != processEntries_.end(); ++processEntry ) {
-        //processEntry->second->fluctuate(fluctStat, fluctSys);
-	processEntry->second->fluctuate(fluctSys, fluctSys);
-      }
-
-      delete fitModel_;
-      buildFitModel();
-
-      fit(false, printLevel, printWarnings);
-      ++numTotFits;
-
-      for ( int iProcess = 0; iProcess < numProcesses; ++iProcess ) {
-	const std::string& processName = processNames_[iProcess];
-	fitValues(iProcess) = processEntries_[processName]->norm_->getVal();
-	//std::cout << " fitValue(iProcess = " << iProcess << ", processName = " << processName << ")"
-	//	    << " = " << fitValues(iProcess) << std::endl;
-      }
-
-      double chi2red = compChi2red();
-      //std::cout << "Chi2red = " << chi2red << std::endl;
-      if ( !(chi2red < chi2redMax) ) continue;
-
-      mean.update(fitValues);
-      median.update(fitValues);
-      cov.update(fitValues);
-
-      ++numGoodFits;
+    for ( processEntryMap::iterator processEntry = processEntries_.begin();
+	  processEntry != processEntries_.end(); ++processEntry ) {
+      //processEntry->second->fluctuate(fluctStat, fluctSys);
+      processEntry->second->fluctuate(fluctSys, fluctSys);
     }
+
+    delete fitModel_;
+    buildFitModel();
+
+    fit(false, printLevel, printWarnings);
+    ++numTotFits;
+    
+    for ( int iProcess = 0; iProcess < numProcesses; ++iProcess ) {
+      const std::string& processName = processNames_[iProcess];
+      fitValues(iProcess) = processEntries_[processName]->norm_->getVal();
+      //std::cout << " fitValue(iProcess = " << iProcess << ", processName = " << processName << ")"
+      //	    << " = " << fitValues(iProcess) << std::endl;
+    }
+    
+    double chi2red = compChi2red();
+    //std::cout << "Chi2red = " << chi2red << std::endl;
+    if ( !(chi2red < chi2redMax) ) continue;
+    
+    mean.update(fitValues);
+    median.update(fitValues);
+    cov.update(fitValues);
+    
+    ++numGoodFits;
   }
 
   double badFitFraction = (numTotFits - numGoodFits)/((double)numTotFits);
