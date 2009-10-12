@@ -6,12 +6,12 @@ import copy
 
 bgEstNtupleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau_looseTauSel/")
 
-# Z --> tau tau sample
+# Z --> tau+ tau+ sample
 fileNames_Ztautau = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Ztautau.root'
 )
 
-# Z --> mu mu sample
+# Z --> mu+ mu- sample
 fileNames_Zmumu = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part01a.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part01b.root',
@@ -27,12 +27,12 @@ fileNames_Zmumu = cms.vstring(
 
 #--------------------------------------------------------------------------------
 
-# Z --> tau tau + jets sample
+# Z --> tau+ tau- + jets sample
 fileNames_ZtautauPlusJets = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZtautauPlusJets.root'
 )
 
-# Z --> mu mu + jets sample
+# Z --> mu+ mu- + jets sample
 fileNames_ZmumuPlusJets = cms.vstring(
     #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01a.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01b.root',
@@ -42,7 +42,7 @@ fileNames_ZmumuPlusJets = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part03b.root'    
 )
 
-# Z --> e e + jets sample
+# Z --> e+ e- + jets sample
 fileNames_ZeePlusJets = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZeePlusJets.root'
 )
