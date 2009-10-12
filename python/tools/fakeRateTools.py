@@ -44,7 +44,7 @@ def reconfigDQMFileLoader(dqmFileLoaderConfig, plotDirectoryName_old, plotDirect
 # for data-driven background estimation to Z --> mu + tau-jet channel
 #--------------------------------------------------------------------------------
 
-def enableFakeRates_runZtoMu(process):
+def enableFakeRates_runZtoMuTau(process):
 
     # import utility function for changing cut values
     from TauAnalysis.Configuration.tools.changeCut import changeCut
@@ -63,6 +63,6 @@ def enableFakeRates_runZtoMu(process):
     #
     setattr(process.analyzeZtoMuTauEvents, "eventWeightSource", cms.VInputTag(cms.InputTag('tauJetFakeRateEventWeight')))
 
-    setattr(process.diTauCandidateHistManagerForMuTau, "diTauLeg2WeightSource", cms.string("byIsolation_qcdJetFakeRate"))
-    setattr(process.tauHistManager, "tauJetWeightSource", cms.string("byIsolation_qcdJetFakeRate"))
-    setattr(process.tauRecoilEnergyFromJetsHistManager, "leptonWeightSource", cms.string("byIsolation_qcdJetFakeRate"))
+    setattr(process.diTauCandidateHistManagerForMuTau, "diTauLeg2WeightSource", cms.string("QCDFakeRateECALIsolation"))
+    setattr(process.tauHistManager, "tauJetWeightSource", cms.string("QCDFakeRateECALIsolation"))
+    setattr(process.tauRecoilEnergyFromJetsHistManager, "leptonWeightSource", cms.string("QCDFakeRateECALIsolation"))
