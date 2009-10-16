@@ -50,10 +50,17 @@ def enableFakeRates_runZtoMuTau(process):
     from TauAnalysis.Configuration.tools.changeCut import changeCut
 
     # disable cuts on tau id. discriminators
+    changeCut(process, "selectedLayer1TausForMuTauLeadTrk", "tauID('leadingTrackFinding') > -1.")
+    changeCut(process, "selectedLayer1TausForMuTauLeadTrkPt", "tauID('leadingTrackPtCut') > -1.")
     changeCut(process, "selectedLayer1TausForMuTauTrkIso", "tauID('trackIsolation') > -1.")
     changeCut(process, "selectedLayer1TausForMuTauEcalIso", "tauID('ecalIsolation') > -1.")
     changeCut(process, "selectedLayer1TausForMuTauProng", "signalTracks.size() > -1")
-    changeCut(process, "selectedLayer1TausForMuTauMuonVeto", "tauID('againstMuon') > -1.")
+    changeCut(process, "selectedLayer1TausForMuTauCharge", "abs(charge) > -1")
+    #changeCut(process, "selectedLayer1TausForMuTauMuonVeto", "tauID('againstMuon') > -1.")
+
+    # add fake-rates to pat::Tau
+    from TauAnalysis.RecoTools.patPFTauConfig_cfi import *
+    setattr(allLayer1Taus.efficiencies, "bgEstFakeRateJetWeight", cms.InputTag("bgEstFakeRateJetWeights"))
 
     # weight events by fake-rate
     #
@@ -61,8 +68,11 @@ def enableFakeRates_runZtoMuTau(process):
     #       in case there is more than one (loosely selected) tau-jet candidate in the event
     #       when filling histograms that are sensitive to the tau-jet multiplicity
     #
-    setattr(process.analyzeZtoMuTauEvents, "eventWeightSource", cms.VInputTag(cms.InputTag('tauJetFakeRateEventWeight')))
+    setattr(process.analyzeZtoMuTauEvents, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeights')))
 
-    setattr(process.diTauCandidateHistManagerForMuTau, "diTauLeg2WeightSource", cms.string("QCDFakeRateECALIsolation"))
-    setattr(process.tauHistManager, "tauJetWeightSource", cms.string("QCDFakeRateECALIsolation"))
-    setattr(process.tauRecoilEnergyFromJetsHistManager, "leptonWeightSource", cms.string("QCDFakeRateECALIsolation"))
+    if hasattr(process, "tauHistManager"):
+        setattr(process.tauHistManager, "tauJetWeightSource", cms.vstring("bgEstFakeRateJetWeight"))
+    if hasattr(process, "diTauCandidateZmumuHypothesisHistManagerForMuTau"):
+        setattr(process.diTauCandidateZmumuHypothesisHistManagerForMuTau, "lepton2WeightSource", cms.vstring("bgEstFakeRateJetWeight"))
+    if hasattr(process, "diTauCandidateHistManagerForMuTau"):
+        setattr(process.diTauCandidateHistManagerForMuTau, "diTauLeg2WeightSource", cms.vstring("bgEstFakeRateJetWeight"))    
