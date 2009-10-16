@@ -5,7 +5,7 @@ from TauAnalysis.BgEstimationTools.makeReplacementsBgEstNtupleProd import makeRe
 
 # name of the directory (either on afs area or castor)
 # to which all .root files produced by the cmsRun job will be copied
-outputDirectory = "/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau_looseTauSel/"
+outputDirectory = "/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau_looseTauSelII/"
 
 # small cmsRun job for testing purposes...
 #submitToBatch(configFile = "prodNtupleZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "Ztautau",
