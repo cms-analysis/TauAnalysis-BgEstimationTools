@@ -7,12 +7,12 @@ import copy
 bgEstNtupleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau_looseTauSel/")
 
 # Z --> tau+ tau+ sample
-fileNames_Ztautau = cms.vstring(
+fileNamesZtoMuTau_Ztautau = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Ztautau.root'
 )
 
 # Z --> mu+ mu- sample
-fileNames_Zmumu = cms.vstring(
+fileNamesZtoMuTau_Zmumu = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part01a.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part01b.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_Zmumu_part02a.root',
@@ -28,12 +28,12 @@ fileNames_Zmumu = cms.vstring(
 #--------------------------------------------------------------------------------
 
 # Z --> tau+ tau- + jets sample
-fileNames_ZtautauPlusJets = cms.vstring(
+fileNamesZtoMuTau_ZtautauPlusJets = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZtautauPlusJets.root'
 )
 
 # Z --> mu+ mu- + jets sample
-fileNames_ZmumuPlusJets = cms.vstring(
+fileNamesZtoMuTau_ZmumuPlusJets = cms.vstring(
     #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01a.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part01b.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZmumuPlusJets_part02a.root',
@@ -43,14 +43,14 @@ fileNames_ZmumuPlusJets = cms.vstring(
 )
 
 # Z --> e+ e- + jets sample
-fileNames_ZeePlusJets = cms.vstring(
+fileNamesZtoMuTau_ZeePlusJets = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_ZeePlusJets.root'
 )
 
 #--------------------------------------------------------------------------------
 
 # W + jets sample
-fileNames_WplusJets = cms.vstring(
+fileNamesZtoMuTau_WplusJets = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_WplusJets_part01.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_WplusJets_part02.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_WplusJets_part03.root'
@@ -59,7 +59,7 @@ fileNames_WplusJets = cms.vstring(
 #--------------------------------------------------------------------------------
 
 # pp --> mu X QCD sample
-fileNames_qcdSum = cms.vstring(
+fileNamesZtoMuTau_qcdSum = cms.vstring(
     #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_InclusivePPmuX.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part01.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part02.root',
@@ -71,7 +71,7 @@ fileNames_qcdSum = cms.vstring(
 #--------------------------------------------------------------------------------
 
 # ttbar + jets sample
-fileNames_TTplusJets = cms.vstring(
+fileNamesZtoMuTau_TTplusJets = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_TTplusJets_part01.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_TTplusJets_part02.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_TTplusJets_part03.root'
@@ -80,9 +80,9 @@ fileNames_TTplusJets = cms.vstring(
 #--------------------------------------------------------------------------------
 
 # (pseudo)Data sample = sum of all signal + background Monte Carlo samples
-fileNames_pseudoData = cms.vstring()
-fileNames_pseudoData.extend(fileNames_Ztautau)
-fileNames_pseudoData.extend(fileNames_ZmumuPlusJets)
-fileNames_pseudoData.extend(fileNames_WplusJets)
-fileNames_pseudoData.extend(fileNames_TTplusJets)
-fileNames_pseudoData.extend(fileNames_qcdSum)
+fileNamesZtoMuTau_pseudoData = cms.vstring()
+fileNamesZtoMuTau_pseudoData.extend(fileNamesZtoMuTau_Ztautau)
+fileNamesZtoMuTau_pseudoData.extend(fileNamesZtoMuTau_ZmumuPlusJets)
+fileNamesZtoMuTau_pseudoData.extend(fileNamesZtoMuTau_WplusJets)
+fileNamesZtoMuTau_pseudoData.extend(fileNamesZtoMuTau_TTplusJets)
+fileNamesZtoMuTau_pseudoData.extend(fileNamesZtoMuTau_qcdSum)

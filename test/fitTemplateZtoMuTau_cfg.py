@@ -163,12 +163,12 @@ branchName_diTauMvis12_QCD = "diTauMvis12QCD_0"
 prodTemplateHistConfiguratorZmumuEnriched = prodTemplateHistConfigurator(
     "prodTemplateHistBgEstZmumuEnriched", prodTemplateHist, dqmDirectory = processName
 )
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("Ztautau", fileNames_Ztautau)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("Zmumu", fileNames_ZmumuPlusJets)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("WplusJets", fileNames_WplusJets)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("TTplusJets", fileNames_TTplusJets)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("QCD", fileNames_qcdSum)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("data", fileNames_pseudoData)
+prodTemplateHistConfiguratorZmumuEnriched.addProcess("Ztautau", fileNamesZtoMuTau_Ztautau)
+prodTemplateHistConfiguratorZmumuEnriched.addProcess("Zmumu", fileNamesZtoMuTau_ZmumuPlusJets)
+prodTemplateHistConfiguratorZmumuEnriched.addProcess("WplusJets", fileNamesZtoMuTau_WplusJets)
+prodTemplateHistConfiguratorZmumuEnriched.addProcess("TTplusJets", fileNamesZtoMuTau_TTplusJets)
+prodTemplateHistConfiguratorZmumuEnriched.addProcess("QCD", fileNamesZtoMuTau_qcdSum)
+prodTemplateHistConfiguratorZmumuEnriched.addProcess("data", fileNamesZtoMuTau_pseudoData)
 prodTemplateHistConfiguratorZmumuEnriched.addSelection("Zmumu", bgEstEventSelection_Zmumu)
 prodTemplateHistConfiguratorZmumuEnriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_Zmumu, 40, 0., 200.)
 
@@ -177,12 +177,12 @@ process.prodTemplateHistBgEstZmumuEnriched = prodTemplateHistConfiguratorZmumuEn
 prodTemplateHistConfiguratorWplusJetsEnriched = prodTemplateHistConfigurator(
     "prodTemplateHistBgEstWplusJetsEnriched", prodTemplateHist, dqmDirectory = processName
 )
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("Ztautau", fileNames_Ztautau)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("Zmumu", fileNames_ZmumuPlusJets)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("WplusJets", fileNames_WplusJets)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("TTplusJets", fileNames_TTplusJets)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("QCD", fileNames_qcdSum)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("data", fileNames_pseudoData)
+prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("Ztautau", fileNamesZtoMuTau_Ztautau)
+prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("Zmumu", fileNamesZtoMuTau_ZmumuPlusJets)
+prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("WplusJets", fileNamesZtoMuTau_WplusJets)
+prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("TTplusJets", fileNamesZtoMuTau_TTplusJets)
+prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("QCD", fileNamesZtoMuTau_qcdSum)
+prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("data", fileNamesZtoMuTau_pseudoData)
 prodTemplateHistConfiguratorWplusJetsEnriched.addSelection("WplusJets", bgEstEventSelection_WplusJets,
                                                            kineEventReweight = "kineEventReweightWplusJets")
 prodTemplateHistConfiguratorWplusJetsEnriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_WplusJets, 40, 0., 200.)
@@ -192,12 +192,12 @@ process.prodTemplateHistBgEstWplusJetsEnriched = prodTemplateHistConfiguratorWpl
 prodTemplateHistConfiguratorTTplusJetsEnriched = prodTemplateHistConfigurator(
     "prodTemplateHistBgEstTTplusJetsEnriched", prodTemplateHist, dqmDirectory = processName
 )
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("Ztautau", fileNames_Ztautau)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("Zmumu", fileNames_ZmumuPlusJets)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("WplusJets", fileNames_WplusJets)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("TTplusJets", fileNames_TTplusJets)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("QCD", fileNames_qcdSum)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("data", fileNames_pseudoData)
+prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("Ztautau", fileNamesZtoMuTau_Ztautau)
+prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("Zmumu", fileNamesZtoMuTau_ZmumuPlusJets)
+prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("WplusJets", fileNamesZtoMuTau_WplusJets)
+prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("TTplusJets", fileNamesZtoMuTau_TTplusJets)
+prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("QCD", fileNamesZtoMuTau_qcdSum)
+prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("data", fileNamesZtoMuTau_pseudoData)
 prodTemplateHistConfiguratorTTplusJetsEnriched.addSelection("TTplusJets", bgEstEventSelection_TTplusJets)
 prodTemplateHistConfiguratorTTplusJetsEnriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_TTplusJets, 40, 0., 200.)
 
@@ -206,12 +206,12 @@ process.prodTemplateHistBgEstTTplusJetsEnriched = prodTemplateHistConfiguratorTT
 prodTemplateHistConfiguratorQCDenriched = prodTemplateHistConfigurator(
     "prodTemplateHistBgEstWplusJetsEnriched", prodTemplateHist, dqmDirectory = processName
 )
-prodTemplateHistConfiguratorQCDenriched.addProcess("Ztautau", fileNames_Ztautau)
-prodTemplateHistConfiguratorQCDenriched.addProcess("Zmumu", fileNames_ZmumuPlusJets)
-prodTemplateHistConfiguratorQCDenriched.addProcess("WplusJets", fileNames_WplusJets)
-prodTemplateHistConfiguratorQCDenriched.addProcess("TTplusJets", fileNames_TTplusJets)
-prodTemplateHistConfiguratorQCDenriched.addProcess("QCD", fileNames_qcdSum)
-prodTemplateHistConfiguratorQCDenriched.addProcess("data", fileNames_pseudoData)
+prodTemplateHistConfiguratorQCDenriched.addProcess("Ztautau", fileNamesZtoMuTau_Ztautau)
+prodTemplateHistConfiguratorQCDenriched.addProcess("Zmumu", fileNamesZtoMuTau_ZmumuPlusJets)
+prodTemplateHistConfiguratorQCDenriched.addProcess("WplusJets", fileNamesZtoMuTau_WplusJets)
+prodTemplateHistConfiguratorQCDenriched.addProcess("TTplusJets", fileNamesZtoMuTau_TTplusJets)
+prodTemplateHistConfiguratorQCDenriched.addProcess("QCD", fileNamesZtoMuTau_qcdSum)
+prodTemplateHistConfiguratorQCDenriched.addProcess("data", fileNamesZtoMuTau_pseudoData)
 prodTemplateHistConfiguratorQCDenriched.addSelection("QCD", bgEstEventSelection_QCD)
 prodTemplateHistConfiguratorQCDenriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_QCD, 40, 0., 200.)
 
