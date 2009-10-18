@@ -70,6 +70,13 @@ def enableFakeRates_runZtoMuTau(process):
     #
     setattr(process.analyzeZtoMuTauEvents, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeights')))
 
+    # check if factorization is enabled;
+    # if so, apply fake-rate event weights to analysis paths without/with muon isolation
+    if hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation"):
+        setattr(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeights')))
+    if hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation"):
+        setattr(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeights')))
+
     if hasattr(process, "tauHistManager"):
         setattr(process.tauHistManager, "tauJetWeightSource", cms.vstring("bgEstFakeRateJetWeight"))
     if hasattr(process, "diTauCandidateZmumuHypothesisHistManagerForMuTau"):
