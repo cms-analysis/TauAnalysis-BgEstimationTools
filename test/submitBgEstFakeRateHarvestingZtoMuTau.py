@@ -18,38 +18,50 @@ outputDirectory = "/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoMuTau/"
 #        see https://twiki.cern.ch/twiki/bin/view/CMS/CMSUKCMSSWBatch for details about the CERN batch system)           
 #
 #--------------------------------------------------------------------------------
-
 # harvest Z --> tau tau 
-submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau", sample = "Ztautau",
+submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau",
+              sample = "Ztautau",
               replFunction = makeReplacementsHarvesting, replacements = "",
-              job = "harvesting", queue = "1nh", outputDirectory = outputDirectory)
+              job = "frHarvesting", queue = "1nh", outputDirectory = outputDirectory)
+submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau",
+              sample = "Ztautau_from_selZmumu",
+              replFunction = makeReplacementsHarvesting, replacements = "",
+              job = "frHarvesting", queue = "1nh", outputDirectory = outputDirectory)
 
 # harvest Z --> mu mu
-submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau", sample = "Zmumu",
+submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau",
+              sample = "Zmumu",
               replFunction = makeReplacementsHarvesting, replacements = "",
-              job = "harvesting", queue = "1nh", outputDirectory = outputDirectory)
+              job = "frHarvesting", queue = "1nh", outputDirectory = outputDirectory)
 
 # harvest PPmuXptGt20
-submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau", sample = "PPmuXptGt20",
-              replFunction = makeReplacementsHarvesting, replacements = "",
-              job = "harvesting", queue = "1nh", outputDirectory = outputDirectory)
+for i in range(2):
+    submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau",
+                  sample = "PPmuXptGt20_part%(i)02d" % {"i" : (i + 1)},
+                  replFunction = makeReplacementsHarvesting, replacements = "",
+                  job = "frHarvesting", queue = "1nh", outputDirectory = outputDirectory)
 
 # harvest W/Z + jets
-submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau", sample = "WplusJets",
+submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau",
+              sample = "WplusJets",
               replFunction = makeReplacementsHarvesting, replacements = "",
-              job = "harvesting", queue = "1nh", outputDirectory = outputDirectory)
+              job = "frHarvesting", queue = "1nh", outputDirectory = outputDirectory)
 
-submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau", sample = "ZtautauPlusJets",
+submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau",
+              sample = "ZtautauPlusJets",
               replFunction = makeReplacementsHarvesting, replacements = "",
-              job = "harvesting", queue = "1nh", outputDirectory = outputDirectory)
-submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau", sample = "ZmumuPlusJets",
+              job = "frHarvesting", queue = "1nh", outputDirectory = outputDirectory)
+submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau",
+              sample = "ZmumuPlusJets",
               replFunction = makeReplacementsHarvesting, replacements = "",
-              job = "harvesting", queue = "1nh", outputDirectory = outputDirectory)
-submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau", sample = "ZeePlusJets",
+              job = "frHarvesting", queue = "1nh", outputDirectory = outputDirectory)
+submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau",
+              sample = "ZeePlusJets",
               replFunction = makeReplacementsHarvesting, replacements = "",
-              job = "harvesting", queue = "1nh", outputDirectory = outputDirectory)
+              job = "frHarvesting", queue = "1nh", outputDirectory = outputDirectory)
 
 # harvest TTplusJets
-submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau", sample = "TTplusJets",
+submitToBatch(configFile = "../../Configuration/test/harvestZtoMuTauPlots_cfg.py", channel = "ZtoMuTau",
+              sample = "TTplusJets",
               replFunction = makeReplacementsHarvesting, replacements = "",
-              job = "harvesting", queue = "1nh", outputDirectory = outputDirectory)
+              job = "frHarvesting", queue = "1nh", outputDirectory = outputDirectory)
