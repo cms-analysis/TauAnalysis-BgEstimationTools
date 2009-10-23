@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import copy
 
-def reconfigDQMFileLoader(dqmFileLoaderConfig, plotDirectoryName_old, plotDirectoryName_new, dqmDirectory):
+def reconfigDQMFileLoader(dqmFileLoaderConfig, dqmDirectory):
 
     # configure attributes of DQMFileLoader module
     # corresponding to different signal/background processes
@@ -9,26 +9,6 @@ def reconfigDQMFileLoader(dqmFileLoaderConfig, plotDirectoryName_old, plotDirect
         processConfigEntry = getattr(dqmFileLoaderConfig, processName)
         
         if isinstance(processConfigEntry, cms.PSet):
-            if hasattr(processConfigEntry, "inputFileNames"):
-
-                inputFileNames_old = getattr(processConfigEntry, "inputFileNames")
-                inputFileNames_new = []
-                
-                for iInputFile in range(len(inputFileNames_old)):
-                    directory_old = plotDirectoryName_old.value()
-                    if not directory_old.endswith("/"):
-                        directory_old += "/"
-
-                    directory_new = plotDirectoryName_new.value()
-                    if not directory_new.endswith("/"):
-                        directory_new += "/"
-                    
-                    inputFileName_old = inputFileNames_old[iInputFile]
-                    inputFileName_new = inputFileName_old.replace(directory_old, directory_new)
-
-                    inputFileNames_new.append(inputFileName_new)
-
-                setattr(processConfigEntry, "inputFileNames", cms.vstring(inputFileNames_new))
 
             if hasattr(processConfigEntry, "dqmDirectory_store"):
                 if not dqmDirectory.endswith("/"):
