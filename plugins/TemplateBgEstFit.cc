@@ -37,7 +37,7 @@
 #include <RooFit.h>
 #include <RooLinkedList.h>
 #include <RooCmdArg.h>
-//#include <RooTFnPdfBinding.h> // <-- CMSSW_3_1_x only (because needs ROOT version 5.22)
+#include <RooTFnPdfBinding.h>
 
 #include <iostream>
 
@@ -1219,10 +1219,7 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
     std::string normConstraints_pdfArgName = std::string("normConstraints").append("_pdfArgs");
     RooArgSet normConstraints_pdfArgs(normConstraints_pdfCollection, normConstraints_pdfArgName.data());
     
-    // CMSSW_3_1_x only (because needs ROOT version 5.22)
-    //fitOptions.Add(new RooCmdArg(RooFit::ExternalConstraints(normConstraints_pdfArgs)));
-    edm::LogError ("TemplateBgEstFit::fit") << " Norm constraints not supported in CMSSW_2_2_x !!";
-    assert(0);
+    fitOptions.Add(new RooCmdArg(RooFit::ExternalConstraints(normConstraints_pdfArgs)));
   }
 
 //--- check if results of fit are to be saved for later analysis
@@ -1232,13 +1229,10 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
 //--- stop Minuit from printing lots of information 
 //    about progress on fit and warnings
   fitOptions.Add(new RooCmdArg(RooFit::PrintLevel(printLevel)));
-  // CMSSW_3_1_x only (because needs ROOT version 5.22)
-  //fitOptions.Add(new RooCmdArg(RooFit::PrintEvalErrors(printWarnings)));
-  //fitOptions.Add(new RooCmdArg(RooFit::Warnings(printWarnings_)));
+  fitOptions.Add(new RooCmdArg(RooFit::PrintEvalErrors(printWarnings)));
+  fitOptions.Add(new RooCmdArg(RooFit::Warnings(printWarnings_)));
 
-  //RooFitResult* fitResult = fitModel_->fitTo(*dataEntry_->fitData_, fitOptions); // <-- CMSSW_3_1_x only
-  RooFitResult* fitResult = fitModel_->fitTo(*dataEntry_->fitData_, RooFit::Extended(), RooFit::Save(true), 
-					     RooFit::PrintLevel(printLevel_)); // <-- CMSSW_2_2_x only
+  RooFitResult* fitResult = fitModel_->fitTo(*dataEntry_->fitData_, fitOptions); // <-- CMSSW_3_1_x only
   if ( saveFitResult ) fitResult_ = fitResult;
 
 //--- delete fit option objects
