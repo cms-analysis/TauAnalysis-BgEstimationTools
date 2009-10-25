@@ -651,6 +651,35 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
                xMax = cms.double(200.)
             )
         ),
+        # constrain normalization of W + jets, ttbar + jets and QCD backgrounds
+        # to Monte Carlo expectation multiplied by "k-factors" determined
+        # in background enriched samples
+        ##constraints = cms.PSet(
+        ##    Zmumu = cms.PSet(
+        ##        norm = cms.PSet(
+        ##            value = cms.double(1.*25.),
+        ##            uncertainty = cms.double(25.)
+        ##        )
+        ##    ),
+        ##    WplusJets = cms.PSet(
+        ##        norm = cms.PSet(
+        ##            value = cms.double(1.*500.),
+        ##            uncertainty = cms.double(250.)
+        ##        )
+        ##    ),
+        ##    TTplusJets = cms.PSet(
+        ##        norm = cms.PSet(
+        ##            value = cms.double(1.*100.),
+        ##            uncertainty = cms.double(100.)
+        ##        )
+        ##    ),
+        ##    QCD = cms.PSet(
+        ##        norm = cms.PSet(
+        ##            value = cms.double(1.*100.),
+        ##            uncertainty = cms.double(100.)
+        ##        )
+        ##    )
+        ##),
         cutUnfittedRegion = cms.bool(False),
         #cutUnfittedRegion = cms.bool(True),
         verbosity = cms.PSet(
