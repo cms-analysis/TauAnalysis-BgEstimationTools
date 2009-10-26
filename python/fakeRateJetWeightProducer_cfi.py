@@ -1,7 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 
 bgEstFakeRateJetWeights = cms.EDProducer("FakeRateJetWeightProducer",
-    tauJetSource = cms.InputTag("shrinkingConePFTauProducer"),                         
+    allTauJetSource = cms.InputTag('shrinkingConePFTauProducer'),
+    preselTauJetSource = cms.InputTag('shrinkingConePFTauProducer'),
+    dRmatch = cms.double(0.3),                                         
     tauJetDiscriminators = cms.VPSet(
         cms.PSet(
             tauJetIdEffSource = cms.InputTag("shrinkingConeEfficienciesProducerFromFile", "effByECALIsolationZtautausim"),
@@ -10,10 +12,3 @@ bgEstFakeRateJetWeights = cms.EDProducer("FakeRateJetWeightProducer",
         )
     )
 )
-
-bgEstFakeRateEventWeights = cms.EDProducer("FakeRateEventWeightProducer",
-    tauJetSource = cms.InputTag('shrinkingConePFTauProducer'),                                              
-    tauJetDiscriminators = bgEstFakeRateJetWeights.tauJetDiscriminators                       
-)
-
-produceFakeRateWeights = cms.Sequence( bgEstFakeRateJetWeights * bgEstFakeRateEventWeights )
