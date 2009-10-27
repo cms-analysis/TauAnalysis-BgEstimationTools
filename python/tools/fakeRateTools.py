@@ -40,7 +40,7 @@ def enableFakeRates_runZtoMuTau(process):
 
     # add fake-rates to pat::Tau
     from TauAnalysis.RecoTools.patPFTauConfig_cfi import *
-    setattr(allLayer1Taus.efficiencies, "bgEstFakeRateJetWeight", cms.InputTag("bgEstFakeRateJetWeights"))
+    setattr(allLayer1Taus.efficiencies, "bgEstFakeRateJetWeight", cms.InputTag('bgEstFakeRateJetWeightsForMuTau'))
 
     # weight events by fake-rate
     #
@@ -48,14 +48,14 @@ def enableFakeRates_runZtoMuTau(process):
     #       in case there is more than one (loosely selected) tau-jet candidate in the event
     #       when filling histograms that are sensitive to the tau-jet multiplicity
     #
-    setattr(process.analyzeZtoMuTauEvents, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeights')))
+    setattr(process.analyzeZtoMuTauEvents, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeightsForMuTau')))
 
     # check if factorization is enabled;
     # if so, apply fake-rate event weights to analysis paths without/with muon isolation
     if hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation"):
-        setattr(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeights')))
+        setattr(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeightsForMuTau')))
     if hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation"):
-        setattr(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeights')))
+        setattr(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeightsForMuTau')))
 
     if hasattr(process, "tauHistManager"):
         setattr(process.tauHistManager, "tauJetWeightSource", cms.vstring("bgEstFakeRateJetWeight"))
