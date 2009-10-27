@@ -23,14 +23,12 @@ class BinGridHistManager : public HistManagerBase
  private:
 //--- histogram booking and filling functions 
 //    inherited from HistManagerBase class
-  void bookHistograms();
-  void fillHistograms(const edm::Event&, const edm::EventSetup&, double);
+  void bookHistogramsImp();
+  void fillHistogramsImp(const edm::Event&, const edm::EventSetup&, double);
 
 //--- configuration parameters
   typedef std::vector<edm::ParameterSet> vParameterSet;
   vParameterSet cfgHistManagers_;
-
-  std::string dqmDirectory_store_;
 
 //--- binning service
   ObjValVectorExtractorBase* objValExtractor_;
@@ -39,8 +37,6 @@ class BinGridHistManager : public HistManagerBase
 //--- histograms managers
   typedef std::vector<HistManagerBase*> vHistManager;
   std::map<unsigned, vHistManager> histManagers_;
-
-  int dqmError_;
 };
 
 #endif  
