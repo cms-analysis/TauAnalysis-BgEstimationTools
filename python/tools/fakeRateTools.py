@@ -24,7 +24,18 @@ def reconfigDQMFileLoader(dqmFileLoaderConfig, dqmDirectory):
 # for data-driven background estimation to Z --> mu + tau-jet channel
 #--------------------------------------------------------------------------------
 
-def enableFakeRates_runZtoMuTau(process):
+def enableFakeRates_runZtoMuTau(process, method = None):
+
+    # check validity of method parameter
+    if method is None:
+        raise ValueError("Undefined method Parameter !!")
+    else:
+        if method != "simple" and method != "CDF":
+            raise ValueError("Invalid method Parameter !!")
+
+    # set method parameter in fakeRateWeight producer modules
+    process.bgEstFakeRateJetWeightsForMuTau.method = method
+    process.bgEstFakeRateEventWeightsForMuTau.method = method
 
     # import utility function for changing cut values
     from TauAnalysis.Configuration.tools.changeCut import changeCut
@@ -37,6 +48,13 @@ def enableFakeRates_runZtoMuTau(process):
     changeCut(process, "selectedLayer1TausForMuTauProng", "signalTracks.size() > -1")
     changeCut(process, "selectedLayer1TausForMuTauCharge", "abs(charge) > -1")
     #changeCut(process, "selectedLayer1TausForMuTauMuonVeto", "tauID('againstMuon') > -1.")
+    # require muon and loosely selected tau-jet candidate to have opposite charges
+    #
+    # NOTE: because tau-jet candidate may well have charge != +1||-1,
+    #       cannot require sum of muon + tau-jet charges to be zero;
+    #       instead, require that charge sum of muon + leading track within tau-jet equals zero
+    #
+    changeCut(process, "selectedMuTauPairsZeroCharge", "(leg1.charge + leg2.leadTrack.charge) = 0")
 
     # add fake-rates to pat::Tau
     from TauAnalysis.RecoTools.patPFTauConfig_cfi import *
