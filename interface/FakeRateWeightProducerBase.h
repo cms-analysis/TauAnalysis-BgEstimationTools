@@ -8,9 +8,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.3 $
+ * \version $Revision: 1.1.2.1 $
  *
- * $Id: FakeRateWeightProducerBase.h,v 1.3 2009/10/26 16:54:44 veelken Exp $
+ * $Id: FakeRateWeightProducerBase.h,v 1.1.2.1 2009/10/27 09:29:46 veelken Exp $
  *
  */
 
@@ -42,6 +42,8 @@ class FakeRateWeightProducerBase : public edm::EDProducer
 			   const edm::Handle<edm::View<reco::Candidate> >&, double&, double&, bool&);
 
 //--- configuration parameters
+  std::string method_; // "simple"/"CDF"
+
   edm::InputTag allTauJetSource_;
   edm::InputTag preselTauJetSource_;
 

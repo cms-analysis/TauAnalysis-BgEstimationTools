@@ -36,6 +36,8 @@ void FakeRateEventWeightProducer::produce(edm::Event& evt, const edm::EventSetup
   double qcdJetFakeRateSum = 0.;
   unsigned numTauJetDiscrPassed = 0;
 
+  double qcdJetFakeRateProduct_complement = 1.;
+
   unsigned numTauJets = allTauJets->size();
   for ( unsigned iTauJet = 0; iTauJet < numTauJets; ++iTauJet ) {
     edm::RefToBase<reco::BaseTau> tauJetRef = allTauJets->refAt(iTauJet);
@@ -49,24 +51,31 @@ void FakeRateEventWeightProducer::produce(edm::Event& evt, const edm::EventSetup
 
     //std::cout << "Pt = " << tauJetRef->pt() << ", eta = " << tauJetRef->eta() << ", tau id. discr = " << tauJetDiscr_passed << ":" 
     //	        << " tau id. eff = " << tauJetIdEff << ", fake-rate = " << qcdJetFakeRate << std::endl;
-    
+
     tauJetIdEffSum += tauJetIdEff;
     qcdJetFakeRateSum += qcdJetFakeRate;
 
     if ( tauJetDiscr_passed ) ++numTauJetDiscrPassed;
+    
+    qcdJetFakeRateProduct_complement *= (1 - qcdJetFakeRate);
   }
-
-  double effTerm = 0.5*(tauJetIdEffSum + qcdJetFakeRateSum);
-  double frTerm = qcdJetFakeRateSum;
 
   double fakeRateEventWeight = 0.;
-  if ( effTerm > frTerm ) {
-    fakeRateEventWeight = ( numTauJetDiscrPassed > 0 ) ?
-      -frTerm*(1 - effTerm)/(effTerm - frTerm) : frTerm*effTerm/(effTerm - frTerm);
+  
+  if ( method_ == "simple" ) {
+    fakeRateEventWeight = (1 - qcdJetFakeRateProduct_complement);
+  } else if ( method_ == "CDF" ) {
+    double effTerm = 0.5*(tauJetIdEffSum + qcdJetFakeRateSum);
+    double frTerm = qcdJetFakeRateSum;
+    
+    if ( effTerm > frTerm ) {
+      fakeRateEventWeight = ( numTauJetDiscrPassed > 0 ) ?
+	-frTerm*(1 - effTerm)/(effTerm - frTerm) : frTerm*effTerm/(effTerm - frTerm);
+    }
   }
-
+  
   //std::cout << " --> event weight = " << fakeRateEventWeight << std::endl;
-
+  
   std::auto_ptr<double> fakeRateEventWeightPtr(new double(fakeRateEventWeight));
   
   evt.put(fakeRateEventWeightPtr);
