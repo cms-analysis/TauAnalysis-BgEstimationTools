@@ -25,9 +25,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.10 $
+ * \version $Revision: 1.11 $
  *
- * $Id: TemplateBgEstFit.h,v 1.10 2009/10/12 08:09:29 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.11 2009/10/25 15:47:13 veelken Exp $
  *
  */
 
@@ -210,7 +210,8 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   normMap normTemplateShapes_;
   pdfMap pdfTemplateShapeSums_;
 
-  RooSimultaneous* fitModel_;
+  //RooSimultaneous* fitModel_;
+  RooAbsPdf* fitModel_;
 
   RooCategory* fitCategories_;
 

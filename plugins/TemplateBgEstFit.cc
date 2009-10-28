@@ -278,6 +278,8 @@ void TemplateBgEstFit::model1dType::fluctuate(bool fluctStat, bool fluctSys)
 
 void TemplateBgEstFit::model1dType::buildPdf()
 {
+  std::cout << "<model1dType::buildPdf>:" << std::endl;
+
   if ( applySmoothing_ ) {
     bool isFirstFit = (!auxTF1Wrapper_);
     
@@ -301,11 +303,23 @@ void TemplateBgEstFit::model1dType::buildPdf()
       pdfBinning_ = new TArrayD(getBinning(fluctHistogram_));
       pdfCoeffCollection_ = new TObjArray();
 
+      const RooAbsBinning& xRange = xRef_->getBinning();
+      double xMin = xRange.lowBound();
+      double xMax = xRange.highBound();
+      std::cout << "pdfName = " << pdfName_ << ": xMin = " << xMin << ", xMax = " << xMax << std::endl;
+
       unsigned numBins = pdfBinning_->GetSize() - 1;
       for ( unsigned iBin = 0; iBin < numBins; ++iBin ) {
 	std::ostringstream pdfCoeffName;
 	pdfCoeffName << processName_ << "_" << varName_ << "_coeff" << iBin;	
-	RooRealVar* pdfCoeff = new RooRealVar(pdfCoeffName.str().data(), pdfCoeffName.str().data(), 0., 1.);
+
+	RooAbsReal* pdfCoeff = 0;
+	if ( pdfBinning_->At(iBin + 1) > xMin && pdfBinning_->At(iBin) < xMax ) {
+	  pdfCoeff = new RooRealVar(pdfCoeffName.str().data(), pdfCoeffName.str().data(), 0., 1.);
+	} else {
+	  pdfCoeff = new RooConstVar(pdfCoeffName.str().data(), pdfCoeffName.str().data(), fluctHistogram_->GetBinContent(iBin));
+	}
+
 	pdfCoeffCollection_->Add(pdfCoeff);
       }
       
@@ -317,9 +331,11 @@ void TemplateBgEstFit::model1dType::buildPdf()
 
     unsigned numBins = pdfCoeffCollection_->GetEntries();
     for ( unsigned iBin = 0; iBin < numBins; ++iBin ) {
-      RooRealVar* pdfCoeff = (RooRealVar*)pdfCoeffCollection_->At(iBin);
-      double pdfCoeffValue = 0.25*(3.*fluctHistogram_->GetBinContent(iBin) + 1./numBins);
-      pdfCoeff->setVal(pdfCoeffValue);
+      RooAbsRealLValue* pdfCoeff = dynamic_cast<RooAbsRealLValue*>(pdfCoeffCollection_->At(iBin));
+      if ( pdfCoeff && !pdfCoeff->isConstant() ) {
+	double pdfCoeffValue = 0.25*(3.*fluctHistogram_->GetBinContent(iBin) + 1./numBins);
+	pdfCoeff->setVal(pdfCoeffValue);
+      }
     }
     
     delete pdf_;
@@ -688,43 +704,51 @@ std::string getCategoryName_template(const std::string& processName, const std::
 
 void TemplateBgEstFit::buildFitData()
 {
-  TObjArray xCollection;
+  std::string fitDataName = "fitData";
 
-  std::map<std::string, TH1*> histMap;
-
-  for ( vstring::const_iterator varName = varNames_.begin();
-	varName != varNames_.end(); ++varName ) {
+  if ( fitCategories_->numTypes() == 1 ) {
+    delete fitData_;
+    RooRealVar* x = x_[varNames_.front()];
+    TH1* hist = dataEntry_->data1dEntries_[varNames_.front()]->fluctHistogram_;
+    fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), *x, hist);
+  } else {
+    TObjArray xCollection;
     
-    xCollection.Add(x_[*varName]);
-
-    std::string categoryName_data = getCategoryName_data(*varName);
-    histMap[categoryName_data] = dataEntry_->data1dEntries_[*varName]->fluctHistogram_;
-
-    for ( vstring::const_iterator processName = processNames_.begin();
-	  processName != processNames_.end(); ++processName ) {
-      if ( !modelEntries_[*processName]->model1dEntries_[*varName]->applySmoothing_ ) {
-	std::string categoryName_template = getCategoryName_template(*processName, *varName);
-	histMap[categoryName_template] = modelEntries_[*processName]->model1dEntries_[*varName]->fluctHistogram_;
+    std::map<std::string, TH1*> histMap;
+    
+    for ( vstring::const_iterator varName = varNames_.begin();
+	  varName != varNames_.end(); ++varName ) {
+      
+      xCollection.Add(x_[*varName]);
+      
+      std::string categoryName_data = getCategoryName_data(*varName);
+      histMap[categoryName_data] = dataEntry_->data1dEntries_[*varName]->fluctHistogram_;
+      
+      for ( vstring::const_iterator processName = processNames_.begin();
+	    processName != processNames_.end(); ++processName ) {
+	if ( !modelEntries_[*processName]->model1dEntries_[*varName]->applySmoothing_ ) {
+	  std::string categoryName_template = getCategoryName_template(*processName, *varName);
+	  histMap[categoryName_template] = modelEntries_[*processName]->model1dEntries_[*varName]->fluctHistogram_;
+	}
       }
     }
+    
+    for ( std::map<std::string, TH1*>::const_iterator histMapEntry = histMap.begin();
+	  histMapEntry != histMap.end(); ++histMapEntry ) {
+      std::cout << "histMap[" << histMapEntry->first << "] = " << histMapEntry->second->GetName() << std::endl;
+    }
+    
+    delete fitData_;
+    fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), RooArgList(xCollection), *fitCategories_, histMap); 
   }
-
-  std::string fitDataName = "fitData";
-  delete fitData_;
-  fitData_ = new RooDataHist(fitDataName.data(), fitDataName.data(), RooArgList(xCollection), *fitCategories_, histMap); 
-  //std::cout << " fitData = " << fitData_ << std::endl;			     
 }
 
 void TemplateBgEstFit::buildFitModel()
 {
-  std::string fitModelName = "fitModel";
-  delete fitModel_;
-  fitModel_ = new RooSimultaneous(fitModelName.data(), fitModelName.data(), *fitCategories_);
-
   for ( vstring::const_iterator varName = varNames_.begin();
 	varName != varNames_.end(); ++varName ) {
     std::string pdfModelSumName = std::string(*varName).append("_pdfModelSum");
-
+    
     TObjArray pdfModelSum_pdfCollection;
     TObjArray pdfModelSum_normCollection;
     for ( vstring::const_iterator processName = processNames_.begin();
@@ -732,42 +756,55 @@ void TemplateBgEstFit::buildFitModel()
       pdfModelSum_pdfCollection.Add(modelEntries_[*processName]->model1dEntries_[*varName]->pdf_);
       pdfModelSum_normCollection.Add(modelEntries_[*processName]->norm_);
     }
-
+    
     //std::cout << "--> creating RooAddPdf with name = " << pdfModelSumName << std::endl;
     //std::cout << " #pdfs = " << RooArgList(pdfModelSum_pdfCollection).getSize() << std::endl;
     //std::cout << " #coefficients = " << RooArgList(pdfModelSum_normCollection).getSize() << std::endl;
     delete pdfModelSums_[*varName];
-    RooAbsPdf* pdfModelSum = new RooAddPdf(pdfModelSumName.data(), pdfModelSumName.data(), 
-					   RooArgList(pdfModelSum_pdfCollection), RooArgList(pdfModelSum_normCollection));
-    pdfModelSums_[*varName] = pdfModelSum;
+    pdfModelSums_[*varName] = new RooAddPdf(pdfModelSumName.data(), pdfModelSumName.data(), 
+					    RooArgList(pdfModelSum_pdfCollection), RooArgList(pdfModelSum_normCollection));
+  }
+  
+  std::string fitModelName = "fitModel";
+
+  if ( fitCategories_->numTypes() == 1 ) {
+    fitModel_ = pdfModelSums_[varNames_.front()];
+  } else {
+    delete fitModel_;
+    fitModel_ = new RooSimultaneous(fitModelName.data(), fitModelName.data(), *fitCategories_);
     
-    std::string categoryName_data = getCategoryName_data(*varName);
-    fitModel_->addPdf(*pdfModelSum, categoryName_data.data());
-
-    for ( vstring::const_iterator processName = processNames_.begin();
-	  processName != processNames_.end(); ++processName ) {
-      if ( !modelEntries_[*processName]->model1dEntries_[*varName]->applySmoothing_ ) {
-	std::string key = std::string(*processName).append("_").append(*varName);
-	
-	std::string normTemplateShapeName = std::string(*processName).append("_").append(*varName).append("_normTemplateShape");
-	delete normTemplateShapes_[key];
-	RooAbsReal* normTemplateShape = new RooRealVar(normTemplateShapeName.data(), normTemplateShapeName.data(), 0., maxNorm);
-	normTemplateShapes_[key] = normTemplateShape;
-	
-	RooAbsPdf* pdfTemplateShape = modelEntries_[*processName]->model1dEntries_[*varName]->pdf_;
-	
-	std::string pdfTemplateShapeSumName = std::string(*processName).append("_").append(*varName).append("_pdfTemplateShapeSum");
-
-	//std::cout << "--> creating RooAddPdf with name = " << pdfTemplateShapeSumName << std::endl;
-	//std::cout << " #pdfs = " << RooArgList(*pdfTemplateShape).getSize() << std::endl;
-	//std::cout << " #coefficients = " << RooArgList(*normTemplateShape).getSize() << std::endl;
-	delete pdfTemplateShapeSums_[key];
-	RooAbsPdf* pdfTemplateShapeSum = new RooAddPdf(pdfTemplateShapeSumName.data(), pdfTemplateShapeSumName.data(), 
-						       RooArgList(*pdfTemplateShape), RooArgList(*normTemplateShape));
-	pdfTemplateShapeSums_[key] = pdfTemplateShapeSum;
-	
-	std::string categoryName_template = getCategoryName_template(*processName, *varName);
-	fitModel_->addPdf(*pdfTemplateShapeSum, categoryName_template.data());
+    for ( vstring::const_iterator varName = varNames_.begin();
+	  varName != varNames_.end(); ++varName ) {
+      
+      std::string categoryName_data = getCategoryName_data(*varName);
+      ((RooSimultaneous*)fitModel_)->addPdf(*pdfModelSums_[*varName], categoryName_data.data());
+      
+      for ( vstring::const_iterator processName = processNames_.begin();
+	    processName != processNames_.end(); ++processName ) {
+	if ( !modelEntries_[*processName]->model1dEntries_[*varName]->applySmoothing_ ) {
+	  std::string key = std::string(*processName).append("_").append(*varName);
+	  
+	  std::string normTemplateShapeName = std::string(*processName).append("_").append(*varName).append("_normTemplateShape");
+	  delete normTemplateShapes_[key];
+	  RooRealVar* normTemplateShape = new RooRealVar(normTemplateShapeName.data(), normTemplateShapeName.data(), 0., maxNorm);
+	  normTemplateShape->setVal(getIntegral(modelEntries_[*processName]->model1dEntries_[*varName]->fluctHistogram_));
+	  normTemplateShapes_[key] = normTemplateShape;
+	  
+	  RooAbsPdf* pdfTemplateShape = modelEntries_[*processName]->model1dEntries_[*varName]->pdf_;
+	  
+	  std::string pdfTemplateShapeSumName = std::string(*processName).append("_").append(*varName).append("_pdfTemplateShapeSum");
+	  
+	  //std::cout << "--> creating RooAddPdf with name = " << pdfTemplateShapeSumName << std::endl;
+	  //std::cout << " #pdfs = " << RooArgList(*pdfTemplateShape).getSize() << std::endl;
+	  //std::cout << " #coefficients = " << RooArgList(*normTemplateShape).getSize() << std::endl;
+	  delete pdfTemplateShapeSums_[key];
+	  RooAbsPdf* pdfTemplateShapeSum = new RooAddPdf(pdfTemplateShapeSumName.data(), pdfTemplateShapeSumName.data(), 
+							 RooArgList(*pdfTemplateShape), RooArgList(*normTemplateShape));
+	  pdfTemplateShapeSums_[key] = pdfTemplateShapeSum;
+	  
+	  std::string categoryName_template = getCategoryName_template(*processName, *varName);
+	  ((RooSimultaneous*)fitModel_)->addPdf(*pdfTemplateShapeSum, categoryName_template.data());
+	}
       }
     }
   }
@@ -835,9 +872,6 @@ void TemplateBgEstFit::endJob()
     return;
   }
 
-  //DQMStore& dqmStore = (*edm::Service<DQMStore>());
-  //dqmStore.showDirStructure();
-
 //--- check that configuration parameters contain no errors,
 //    retrieve MonitorElements from DQMStore
 //    and check that all DQM MonitorElements have successfully been retrieved
@@ -871,6 +905,12 @@ void TemplateBgEstFit::endJob()
 	fitCategories_->defineType(categoryName_template.data());
       }
     }
+  }
+
+  std::cout << "number of Categories = " << fitCategories_->numTypes() << std::endl;
+  unsigned numCategories = fitCategories_->numTypes();
+  for ( unsigned iCategory = 0; iCategory < numCategories; ++iCategory ) {
+    std::cout << "Category[" << iCategory << "] = " << fitCategories_->lookupType(iCategory)->GetName() << std::endl;
   }
 
   buildFitData();
