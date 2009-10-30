@@ -821,6 +821,9 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
 //--- build list of fit options
   RooLinkedList fitOptions;
 
+//--- perform extended likelihood fit
+  fitOptions.Add(new RooCmdArg(RooFit::Extended()));
+
 //--- check if "external" constraints exist on normalization factors to be determined by fit
 //    (specified by Gaussian probability density functions with mean and sigma obtained
 //     e.g. by level of agreement between Monte Carlo simulation and number of events observed in background enriched samples)
