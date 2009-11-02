@@ -11,7 +11,8 @@
 #include "DataFormats/TauReco/interface/PFTauFwd.h"
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 
-#include "DataFormats/Math/interface/deltaR.h"
+//#include "DataFormats/Math/interface/deltaR.h"    // for CMSSW_3_1_x
+#include "PhysicsTools/Utilities/interface/deltaR.h"// for CMSSW_2_2_x
 
 #include "DataFormats/Common/interface/ValueMap.h" 
 #include "DataFormats/PatCandidates/interface/LookupTableRecord.h"
@@ -65,7 +66,7 @@ FakeRateWeightProducerBase::FakeRateWeightProducerBase(const edm::ParameterSet& 
     edm::LogError("FakeRateWeightProducerBase") << " Configuration parameter 'method' = " << method_ << " invalid !!";
     cfgError_ = 1;
   }
-
+  
   allTauJetSource_ = cfg.getParameter<edm::InputTag>("allTauJetSource");
   preselTauJetSource_ = cfg.getParameter<edm::InputTag>("preselTauJetSource");
 
@@ -124,13 +125,13 @@ void FakeRateWeightProducerBase::getTauJetProperties(const edm::Event& evt,
     edm::Handle<LookupTableMap> tauJetIdEffMap;
     evt.getByLabel(tauJetDiscr->tauJetIdEffSource_, tauJetIdEffMap);
     //std::cout << " tau id. efficiency (" << tauJetDiscr->tauJetIdEffSource_ << ") = " 
-    //	  << (*tauJetIdEffMap)[tauJetRef].value() << std::endl;
+    //	        << (*tauJetIdEffMap)[tauJetRef].value() << std::endl;
     tauJetIdEff *= (*tauJetIdEffMap)[tauJetRef].value();
 
     edm::Handle<LookupTableMap> qcdJetFakeRateMap;
     evt.getByLabel(tauJetDiscr->qcdJetFakeRateSource_, qcdJetFakeRateMap);
     //std::cout << " fake-rate (" << tauJetDiscr->qcdJetFakeRateSource_ << ") = " 
-    //	  << (*qcdJetFakeRateMap)[tauJetRef].value() << std::endl;
+    //	        << (*qcdJetFakeRateMap)[tauJetRef].value() << std::endl;
     qcdJetFakeRate *= (*qcdJetFakeRateMap)[tauJetRef].value();
 
     double tauJetDiscr_value = -1.;

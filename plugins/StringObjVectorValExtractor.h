@@ -14,9 +14,9 @@
  * 
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.1 $
+ * \version $Revision: 1.2 $
  *
- * $Id: StringObjVectorValExtractor.h,v 1.1 2009/09/08 15:56:26 gfball Exp $
+ * $Id: StringObjValExtractor.h,v 1.2 2009/07/30 16:08:12 veelken Exp $
  *
  */
 
@@ -25,7 +25,8 @@
 #include "FWCore/ParameterSet/interface/InputTag.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
-#include "CommonTools/Utils/interface/StringObjectFunction.h"
+#include "PhysicsTools/Utilities/interface/StringObjectFunction.h" // for CMSSW_2_2_x
+//#include "CommonTools/Utils/interface/StringObjectFunction.h"    // for CMSSW_3_1_x
 
 #include "TauAnalysis/BgEstimationTools/interface/ObjValVectorExtractorBase.h"
 
