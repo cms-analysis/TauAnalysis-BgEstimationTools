@@ -1,6 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 import copy
 
+# import utility function for changing cut values
+from TauAnalysis.Configuration.tools.changeCut import changeCut
+
 def reconfigDQMFileLoader(dqmFileLoaderConfig, dqmDirectory):
 
     # configure attributes of DQMFileLoader module
@@ -19,12 +22,74 @@ def reconfigDQMFileLoader(dqmFileLoaderConfig, dqmDirectory):
 
                 setattr(processConfigEntry, "dqmDirectory_store", dqmDirectory_new)
 
+def addGenAnalyzer(process, genAnalyzerName, genAnalyzerModuleName, label,
+                   pythonSequence = None, eventWeightSource = None, histManagerNames = None, frType = None):
+    oldGenAnalyzer = getattr(process, genAnalyzerName)
+    
+    newGenAnalyzer = copy.deepcopy(oldGenAnalyzer)
+    newGenAnalyzer.name = cms.string(genAnalyzerModuleName + "_" + label)
+
+    if eventWeightSource is not None:
+        setattr(newGenAnalyzer, "eventWeightSource", eventWeightSource)
+
+    if histManagerNames is not None:
+        for histManagerName in histManagerNames:            
+            oldHistManagerName = histManagerName
+            oldHistManager = getattr(process, oldHistManagerName)
+
+            newHistManagerName = histManagerName + "_" + frType
+            newHistManager = getattr(process, newHistManagerName)
+
+            histManagers = newGenAnalyzer.analyzers;
+            for iHistManager in range(len(histManagers)):
+                histManager = histManagers[iHistManager]
+                if histManager.pluginName.value() == oldHistManagerName:
+                    histManagers[iHistManager] = newHistManager
+            
+            for analysisSequenceEntry in newGenAnalyzer.analysisSequence:
+                if hasattr(analysisSequenceEntry, "analyzers"):
+                    histManagerNames = getattr(analysisSequenceEntry, "analyzers")
+                    for iHistManagerName in range(len(histManagerNames)):
+                        if histManagerNames[iHistManagerName] == oldHistManagerName:
+                            histManagerNames[iHistManagerName] = newHistManagerName
+                if hasattr(analysisSequenceEntry, "replace"):
+                    replaceStatements = getattr(analysisSequenceEntry, "replace")
+                    for iReplaceStatement in range(len(replaceStatements)):
+                        oldReplaceStatement = replaceStatements[iReplaceStatement]
+                        newReplaceStatement = oldReplaceStatement.replace(oldHistManagerName, newHistManagerName)
+                        replaceStatements[iReplaceStatement] = newReplaceStatement
+
+    setattr(process, genAnalyzerName + "_" + label, newGenAnalyzer);
+
+    if pythonSequence is not None:    
+        pythonSequence._seq = pythonSequence._seq * newGenAnalyzer
+
+    return newGenAnalyzer
+
+def disableHistogramFilling(genAnalyzer):
+    for iAnalysisSequenceEntry in range(len(genAnalyzer.analysisSequence)):
+
+        # disable filling of histograms after all stages of the event selection
+        # except after all cuts have been applied
+        if iAnalysisSequenceEntry < (len(genAnalyzer.analysisSequence) - 1):
+            if hasattr(genAnalyzer.analysisSequence[iAnalysisSequenceEntry], "analyzers"):
+                setattr(genAnalyzer.analysisSequence[iAnalysisSequenceEntry], "analyzers", cms.vstring())
+                setattr(genAnalyzer.analysisSequence[iAnalysisSequenceEntry], "replace", cms.vstring())
+
+        # disable storing run and events numbers for events passing selection
+        if hasattr(genAnalyzer.analysisSequence[iAnalysisSequenceEntry], "saveRunEventNumbers"):
+            setattr(genAnalyzer.analysisSequence[iAnalysisSequenceEntry], "saveRunEventNumbers", cms.vstring())
+
 #--------------------------------------------------------------------------------
 # utility functions specific to application of fake-rate technique
 # for data-driven background estimation to Z --> mu + tau-jet channel
 #--------------------------------------------------------------------------------
 
-def enableFakeRates_runZtoMuTau(process, method = None):
+def enableFakeRates_runZtoMuTau(process, frTypes = None, method = None):
+
+    # check validity of frTypes parameter
+    if frTypes is None or len(frTypes) == 0:
+        raise ValueError("Undefined frTypes Parameter !!")
 
     # check validity of method parameter
     if method is None:
@@ -32,13 +97,6 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     else:
         if method != "simple" and method != "CDF":
             raise ValueError("Invalid method Parameter !!")
-
-    # set method parameter in fakeRateWeight producer modules
-    process.bgEstFakeRateJetWeightsForMuTau.method = method
-    process.bgEstFakeRateEventWeightsForMuTau.method = method
-
-    # import utility function for changing cut values
-    from TauAnalysis.Configuration.tools.changeCut import changeCut
 
     # disable cuts on tau id. discriminators
     changeCut(process, "selectedLayer1TausForMuTauLeadTrk", "tauID('leadingTrackFinding') > -1.")
@@ -50,34 +108,102 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     #changeCut(process, "selectedLayer1TausForMuTauMuonVeto", "tauID('againstMuon') > -1.")
     # require muon and loosely selected tau-jet candidate to have opposite charges
     #
-    # NOTE: because tau-jet candidate may well have charge != +1||-1,
-    #       cannot require sum of muon + tau-jet charges to be zero;
-    #       instead, require that charge sum of muon + leading track within tau-jet equals zero
+    # NOTE:
+    #  (1) because tau-jet candidate may well have charge != +1||-1,
+    #      cannot require sum of muon + tau-jet charges to be zero;
+    #      instead, require that charge sum of muon + leading track within tau-jet equals zero
+    #  (2) this requirement implies that there is at least one track within the tau-jet
+    #     (leading to a small underestimation of backgrounds)
     #
-    changeCut(process, "selectedMuTauPairsZeroCharge", "(leg1.charge + leg2.leadTrack.charge) = 0")
+    changeCut(process, "selectedMuTauPairsZeroCharge", "leg2.leadTrack.isNonnull & (leg1.charge + leg2.leadTrack.charge) = 0")
+
+    # set method parameter in fakeRateWeight producer modules
+    process.bgEstFakeRateJetWeightsForMuTau.method = method
+    process.bgEstFakeRateEventWeightsForMuTau.method = method
 
     # add fake-rates to pat::Tau
-    from TauAnalysis.RecoTools.patPFTauConfig_cfi import *
-    setattr(allLayer1Taus.efficiencies, "bgEstFakeRateJetWeight", cms.InputTag('bgEstFakeRateJetWeightsForMuTau'))
+    for frType in dir(process.bgEstFakeRateJetWeightsForMuTau.frTypes):
+        
+        # check that "attribute" is not an internal attribute or method of cms.PSet
+        isInternalAttribute = False
+        for classAttribute in dir(cms.PSet):
+            if frType == classAttribute:
+                isInternalAttribute = True
+        if frType.startswith("_"):
+                isInternalAttribute = True             
+        if not isInternalAttribute:
+            frLabel = "bgEstFakeRateJetWeight" + "_" + frType
+            frInputTag = cms.InputTag('bgEstFakeRateJetWeightsForMuTau', frType)
+            setattr(process.allLayer1Taus.efficiencies, frLabel, frInputTag)
 
-    # weight events by fake-rate
+    # fill histograms only for events passing all event selection critera;
+    # disable storing run and event numbers for events passing selection
+    # (in order to save space in the .root files)
+    if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and \
+         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
+        disableHistogramFilling(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation)
+        disableHistogramFilling(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation)
+    else:
+        disableHistogramFilling(process.analyzeZtoMuTauEvents)
+
+    # duplicate analysis sequence:
+    #  1.) fake-rate weights not applied
+    #  2.) events weighted by fake-rate
+    # for each type of fake-rate weights given as function argument
     #
     # Note: special care is needed to avoid double-counting
     #       in case there is more than one (loosely selected) tau-jet candidate in the event
     #       when filling histograms that are sensitive to the tau-jet multiplicity
     #
-    setattr(process.analyzeZtoMuTauEvents, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeightsForMuTau')))
-
     # check if factorization is enabled;
     # if so, apply fake-rate event weights to analysis paths without/with muon isolation
-    if hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation"):
-        setattr(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeightsForMuTau')))
-    if hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation"):
-        setattr(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation, "eventWeightSource", cms.VInputTag(cms.InputTag('bgEstFakeRateEventWeightsForMuTau')))
+    analyzeZtoMuTauFakeRateSequence = None
+    if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and \
+         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
+        seqEntry = addGenAnalyzer(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation",
+                                  "zMuTauAnalyzer_factorizedWithoutMuonIsolation", "noWeights")
+        analyzeZtoMuTauFakeRateSequence = cms.Sequence( seqEntry )
+        addGenAnalyzer(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation",
+                       "zMuTauAnalyzer_factorizedWithMuonIsolation", "noWeights", analyzeZtoMuTauFakeRateSequence)
+    else:
+        seqEntry = addGenAnalyzer(process, "analyzeZtoMuTauEvents", "zMuTauAnalyzer", "noWeights")
+        analyzeZtoMuTauFakeRateSequence = cms.Sequence( seqEntry )
+    for frType in frTypes:
+        if hasattr(process, "tauHistManager"):
+            tauHistManager = copy.deepcopy(process.tauHistManager)
+            tauHistManager.pluginName = cms.string(process.tauHistManager.pluginName.value() + "_" + frType)
+            setattr(tauHistManager, "tauJetWeightSource", cms.vstring("bgEstFakeRateJetWeight" + "_" + frType))
+            setattr(process, "tauHistManager" + "_" + frType, tauHistManager)
+        if hasattr(process, "diTauCandidateHistManagerForMuTau"):
+            diTauCandidateHistManager = copy.deepcopy(process.diTauCandidateHistManagerForMuTau)
+            diTauCandidateHistManager.pluginName = cms.string(process.diTauCandidateHistManagerForMuTau.pluginName.value() + "_" + frType)
+            setattr(diTauCandidateHistManager, "diTauLeg2WeightSource", cms.vstring("bgEstFakeRateJetWeight" + "_" + frType)) 
+            setattr(process, "diTauCandidateHistManagerForMuTau" + "_" + frType, diTauCandidateHistManager)
+        if hasattr(process, "diTauCandidateZmumuHypothesisHistManagerForMuTau"):
+            diTauCandidateZmumuHypothesisHistManager = copy.deepcopy(process.diTauCandidateZmumuHypothesisHistManagerForMuTau)
+            diTauCandidateZmumuHypothesisHistManager.pluginName = cms.string(process.diTauCandidateZmumuHypothesisHistManagerForMuTau.pluginName.value() + "_" + frType)
+            setattr(diTauCandidateZmumuHypothesisHistManager, "lepton2WeightSource", cms.vstring("bgEstFakeRateJetWeight" + "_" + frType))
+            setattr(process, "diTauCandidateZmumuHypothesisHistManagerForMuTau" + "_" + frType, diTauCandidateZmumuHypothesisHistManager)
 
-    if hasattr(process, "tauHistManager"):
-        setattr(process.tauHistManager, "tauJetWeightSource", cms.vstring("bgEstFakeRateJetWeight"))
-    if hasattr(process, "diTauCandidateZmumuHypothesisHistManagerForMuTau"):
-        setattr(process.diTauCandidateZmumuHypothesisHistManagerForMuTau, "lepton2WeightSource", cms.vstring("bgEstFakeRateJetWeight"))
-    if hasattr(process, "diTauCandidateHistManagerForMuTau"):
-        setattr(process.diTauCandidateHistManagerForMuTau, "diTauLeg2WeightSource", cms.vstring("bgEstFakeRateJetWeight"))    
+        frInputTag = cms.VInputTag( cms.InputTag('bgEstFakeRateEventWeightsForMuTau', frType) )
+        histManagers = [ "tauHistManager", "diTauCandidateHistManagerForMuTau", "diTauCandidateZmumuHypothesisHistManagerForMuTau" ]
+        if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and
+             hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
+            addGenAnalyzer(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation",
+                           "zMuTauAnalyzer_factorizedWithoutMuonIsolation", "frWeights" + "_" + frType, analyzeZtoMuTauFakeRateSequence,
+                           frInputTag, histManagers, frType)
+            addGenAnalyzer(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation",
+                           "zMuTauAnalyzer_factorizedWithMuonIsolation", "frWeights" + "_" + frType, analyzeZtoMuTauFakeRateSequence,
+                           frInputTag, histManagers, frType)          
+        else:
+            addGenAnalyzer(process, "analyzeZtoMuTauEvents",
+                           "zMuTauAnalyzer", "frWeights" + "_" + frType, analyzeZtoMuTauFakeRateSequence,
+                           frInputTag, histManagers, frType)
+
+    setattr(process, "analyzeZtoMuTauFakeRateSequence", analyzeZtoMuTauFakeRateSequence)
+
+    if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and
+         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
+        process.p.replace(process.analyzeZtoMuTauEvents_factorized, process.analyzeZtoMuTauFakeRateSequence)
+    else:
+        process.p.replace(process.analyzeZtoMuTauEvents, process.analyzeZtoMuTauFakeRateSequence)
