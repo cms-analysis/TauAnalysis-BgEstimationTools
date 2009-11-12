@@ -54,7 +54,7 @@ BinGrid::BinGrid(const edm::ParameterSet& cfg)
 //    data-members for encoding/decoding of bin numbers
   initialize();
 
-  //print(std::cout);
+  print(std::cout);
 }
 
 BinGrid::~BinGrid()
@@ -250,6 +250,17 @@ void BinGrid::print(std::ostream& stream) const
       stream << binEdges_[iDimension][iBin] << ", ";
     }
     stream << binEdges_[iDimension][numBinsPerDimension_[iDimension]] << " }" << std::endl;
+  }
+
+  stream << "numBins(total) = " << numBinsTotal_ << std::endl;
+  for ( unsigned iBin = 0; iBin < numBinsTotal_; ++iBin ) {
+    stream << " bin = " << iBin << std::endl;
+    std::vector<double> binCenter_i = binCenter(iBin);
+    stream << "  binCenter = { ";
+    for ( unsigned iDimension = 0; iDimension < (numDimensions_ - 1); ++iDimension ) {
+      stream << binCenter_i[iDimension] << ", ";
+    }
+    stream << binCenter_i[numDimensions_ - 1] << " }" << std::endl;
   }
 }
 
