@@ -4,6 +4,9 @@ import copy
 # import utility function for changing cut values
 from TauAnalysis.Configuration.tools.changeCut import changeCut
 
+# import utility function to enable factorization
+from TauAnalysis.Configuration.factorizationTools import enableFactorization_makeZtoMuTauPlots
+
 def reconfigDQMFileLoader(dqmFileLoaderConfig, dqmDirectory):
 
     # configure attributes of DQMFileLoader module
@@ -207,3 +210,73 @@ def enableFakeRates_runZtoMuTau(process, frTypes = None, method = None):
         process.p.replace(process.analyzeZtoMuTauEvents_factorized, process.analyzeZtoMuTauFakeRateSequence)
     else:
         process.p.replace(process.analyzeZtoMuTauEvents, process.analyzeZtoMuTauFakeRateSequence)
+
+def enableFakeRates_makeZtoMuTauPlots(process, frTypes = None)
+
+    isFirstModule_addSequence = True
+    isFirstModule_dumpSequence = True
+    dumpSequence = None
+
+    for frType in frTypes:
+        enableFactorization_makeZtoMuTauPlots(process,
+             dqmDirectoryIn_InclusivePPmuX = 'tauFakeRate/harvested/InclusivePPmuX/zMuTauAnalyzer' + '_' + frType,
+             dqmDirectoryOut_InclusivePPmuX = 'tauFakeRate/harvested/InclusivePPmuX_factorized/zMuTauAnalyzer' + '_' + frType,
+             dqmDirectoryIn_PPmuXptGt20 = 'tauFakeRate/harvested/PPmuXptGt20/zMuTauAnalyzer' + '_' + frType,
+             dqmDirectoryOut_PPmuXptGt20 = 'tauFakeRate/harvested/PPmuXptGt20_factorized/zMuTauAnalyzer' + '_' + frType,
+             moduleName_addZtoMuTau_qcdSum = "addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate",
+             moduleName_addZtoMuTau = "addBgEstFakeRateZtoMuTau_tauFakeRate")
+
+        for processName in [ "InclusivePPmuX", "PPmuXptGt20" ]:
+            for moduleType in [ "plotsFactorizedTightEvtSel",
+                                "filterStatFactorizedTightEvtSel",
+                                "plotsFactorizedLooseEvtSel",
+                                "filterStatFactorizedLooseEvtSel" ]:
+                oldModuleName_scale = "dqmHistScaler" + "_" + moduleType + "_" + processName
+                module_scale = getattr(process, oldModuleName_scale)
+                newModuleName_scale = oldModuleName_scale + "_" + frType
+                setattr(process, newModName_scale, module_scale)
+
+                if isFirstModule_addSequence:
+                     process.addZtoMuTau = cms.Sequence( module_scale )
+                     isFirstModule_addSequence = False
+                else:
+                     process.addZtoMuTau._seq = process.addZtoMuTau._seq * module_scale
+
+        oldModuleName_qcdSum = "addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate"
+        module_qcdSum = getattr(process, oldModuleName_qcdSum)
+        newModuleName_qcdSum = oldModuleName_qcdSum + "_" + frType
+        setattr(process, newModuleName_qcdSum, module_qcdSum)
+        process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq = process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq * module_qcdSum
+
+        if hasattr(process, "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate"):
+            oldModuleName_smSum = "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate"
+            module_smSum = getattr(process, oldModuleName_smSum)
+            newModuleName_smSum = oldModuleName_smSum + "_" + frType
+            setattr(process, newModuleName_smSum, module_smSum)
+            process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq = process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq * module_smSum
+
+        oldModuleName_dump = "dumpZtoMuTau"
+        oldModule_dump = getattr(process, oldModuleName_dump)
+        newModule_dump = copy.deepcopy(oldModule_dump)
+        for processName in dir(newModule_dump.dqmDirectories):            
+            # check that "attribute" is not an internal attribute or method of cms.PSet
+            isInternalAttribute = False
+            for classAttribute in dir(cms.PSet):
+                if frType == classAttribute:
+                    isInternalAttribute = True
+            if frType.startswith("_"):
+                isInternalAttribute = True             
+            if not isInternalAttribute:
+                 oldDirectory = getattr(newModule_dump.dqmDirectories, processName)
+                 newDirectory = oldDirectory.replace("/zMuTauAnalyzer/", "/zMuTauAnalyzer" + "_" + frType + "/")
+                 setattr(newModule_dump.dqmDirectories, processName, newDirectory)
+        newModuleName_dump = oldModuleName_dump + "_" + frType
+        setattr(process, newModuleName_dump, module_dump)
+
+        if isFirstModule_dumpSequence:
+            dumpSequence = cms.Sequence( module_dump )
+                isFirstModule_dumpSequence = False
+            else:
+                dumpSequence._seq = dumpSequence._seq * module_dump
+
+    process.dumpZtoMuTau = dumpSequence
