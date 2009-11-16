@@ -25,16 +25,13 @@ plots_TauIdEffZtoMuTau = cms.PSet(
     legend = cms.string('regular'),
     labels = cms.vstring('mcNormScale'),                   
     drawOptionSet = cms.string('default'),
-    stack = cms.vstring(
-        'Zmumu',
-        #'ZmumuPlusJets',
-        #'ZeePlusJets',
-        'WplusJets',
-        'TTplusJets',
-        'qcdSum',
-        'Ztautau'
-        #'ZtautauPlusJets'
-    )
+    ##stack = cms.vstring(
+    ##    'Zmumu',
+    ##    'WplusJets',
+    ##    'TTplusJets',
+    ##    'qcdSum',
+    ##    'Ztautau'
+    ##)
 )
 
 drawJobConfigurator_TauIdEffZtoMuTau = drawJobConfigurator(
@@ -48,7 +45,7 @@ drawJobConfigurator_TauIdEffZtoMuTau = drawJobConfigurator(
 #--------------------------------------------------------------------------------
 
 drawJobConfigurator_TauIdEffZtoMuTau.add(
-    afterCut = "tauIdEffEventSelection",
+    afterCut = "uniqueTauCandidateCut",
     plots = [
         drawJobConfigEntry(
             meName = 'MuonQuantities/Muon#PAR#',
@@ -112,7 +109,7 @@ drawJobConfigurator_TauIdEffZtoMuTau.add(
 
 for iRegion in [ 1, 2, 5, 6 ]:
     
-    dqmSubDirectory_region = 'tauIdDiscrHistograms/region' + "%(i)02d" % {"i" : iRegion} + '/'
+    dqmSubDirectory_region = 'tauIdEffHistograms4regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
     
     title_region = { 1: "Tau id. failed && OS",
                      2: "Tau id. passed && OS",
@@ -122,7 +119,7 @@ for iRegion in [ 1, 2, 5, 6 ]:
     name_region = "region%(i)02d" % {"i" : iRegion}
             
     drawJobConfigurator_TauIdEffZtoMuTau.add(
-        afterCut = "tauIdEffEventSelection",
+        afterCut = "uniqueTauCandidateCut",
         plots = [        
             drawJobConfigEntry(
                 meName = dqmSubDirectory_region + 'MuonQuantities/Muon#PAR#',
@@ -204,8 +201,8 @@ plots_TauIdEffZtoMuTau_shapes = cms.PSet(
             legendEntry = cms.string('')
         )
     ),    
-    title = cms.string('muonSelectionEfficiencies#PAR#'),
-    xAxis = cms.string('Pt'),
+    title = cms.string(''),
+    xAxis = cms.string('unlabeled'),
     yAxis = cms.string('numEntries_linear'),
     #yAxis = cms.string('numEntries_log'),        
     legend = cms.string('regular'),
@@ -214,33 +211,40 @@ plots_TauIdEffZtoMuTau_shapes = cms.PSet(
 
 drawJobs_TauIdEffZtoMuTau_shapes = cms.PSet()
 
-for process in [ 'Zmumu', 'WplusJets', 'qcdSum', 'Ztautau' ]:
-    drawJob_process = copy.deepcopy(plots_TauIdEffZtoMuTau_shapes)
+def addDrawJob(drawJobs, meName, xAxis, label):
+    for process in [ 'Zmumu', 'WplusJets', 'qcdSum', 'Ztautau' ]:
+        drawJob_process = copy.deepcopy(plots_TauIdEffZtoMuTau_shapes)
 
-    for iRegion in [ 1, 2, 5, 6 ]:
+        for iRegion in [ 1, 2, 5, 6 ]:
         
-        index = { 1: 0,
-                  2: 1,
-                  5: 2,
-                  6: 3 }[iRegion]
+            index = { 1: 0,
+                      2: 1,
+                      5: 2,
+                      6: 3 }[iRegion]
         
-        dqmDirectory = 'harvested/' + process + '/TauIdEffAnalyzerZtoMuTau/afterTauIdEffEventSelection/'    
-        dqmSubDirectory_region = 'tauIdDiscrHistograms/region' + "%(i)02d" % {"i" : iRegion} + '/'
-        meName = dqmDirectory + dqmSubDirectory_region + 'MuonQuantities/MuonTrkIsoPt'
-        drawJob_process.plots[index].dqmMonitorElements = cms.vstring(meName)
-        
-        drawJob_process.plots[index].process = cms.string(process)
-        
-        title_region = { 1: "Tau id. failed && OS",
-                         2: "Tau id. passed && OS",
-                         5: "Tau id. failed && SS",
-                         6: "Tau id. passed && SS" }[iRegion]
-        #title = "Muon Track Isolation (" + title_region + ")"
-        title = title_region
-        drawJob_process.plots[index].legendEntry = cms.string(title)
-        
-    drawJob_process.title = cms.string('muonTrackIsoPt' + "_" + process)
-    setattr(drawJob_process, "norm", cms.double(1.))
+            dqmDirectory = 'harvested/' + process + '/TauIdEffAnalyzerZtoMuTau/afterUniqueTauCandidateCut/'    
+            dqmSubDirectory_region = 'tauIdEffHistograms4regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
+            meName_full = dqmDirectory + dqmSubDirectory_region + meName
+            drawJob_process.plots[index].dqmMonitorElements = cms.vstring(meName_full)
+            
+            drawJob_process.plots[index].process = cms.string(process)
+            
+            title_region = { 1: "Tau id. failed && OS",
+                             2: "Tau id. passed && OS",
+                             5: "Tau id. failed && SS",
+                             6: "Tau id. passed && SS" }[iRegion]
+            title = title_region
+            drawJob_process.plots[index].legendEntry = cms.string(title)
+            
+        drawJob_process.title = cms.string(label + "_" + process)
+        drawJob_process.xAxis = cms.string(xAxis)
+        setattr(drawJob_process, "norm", cms.double(1.))
+            
+        setattr(drawJobs, label + "_" + process, drawJob_process)
 
-    setattr(drawJobs_TauIdEffZtoMuTau_shapes, 'muonTrackIsoPt' + "_" + process, drawJob_process)
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonPt', "Pt", "muonPt")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonAbsEta', "Eta", "muonAbsEta")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'DiTauCandidateQuantities/VisMass', "Mass", "mVis")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauQuantities/TauPt', "Pt", "tauPt")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauQuantities/TauEta', "Eta", "tauEta")
 

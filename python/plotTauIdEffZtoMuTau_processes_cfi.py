@@ -26,8 +26,8 @@ processZtoMuTau_ZtautauSum.config_dqmFileLoader.scaleFactor = cms.double(1.)
 
 processZtoMuTau_Zmumu = copy.deepcopy(process_Zmumu)
 processZtoMuTau_Zmumu.config_dqmFileLoader.inputFileNames = cms.vstring(
-    'plotsZtoMuTau_Zmumu_part01.root',
-    'plotsZtoMuTau_Zmumu_part02.root',
+    #'plotsZtoMuTau_Zmumu_part01.root',
+    #'plotsZtoMuTau_Zmumu_part02.root',
     'plotsZtoMuTau_Zmumu_part03.root'
 )
 processZtoMuTau_Zmumu.config_dqmFileLoader.scaleFactor = cms.double(corrFactorZtoMuTau_Zmumu*intLumiZtoMuTau_Data/intLumiZtoMuTau_Zmumu)
@@ -68,7 +68,7 @@ processZtoMuTau_WplusJets = copy.deepcopy(process_WplusJets)
 processZtoMuTau_WplusJets.config_dqmFileLoader.inputFileNames = cms.vstring(
     'plotsZtoMuTau_WplusJets_part01.root',
     'plotsZtoMuTau_WplusJets_part02.root',
-    'plotsZtoMuTau_WplusJets_part03.root',
+    #'plotsZtoMuTau_WplusJets_part03.root',
     'plotsZtoMuTau_WplusJets_part04.root'
 )
 

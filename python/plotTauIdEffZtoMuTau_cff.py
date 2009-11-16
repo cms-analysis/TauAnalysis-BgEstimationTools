@@ -21,7 +21,7 @@ loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     InclusivePPmuX = copy.deepcopy(processZtoMuTau_InclusivePPmuX.config_dqmFileLoader),
     PPmuXptGt20 = copy.deepcopy(processZtoMuTau_PPmuXptGt20Sum.config_dqmFileLoader),
     TTplusJets = copy.deepcopy(processZtoMuTau_TTplusJetsSum.config_dqmFileLoader),
-    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/plots/TauIdEff/")
+    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/plots/TauIdEffIV/")
 )
 
 addTauIdEffZtoMuTau_qcdSum = cms.EDAnalyzer("DQMHistAdder",
@@ -37,15 +37,20 @@ addTauIdEffZtoMuTau_qcdSum = cms.EDAnalyzer("DQMHistAdder",
 addTauIdEffZtoMuTau = cms.Sequence(addTauIdEffZtoMuTau_qcdSum)
 
 plotTauIdEffZtoMuTau = copy.deepcopy(plotZtoMuTau)
+plotTauIdEffZtoMuTau.drawOptionSets.default.Ztautau = copy.deepcopy(drawOption_red_separate)
+plotTauIdEffZtoMuTau.drawOptionSets.default.Zmumu = copy.deepcopy(drawOption_darkBlue_separate)
+plotTauIdEffZtoMuTau.drawOptionSets.default.WplusJets = copy.deepcopy(drawOption_lightBlue_separate)
+plotTauIdEffZtoMuTau.drawOptionSets.default.TTplusJets = copy.deepcopy(drawOption_violett_separate)
+plotTauIdEffZtoMuTau.drawOptionSets.default.qcdSum = copy.deepcopy(drawOption_orange_separate)
 plotTauIdEffZtoMuTau.drawJobs = drawJobConfigurator_TauIdEffZtoMuTau.configure()
 plotTauIdEffZtoMuTau.indOutputFileName = cms.string('plotTauIdEffZtoMuTau_#PLOT#.png')
     
 plotTauIdEffZtoMuTauShapes = copy.deepcopy(plotZtoMuTau)
 plotTauIdEffZtoMuTauShapes.drawOptionEntries = cms.PSet(
-    region01 = copy.deepcopy(drawOption_magenta_eff),
+    region01 = copy.deepcopy(drawOption_orange_eff),
     region02 = copy.deepcopy(drawOption_red_eff),
     region05 = copy.deepcopy(drawOption_lightBlue_eff),
-    region06 = copy.deepcopy(drawOption_darkBlue_eff)
+    region06 = copy.deepcopy(drawOption_green_eff)
 )
 #plotTauIdEffZtoMuTauShapes.legends.regular.posX = cms.double(0.50)
 #plotTauIdEffZtoMuTauShapes.legends.regular.posX = cms.double(0.64)
