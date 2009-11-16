@@ -30,6 +30,7 @@ genPhaseSpaceCutZtoMuTau_Ztautau = cms.PSet(
 )
 
 plotsOutputFileNameZtoMuTau_Ztautau = cms.string('plotsZtoMuTau_Ztautau_partXX.root')
+patTupleOutputFileNameZtoMuTau_Ztautau = cms.untracked.string('patTupleZtoMuTau_Ztautau_partXX.root')
 #--------------------------------------------------------------------------------
 
 
@@ -63,6 +64,7 @@ genPhaseSpaceCutZtoMuTau_Zmumu = cms.PSet(
 )
 
 plotsOutputFileNameZtoMuTau_Zmumu = cms.string('plotsZtoMuTau_Zmumu_partXX.root')
+patTupleOutputFileNameZtoMuTau_Zmumu = cms.untracked.string('patTupleZtoMuTau_Zmumu_partXX.root')
 #--------------------------------------------------------------------------------
 
 
@@ -100,6 +102,7 @@ corrFactorZtoMuTau_ZeePlusJets = corrFactorZtoMuTau_ZplusJets
 intLumiZtoMuTau_ZeePlusJets = intLumiZtoMuTau_ZplusJets
 
 plotsOutputFileNameZtoMuTau_ZeePlusJets = cms.string('plotsZtoMuTau_ZeePlusJets.root')
+patTupleOutputFileNameZtoMuTau_ZeePlusJets = cms.untracked.string('patTupleZtoMuTau_ZeePlusJets.root')
 
 genPhaseSpaceCutZtoMuTau_ZeePlusJets = cms.PSet(
     pluginName = cms.string('genPhaseSpaceCut'),
@@ -112,6 +115,7 @@ corrFactorZtoMuTau_ZmumuPlusJets = corrFactorZtoMuTau_ZplusJets
 intLumiZtoMuTau_ZmumuPlusJets = intLumiZtoMuTau_ZplusJets
 
 plotsOutputFileNameZtoMuTau_ZmumuPlusJets = cms.string('plotsZtoMuTau_ZmumuPlusJets.root')
+patTupleOutputFileNameZtoMuTau_ZmumuPlusJets = cms.untracked.string('patTupleZtoMuTau_ZmumuPlusJets.root')
 
 genPhaseSpaceCutZtoMuTau_ZmumuPlusJets = cms.PSet(
     pluginName = cms.string('genPhaseSpaceCut'),
@@ -124,6 +128,7 @@ corrFactorZtoMuTau_ZtautauPlusJets = corrFactorZtoMuTau_ZplusJets
 intLumiZtoMuTau_ZtautauPlusJets = intLumiZtoMuTau_ZplusJets
 
 plotsOutputFileNameZtoMuTau_ZtautauPlusJets = cms.string('plotsZtoMuTau_ZtautauPlusJets.root')
+patTupleOutputFileNameZtoMuTau_ZtautauPlusJets = cms.untracked.string('patTupleZtoMuTau_ZtautauPlusJets.root')
 
 genPhaseSpaceCutZtoMuTau_ZtautauPlusJets = cms.PSet(
     pluginName = cms.string('genPhaseSpaceCut'),
@@ -177,6 +182,7 @@ genPhaseSpaceCutZtoMuTau_WplusJets = cms.PSet(
 )
 
 plotsOutputFileNameZtoMuTau_WplusJets = cms.string('plotsZtoMuTau_WplusJets_partXX.root')
+patTupleOutputFileNameZtoMuTau_WplusJets = cms.untracked.string('patTupleZtoMuTau_WplusJets_partXX.root')
 #--------------------------------------------------------------------------------
 
 
@@ -201,6 +207,7 @@ genPhaseSpaceCutZtoMuTau_InclusivePPmuX = cms.PSet(
 )
 
 plotsOutputFileNameZtoMuTau_InclusivePPmuX = cms.string('plotsZtoMuTau_InclusivePPmuX.root')
+patTupleOutputFileNameZtoMuTau_InclusivePPmuX = cms.untracked.string('patTupleZtoMuTau_InclusivePPmuX.root')
 #--------------------------------------------------------------------------------
 
 
@@ -286,6 +293,7 @@ genPhaseSpaceCutZtoMuTau_PPmuXptGt20 = cms.PSet(
 )
 
 plotsOutputFileNameZtoMuTau_PPmuXptGt20 = cms.string('plotsZtoMuTau_PPmuXptGt20_partXX.root')
+patTupleOutputFileNameZtoMuTau_PPmuXptGt20 = cms.untracked.string('patTupleZtoMuTau_PPmuXptGt20_partXX.root')
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
