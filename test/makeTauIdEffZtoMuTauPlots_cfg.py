@@ -23,15 +23,26 @@ process.dumpTauIdEffZtoMuTau = cms.EDAnalyzer("DQMDumpFilterStatisticsTables",
     ),
     columnsSummaryTable = cms.vstring("Passed", "cumul. Efficiency", "margin. Efficiency", "indiv. Efficiency")
 )
- 
 
+process.dumpTauIdEffZtoMuTau_binning = cms.EDAnalyzer("DQMDumpBinningResults",
+    binningService = cms.PSet(
+        pluginType = cms.string("DataBinningService"),
+        dqmDirectories = cms.PSet(
+            Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTau/afterUniqueTauCandidateCut/tauIdEffBinningResults4regions/'),
+            Zmumu = cms.string('harvested/Zmumu/TauIdEffAnalyzerZtoMuTau/afterUniqueTauCandidateCut/tauIdEffBinningResults4regions/'),
+            WplusJets = cms.string('harvested/WplusJets/TauIdEffAnalyzerZtoMuTau/afterUniqueTauCandidateCut/tauIdEffBinningResults4regions/'),
+            QCD = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTau/afterUniqueTauCandidateCut/tauIdEffBinningResults4regions/'),
+            TTplusJets = cms.string('harvested/TTplusJets/TauIdEffAnalyzerZtoMuTau/afterUniqueTauCandidateCut/tauIdEffBinningResults4regions/'),
+        )
+    )
+)
+ 
 process.makeTauIdEffZtoMuTauPlots = cms.Sequence(
     process.loadTauIdEffZtoMuTau
    + process.addTauIdEffZtoMuTau
-   #+ process.saveTauIdEffZtoMuTau
-   + process.dumpTauIdEffZtoMuTau
-   + process.plotTauIdEffZtoMuTau
-   + process.plotTauIdEffZtoMuTauShapes
+   + process.saveTauIdEffZtoMuTau
+   + process.dumpTauIdEffZtoMuTau + process.dumpTauIdEffZtoMuTau_binning
+   + process.plotTauIdEffZtoMuTau + process.plotTauIdEffZtoMuTauShapes
 )
 
 process.p = cms.Path(process.makeTauIdEffZtoMuTauPlots)
