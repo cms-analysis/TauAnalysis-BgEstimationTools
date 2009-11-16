@@ -99,9 +99,9 @@ changeCut(process, "selectedLayer1TausForMuTauMuonVeto", "tauID('againstMuon') >
 # disable cut on muon + tau-jet charge
 changeCut(process, "selectedMuTauPairsZeroCharge", "charge > -1000.")
 
-# require muon and tau-jet to be "back-to-back" (acoplanarity angle > 170 degrees)
+# require muon and tau-jet to be "back-to-back" (acoplanarity angle > 170°)
 # (in order to reduce contamination from quark/gluon jets in Z --> tau+ tau- signal events)
-changeCut(process, "selectedMuTauPairsAcoplanarity12", "dPhi12 > 2.967")
+##changeCut(process, "selectedMuTauPairsAcoplanarity12", "dPhi12 > 2.967")
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -124,6 +124,21 @@ process.uniqueMuonCandidateCut = cms.EDFilter("BoolEventSelFlagProducer",
 )
 
 process.selectZtoMuTauEvents._seq = process.selectZtoMuTauEvents._seq * process.uniqueMuonCandidateCut
+
+process.selectedMuTauPairsBackToBack = cms.EDFilter("PATJetSelector",
+    src = cms.InputTag('selectedMuTauPairsPzetaDiffCumulative'),                                                             
+    cut = cms.string('dPhi12 > 2.967'),
+    filter = cms.bool(False)
+)
+
+process.diTauCandidateBackToBackCut = cms.EDFilter("BoolEventSelFlagProducer",
+    pluginName = cms.string('diTauCandidateBackToBackCut'),
+    pluginType = cms.string('PATCandViewMinEventSelector'),
+    src = cms.InputTag('selectedMuTauPairsBackToBack')
+    minNumber = cms.uint32(1)
+)
+
+process.selectZtoMuTauEvents._seq = process.selectZtoMuTauEvents._seq * process.selectedMuTauPairsBackToBack * process.diTauCandidateBackToBackCut
 #--------------------------------------------------------------------------------
 
 # import config for event selection, event print-out and analysis sequence
@@ -246,6 +261,13 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
             pluginName = cms.string('uniqueTauCandidateCut'),
             pluginType = cms.string('BoolEventSelector'),
             src = cms.InputTag('uniqueTauCandidateCut')
+        ),
+
+        # require muon and tau-jet to be back-to-back
+        cms.PSet(
+            pluginName = cms.string('diTauCandidateBackToBackCut'),
+            pluginType = cms.string('BoolEventSelector'),
+            src = cms.InputTag('diTauCandidateBackToBackCut')
         )
     ),
   
@@ -499,6 +521,30 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
         cms.PSet(
             filter = cms.string('uniqueTauCandidateCut'),
             title = cms.string('num. Tau-Jet Candidates < 2'),
+            saveRunEventNumbers = cms.vstring('')
+        ),
+
+        # fill histograms & binning tables
+        cms.PSet(
+            analyzers = cms.vstring(
+                'muonHistManager',
+                'tauHistManager',
+                'diTauCandidateHistManagerForMuTau',
+                'metHistManager',
+                'tauIdEffZtoMuTauHistManager',
+                'tauIdEffDataBinner2regions',
+                'tauIdEffBinGridHistManager2regions',
+                'tauIdEffDataBinner4regions',
+                'tauIdEffBinGridHistManager4regions'
+            )
+        ),
+
+        # require muon and tau-jet to be back-to-back
+        # (cut added to end of selection criteria in order to be able to make plots of muon + tau-jet
+        #  mass reconstructed via collinear approximation before acoplanarity cut is applied)
+        cms.PSet(
+            filter = cms.string('diTauCandidateBackToBackCut'),
+            title = cms.string('dPhi(Muon+Tau) > 170°'),
             saveRunEventNumbers = cms.vstring('')
         ),
 
