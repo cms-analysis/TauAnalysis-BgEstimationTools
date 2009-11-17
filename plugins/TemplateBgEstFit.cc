@@ -284,7 +284,7 @@ void TemplateBgEstFit::model1dType::fluctuate(bool fluctStat, bool fluctSys)
 
 void TemplateBgEstFit::model1dType::buildPdf()
 {
-  std::cout << "<model1dType::buildPdf>:" << std::endl;
+  //std::cout << "<model1dType::buildPdf>:" << std::endl;
 
   if ( applySmoothing_ ) {
     bool isFirstFit = (!auxTF1Wrapper_);
@@ -312,7 +312,7 @@ void TemplateBgEstFit::model1dType::buildPdf()
       const RooAbsBinning& xRange = xRef_->getBinning();
       double xMin = xRange.lowBound();
       double xMax = xRange.highBound();
-      std::cout << "pdfName = " << pdfName_ << ": xMin = " << xMin << ", xMax = " << xMax << std::endl;
+      //std::cout << "pdfName = " << pdfName_ << ": xMin = " << xMin << ", xMax = " << xMax << std::endl;
 
       unsigned numBins = pdfBinning_->GetSize() - 1;
       for ( unsigned iBin = 0; iBin < numBins; ++iBin ) {
@@ -776,7 +776,7 @@ void TemplateBgEstFit::buildFitData_RooFit()
     
     for ( std::map<std::string, TH1*>::const_iterator histMapEntry = histMap.begin();
 	  histMapEntry != histMap.end(); ++histMapEntry ) {
-      std::cout << "histMap[" << histMapEntry->first << "] = " << histMapEntry->second->GetName() << std::endl;
+      //std::cout << "histMap[" << histMapEntry->first << "] = " << histMapEntry->second->GetName() << std::endl;
     }
     
     delete fitData_;
@@ -1680,7 +1680,7 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, bool fluctSys, int 
       const std::string& processName = processNames_[iProcess];
       fitValues(iProcess) = modelEntries_[processName]->norm_->getVal();
       //std::cout << " fitValue(iProcess = " << iProcess << ", processName = " << processName << ")"
-      //	    << " = " << fitValues(iProcess) << std::endl;
+      //	  << " = " << fitValues(iProcess) << std::endl;
     }
     
     double chi2red = compChi2red();
