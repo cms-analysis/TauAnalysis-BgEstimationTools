@@ -144,21 +144,34 @@ void makeHistogramPositive(TH1* fluctHistogram)
   }
 }
 
-TH1* makeConcatenatedHistogram(const std::string& concatHistogramName, const std::vector<TH1*>& histograms, 
+TH1* makeConcatenatedHistogram(const std::string& histogramName_concatenated, const std::vector<const TH1*>& histograms, 
 			       const std::vector<double_pair>& xRanges)
 {
   std::cout << "<makeConcatenatedHistogram>:" << std::endl;
 
+  assert(histograms.size() == xRanges.size());
+  
   unsigned numHistograms = histograms.size();
 
   int numBinsTot = 0;
-
+  
   for ( unsigned iHistogram = 0; iHistogram < numHistograms; ++iHistogram ) {
     const TH1* histogram_i = histograms[iHistogram];
-    numBinsTot += (histogram_i->GetNbinsX() + 2);
+    
+    int numBins_i = histogram_i->GetNbinsX();
+    for ( int iBin_i = 0; iBin_i < (numBins_i + 2); ++iBin_i ) {
+      double binCenter_i = histogram_i->GetBinCenter(iBin_i);
+      
+      double xMin = xRanges[iHistogram].first;
+      double xMax = xRanges[iHistogram].second;
+
+//--- take care that ranges of "original" histograms excluded from fit
+//    do not get included in fit of concatenated histogram      
+      if ( binCenter_i >= xMin && binCenter_i <= xMax ) ++numBinsTot;
+    }
   }
 
-  TH1* concatenatedHistogram = new TH1F(concatHistogramName.data(), concatHistogramName.data(), numBinsTot, -0.5, numBinsTot - 0.5);
+  TH1* histogram_concatenated = new TH1F(histogramName_concatenated.data(), histogramName_concatenated.data(), numBinsTot, -0.5, numBinsTot - 0.5);
 
   int iBin_concat = 0;
 
@@ -178,14 +191,11 @@ TH1* makeConcatenatedHistogram(const std::string& concatHistogramName, const std
 	double binContent_i = histogram_i->GetBinContent(iBin_i);
 	double binError_i = histogram_i->GetBinError(iBin_i);
 
-	concatenatedHistogram->SetBinContent(iBin_concat, binContent_i);
-	concatenatedHistogram->SetBinError(iBin_concat, binError_i);
-      } else {
-	concatenatedHistogram->SetBinContent(iBin_concat, 0.);
-	concatenatedHistogram->SetBinError(iBin_concat, 0.);
-      }
+	histogram_concatenated->SetBinContent(iBin_concat, binContent_i);
+	histogram_concatenated->SetBinError(iBin_concat, binError_i);
 
-      ++iBin_concat;
+	++iBin_concat;
+      }
     }
   }
 
@@ -193,39 +203,13 @@ TH1* makeConcatenatedHistogram(const std::string& concatHistogramName, const std
 //    (the same event enters concatenated histograms multiple times,
 //     and would hence be "double-counted" if the normalization of the concatenated histogram
 //     is not corrected for accordingly)
-  double integral_concatenated = getIntegral(concatenatedHistogram);
+  double integral_concatenated = getIntegral(histogram_concatenated);
   double norm = getIntegral(histograms[0]);
   if ( integral_concatenated > 0. ) {
-    std::cout << "--> scaling concatenatedHistogram by factor = " << (norm/integral_concatenated) << std::endl;
-    concatenatedHistogram->Scale(norm/integral_concatenated);
+    std::cout << "--> scaling histogram_concatenated by factor = " << (norm/integral_concatenated) << std::endl;
+    histogram_concatenated->Scale(norm/integral_concatenated);
   }
 
-  return concatenatedHistogram;
+  return histogram_concatenated;
 }
 
-void unpackFitResult(const RooFitResult* fitResult, TVectorD& mean, TMatrixD& cov)
-{
-  const RooArgList& fitParameter = fitResult->floatParsFinal();
-  int numFitParameter = fitParameter.getSize();
-  mean.ResizeTo(numFitParameter);
-  cov.ResizeTo(numFitParameter, numFitParameter);
-  for ( int iX = 0; iX < numFitParameter; ++iX ) {
-    const RooAbsArg* paramX_arg = fitParameter.at(iX);
-    const RooRealVar* paramX = dynamic_cast<const RooRealVar*>(paramX_arg);
-    assert(paramX != NULL);
-    mean(iX) = paramX->getVal();
-    double sigmaX = paramX->getError();    
-    for ( int iY = 0; iY < numFitParameter; ++iY ) {
-      if ( iY == iX ) {
-	cov(iX, iX) = sigmaX*sigmaX;
-      } else {
-	const RooAbsArg* paramY_arg = fitParameter.at(iY);
-	const RooRealVar* paramY = dynamic_cast<const RooRealVar*>(paramY_arg);
-	assert(paramY != NULL);
-	double sigmaY = paramY->getError();
-	double corrXY = fitResult->correlation(*paramX_arg, *paramY_arg);
-	cov(iX, iY) = sigmaX*sigmaY*corrXY;
-      }
-    }
-  }
-}

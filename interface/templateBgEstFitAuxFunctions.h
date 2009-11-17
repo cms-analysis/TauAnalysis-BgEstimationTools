@@ -27,8 +27,6 @@ double getIntegral(const TH1*, double, double);
 
 void makeHistogramPositive(TH1*);
 
-TH1* makeConcatenatedHistogram(const std::string&, const std::vector<TH1*>&, const std::vector<double_pair>&);
-
-void unpackFitResult(const RooFitResult*, TVectorD&, TMatrixD&);
+TH1* makeConcatenatedHistogram(const std::string&, const std::vector<const TH1*>&, const std::vector<double_pair>&);
 
 #endif
