@@ -662,8 +662,8 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
             diTauMvis12 = cms.PSet(
                name = cms.string("diTauMvis12"),
                title = cms.string("M_{vis}^{#mu + #tau-jet}"),
-               xMin = cms.double(20.),
-               xMax = cms.double(200.)
+               xMin = cms.double(20.), # default:  20.
+               xMax = cms.double(200.)  # default: 200.
             )
         ),
         # constrain normalization of W + jets, ttbar + jets and QCD backgrounds
