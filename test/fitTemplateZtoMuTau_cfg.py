@@ -14,8 +14,9 @@ from TauAnalysis.Configuration.recoSampleDefinitionsZtoMuTau_cfi import *
 from TauAnalysis.BgEstimationTools.bgEstNtupleDefinitionsZtoMuTau_cfi import *
 from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
 from TauAnalysis.BgEstimationTools.templateHistDefinitions_cfi import *
-from TauAnalysis.BgEstimationTools.tools.prodTemplateHistConfigurator import prodTemplateHistConfigurator
+from TauAnalysis.BgEstimationTools.tools.prodTemplateHistConfigurator import makeTemplateHistProdSequence
 from TauAnalysis.BgEstimationTools.tools.drawTemplateHistConfigurator import drawTemplateHistConfigurator
+from TauAnalysis.BgEstimationTools.bgEstTemplateEvtSelZtoMuTau_cfi import *
 
 processName = 'fitTemplateZtoMuTau'
 process = cms.Process(processName)
@@ -39,69 +40,6 @@ process.source = cms.Source("EmptySource")
 #      produced by "official" analysis workflow documented at
 #       https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideTauAnalysisZtoMuTau
 #--------------------------------------------------------------------------------
-
-#--------------------------------------------------------------------------------
-# define event selection of background enriched samples
-# from which template histograms are obtained
-#--------------------------------------------------------------------------------
-
-bgEstEventSelection_Zmumu = (
-    "numDiTausZmumu >= 1 && muonTrackIsoZmumu_0 < 1. && muonEcalIsoZmumu_0 < 1."
-#   " && tauDiscrAgainstMuonsZmumu_0 > 0.5 && numGlobalMuons >= 2 && numJetsAlpha0point1Zmumu < 1"
-    " && (tauDiscrAgainstMuonsZmumu_0 < 0.5 || numGlobalMuons >= 2)"
-#   " && diTauAbsChargeZmumu_0 < 0.5"
-)
-
-print("bgEstEventSelection_Zmumu = " + bgEstEventSelection_Zmumu)
-
-bgEstEventSelection_WplusJets = (
-#   "numDiTausWplusJets >= 1 && muonPtWplusJets_0 > 25. && muonTrackIsoWplusJets_0 < 1. && muonEcalIsoWplusJets_0 < 1."
-#
-# Note: muonPt cut improves WplusJets/QCD ratio by about a factor five,
-#       but significantly shifts the muon + tau-jet visible invariant mass distribution towards higher values.
-#       In order to supress QCD background contamination (on a statistical basis),
-#       could extract W + jets template shape from difference in muon + tau-jet visible invariant mass distributions
-#       of opposite sign - same sign muon and tau-jet combinations.
-#      (SS/OS ratio is close to one for QCD background; significant charge asymmetry expected for W + jets background)
-#    
-    "numDiTausWplusJets >= 1 && muonTrackIsoWplusJets_0 < 1. && muonEcalIsoWplusJets_0 < 1."
-#   " && tauTrackIsoDiscrWplusJets_0 < 0.5 && tauTrackIsoWplusJets_0 > 2. && tauDiscrAgainstMuonsWplusJets_0 > 0.5"
-#
-# Note: probability for quark/gluon jets to pass tau track and ECAL isolation criteria
-#       is higher for low Pt than for high Pt jets; the consequence is that muon + tau-jet visible invariant mass distribution
-#       gets shifted towards higher values in case tau track and ECAL isolation criteria are not applied.
-#       For this reason, either need to apply tau track and ECAL isolation criteria in selection of W + jets background enriched sample
-#       or correct for template shape distortion by reweighting
-#      (would gain a factor of about 2.5 in event statistics; reweighting of tauPt distribution not implemented yet, however)
-#    
-    " && tauTrackIsoDiscrWplusJets_0 > 0.5 && tauEcalIsoDiscrWplusJets_0 > 0.5 && tauDiscrAgainstMuonsWplusJets_0 > 0.5"
-    " && diTauMt1MEtWplusJets_0 > 30."
-    " && numGlobalMuons < 2"
-    " && numJetsAlpha0point1WplusJets < 1"
-)
-
-print("bgEstEventSelection_WplusJets = " + bgEstEventSelection_WplusJets)
-
-bgEstEventSelection_TTplusJets = (
-    "numDiTausTTplusJets >= 1 && muonTrackIsoTTplusJets_0 < 2. && muonEcalIsoTTplusJets_0 < 2."
-    " && tauDiscrAgainstMuonsTTplusJets_0 > 0.5"
-    " && diTauAbsChargeTTplusJets_0 < 0.5"
-    " && numGlobalMuons < 2"
-    " && ((numJetsEt40TTplusJets >= 1 && jetEt40bTaggingDiscrTrackCountingHighEffTTplusJets_0 > 4.5)"
-    " || (numJetsEt40TTplusJets >= 2 && jetEt40bTaggingDiscrTrackCountingHighEffTTplusJets_1 > 4.5)"
-    " || (numJetsEt40TTplusJets >= 3 && jetEt40bTaggingDiscrTrackCountingHighEffTTplusJets_2 > 4.5))"
-    " && numJetsEt40TTplusJets >= 2 && numJetsEt60TTplusJets >= 1"
-)
-
-print("bgEstEventSelection_TTplusJets = " + bgEstEventSelection_TTplusJets)
-
-bgEstEventSelection_QCD = (
-    "numDiTausQCD >= 1 && muonTrackIsoQCD_0 > 4. && muonEcalIsoQCD_0 > 4."
-    " && tauDiscrAgainstMuonsQCD_0 > 0.5"
-    " && numGlobalMuons < 2"
-)
-
-print("bgEstEventSelection_QCD = " + bgEstEventSelection_QCD)
 
 #--------------------------------------------------------------------------------
 # define directories in which histograms are stored in DQMStore
@@ -151,76 +89,45 @@ meName_diTauMvis12_norm = "VisMassShape"
 # define names of branches in Ntuple from which template histograms get produced
 #--------------------------------------------------------------------------------
 
-branchName_diTauMvis12_Zmumu = "diTauMvis12Zmumu_0"
-branchName_diTauMvis12_WplusJets = "diTauMvis12WplusJets_0"
-branchName_diTauMvis12_TTplusJets = "diTauMvis12TTplusJets_0"
-branchName_diTauMvis12_QCD = "diTauMvis12QCD_0"
+branchNames_diTauMvis12 = dict()
+branchNames_diTauMvis12["Zmumu"] = "diTauMvis12Zmumu_0"
+branchNames_diTauMvis12["WplusJets"] = "diTauMvis12WplusJets_0"
+branchNames_diTauMvis12["TTplusJets"] = "diTauMvis12TTplusJets_0"
+branchNames_diTauMvis12["QCD"] = "diTauMvis12QCD_0"
+
+kineEventReweights_diTauMvis12 = dict()
+kineEventReweights_diTauMvis12["Zmumu"] = None
+kineEventReweights_diTauMvis12["WplusJets"] = "kineEventReweightWplusJets"
+kineEventReweights_diTauMvis12["TTplusJets"] = None
+kineEventReweights_diTauMvis12["QCD"] = None
 
 #--------------------------------------------------------------------------------
 # produce template histograms 
 #--------------------------------------------------------------------------------
 
-prodTemplateHistConfiguratorZmumuEnriched = prodTemplateHistConfigurator(
-    "prodTemplateHistBgEstZmumuEnriched", prodTemplateHist, dqmDirectory = processName
+fileNames = dict()
+fileNames["Ztautau"] = fileNamesZtoMuTau_Ztautau
+fileNames["Zmumu"] = fileNamesZtoMuTau_ZmumuPlusJets
+fileNames["WplusJets"] = fileNamesZtoMuTau_WplusJets
+fileNames["TTplusJets"] = fileNamesZtoMuTau_TTplusJets
+fileNames["QCD"] = fileNamesZtoMuTau_qcdSum
+fileNames["data"] = fileNamesZtoMuTau_pseudoData
+
+bgEstEventSelections = dict()
+bgEstEventSelections["Zmumu"] = bgEstEventSelection_Zmumu
+bgEstEventSelections["WplusJets"] = bgEstEventSelection_WplusJets 
+bgEstEventSelections["TTplusJets"] = bgEstEventSelection_TTplusJets
+bgEstEventSelections["QCD"] = bgEstEventSelection_QCD
+
+print("bgEstEventSelection_Zmumu = " + bgEstEventSelections["Zmumu"])
+print("bgEstEventSelection_WplusJets = " + bgEstEventSelections["WplusJets"])
+print("bgEstEventSelection_TTplusJets = " + bgEstEventSelections["TTplusJets"])
+print("bgEstEventSelection_QCD = " + bgEstEventSelections["QCD"])
+
+process.prodTemplateHistZtoMuTau = makeTemplateHistProdSequence(
+    process, prodTemplateHist, fileNames, bgEstEventSelections, branchNames_diTauMvis12, kineEventReweights_diTauMvis12,
+    dqmDirectory = processName, meName = meName_diTauMvis12_norm, numBinsX = 40, xMin = 0., xMax = 200.
 )
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("Ztautau", fileNamesZtoMuTau_Ztautau)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("Zmumu", fileNamesZtoMuTau_ZmumuPlusJets)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("WplusJets", fileNamesZtoMuTau_WplusJets)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("TTplusJets", fileNamesZtoMuTau_TTplusJets)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("QCD", fileNamesZtoMuTau_qcdSum)
-prodTemplateHistConfiguratorZmumuEnriched.addProcess("data", fileNamesZtoMuTau_pseudoData)
-prodTemplateHistConfiguratorZmumuEnriched.addSelection("Zmumu", bgEstEventSelection_Zmumu)
-prodTemplateHistConfiguratorZmumuEnriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_Zmumu, 40, 0., 200.)
-
-process.prodTemplateHistBgEstZmumuEnriched = prodTemplateHistConfiguratorZmumuEnriched.configure(process)
-
-prodTemplateHistConfiguratorWplusJetsEnriched = prodTemplateHistConfigurator(
-    "prodTemplateHistBgEstWplusJetsEnriched", prodTemplateHist, dqmDirectory = processName
-)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("Ztautau", fileNamesZtoMuTau_Ztautau)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("Zmumu", fileNamesZtoMuTau_ZmumuPlusJets)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("WplusJets", fileNamesZtoMuTau_WplusJets)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("TTplusJets", fileNamesZtoMuTau_TTplusJets)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("QCD", fileNamesZtoMuTau_qcdSum)
-prodTemplateHistConfiguratorWplusJetsEnriched.addProcess("data", fileNamesZtoMuTau_pseudoData)
-prodTemplateHistConfiguratorWplusJetsEnriched.addSelection("WplusJets", bgEstEventSelection_WplusJets,
-                                                           kineEventReweight = "kineEventReweightWplusJets")
-prodTemplateHistConfiguratorWplusJetsEnriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_WplusJets, 40, 0., 200.)
-
-process.prodTemplateHistBgEstWplusJetsEnriched = prodTemplateHistConfiguratorWplusJetsEnriched.configure(process)
-
-prodTemplateHistConfiguratorTTplusJetsEnriched = prodTemplateHistConfigurator(
-    "prodTemplateHistBgEstTTplusJetsEnriched", prodTemplateHist, dqmDirectory = processName
-)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("Ztautau", fileNamesZtoMuTau_Ztautau)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("Zmumu", fileNamesZtoMuTau_ZmumuPlusJets)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("WplusJets", fileNamesZtoMuTau_WplusJets)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("TTplusJets", fileNamesZtoMuTau_TTplusJets)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("QCD", fileNamesZtoMuTau_qcdSum)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addProcess("data", fileNamesZtoMuTau_pseudoData)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addSelection("TTplusJets", bgEstEventSelection_TTplusJets)
-prodTemplateHistConfiguratorTTplusJetsEnriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_TTplusJets, 40, 0., 200.)
-
-process.prodTemplateHistBgEstTTplusJetsEnriched = prodTemplateHistConfiguratorTTplusJetsEnriched.configure(process)
-
-prodTemplateHistConfiguratorQCDenriched = prodTemplateHistConfigurator(
-    "prodTemplateHistBgEstWplusJetsEnriched", prodTemplateHist, dqmDirectory = processName
-)
-prodTemplateHistConfiguratorQCDenriched.addProcess("Ztautau", fileNamesZtoMuTau_Ztautau)
-prodTemplateHistConfiguratorQCDenriched.addProcess("Zmumu", fileNamesZtoMuTau_ZmumuPlusJets)
-prodTemplateHistConfiguratorQCDenriched.addProcess("WplusJets", fileNamesZtoMuTau_WplusJets)
-prodTemplateHistConfiguratorQCDenriched.addProcess("TTplusJets", fileNamesZtoMuTau_TTplusJets)
-prodTemplateHistConfiguratorQCDenriched.addProcess("QCD", fileNamesZtoMuTau_qcdSum)
-prodTemplateHistConfiguratorQCDenriched.addProcess("data", fileNamesZtoMuTau_pseudoData)
-prodTemplateHistConfiguratorQCDenriched.addSelection("QCD", bgEstEventSelection_QCD)
-prodTemplateHistConfiguratorQCDenriched.addTemplate(meName_diTauMvis12_norm, branchName_diTauMvis12_QCD, 40, 0., 200.)
-
-process.prodTemplateHistBgEstQCDenriched = prodTemplateHistConfiguratorQCDenriched.configure(process)
-
-process.prodTemplateHistZtoMuTau = cms.Sequence( process.prodTemplateHistBgEstZmumuEnriched
-                                                * process.prodTemplateHistBgEstWplusJetsEnriched
-                                                * process.prodTemplateHistBgEstTTplusJetsEnriched
-                                                * process.prodTemplateHistBgEstQCDenriched )
 
 #--------------------------------------------------------------------------------
 # load template histogram of visible muon + tau-jet mass distribution
@@ -464,7 +371,7 @@ process.plotTemplateHistZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
     ),
 
     drawOptionEntries = cms.PSet(
-        bgEstData = copy.deepcopy(drawOption_darkBlue_eff),
+        bgEstData = copy.deepcopy(drawOption_green_eff),
         bgEstPure = copy.deepcopy(drawOption_lightBlue_eff),
         finalEvtSel = copy.deepcopy(drawOption_red_eff)
     ),
@@ -750,7 +657,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
     ),
 
     fit = cms.PSet(
-        mode = cms.string("Nd"),
+        algorithm = cms.string("RooFit"), # either "RooFit" or "TFractionFitter"
         variables = cms.PSet(
             diTauMvis12 = cms.PSet(
                name = cms.string("diTauMvis12"),
@@ -842,6 +749,9 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
     output = cms.PSet(
         controlPlots = cms.PSet(
             fileName = cms.string("./plots/fitTemplateZtoMuTau_#PLOT#.eps")
+        ),
+        fitResults = cms.PSet(
+            dqmDirectory = cms.string("fitTemplateZtoMuTau/fitResults/")
         )
     )                                      
 )                          
