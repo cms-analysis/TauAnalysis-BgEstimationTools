@@ -55,7 +55,8 @@ const std::string fluctMode_incoherent = "incoherent";
 const double epsilon = 1.e-3;
 const double epsilon_integral = 5.e-2;
 
-const int fitStatus_converged = 0;
+const int fitStatus_converged_RooFit = 0;
+const int fitStatus_converged_TFractionFitter = 0;
 
 typedef std::pair<double, double> double_pair;
 
@@ -196,10 +197,14 @@ void TemplateBgEstFit::dataNdType::fluctuate(bool, bool)
 
 TemplateBgEstFit::model1dType::model1dType(const std::string& processName, const std::string& varName,
 					   const std::string& meName, RooRealVar* x, bool cutUnfittedRegion,
+					   bool fitSimultaneously,
 					   bool applySmoothing, const edm::ParameterSet& cfgSmoothing)
   : data1dType(processName, varName, meName, x, cutUnfittedRegion),
     pdfName_(std::string(processName).append("_").append(varName).append("_").append("pdf")),
     pdf_(0),
+    fitSimultaneously_(fitSimultaneously),
+    dataHistName_(std::string(processName_).append("_").append(varName_).append("_rooDataHist")),
+    dataHist_(0),
     applySmoothing_(applySmoothing), cfgSmoothing_(cfgSmoothing),
     auxTF1Wrapper_(0),
     pdfBinning_(0),
@@ -210,6 +215,7 @@ TemplateBgEstFit::model1dType::model1dType(const std::string& processName, const
 TemplateBgEstFit::model1dType::~model1dType()
 {
   delete pdf_;
+  delete dataHist_;
   delete auxTF1Wrapper_;
   delete pdfBinning_;
   delete pdfCoeffCollection_;
@@ -296,7 +302,7 @@ void TemplateBgEstFit::model1dType::buildPdf()
 
     delete pdf_;
     pdf_ = new RooTFnPdfBinding(pdfName_.data(), pdfName_.data(), auxTF1Wrapper_->getTF1(), RooArgList(*xRef_));
-  } else {
+  } else if ( fitSimultaneously_ ) {
     bool isFirstFit = (!pdfCoeffCollection_);
 
     if ( isFirstFit ) {
@@ -340,7 +346,13 @@ void TemplateBgEstFit::model1dType::buildPdf()
     
     delete pdf_;
     pdf_ = new RooParametricStepFunction(pdfName_.data(), pdfName_.data(), *xRef_, *pdfCoeffArgs_, *pdfBinning_, numBins);
-  } 
+  } else {
+    delete dataHist_;
+    dataHist_ = new RooDataHist(dataHistName_.data(), dataHistName_.data(), *xRef_, fluctHistogram_);
+
+    delete pdf_;
+    pdf_ = new RooHistPdf(pdfName_.data(), pdfName_.data(), *xRef_, *dataHist_);
+  }
 }
 
 //
@@ -401,12 +413,12 @@ TemplateBgEstFit::modelNdType::~modelNdType()
 }
 
 void TemplateBgEstFit::modelNdType::addVar(const std::string& varName, RooRealVar* x, const std::string& meName,
-					   bool applySmoothing, const edm::ParameterSet& cfgSmoothing)
+					   bool fitSimultaneously, bool applySmoothing, const edm::ParameterSet& cfgSmoothing)
 {
   varNames_.push_back(varName);
   
   model1dType* model1dEntry = new model1dType(processName_, varName, meName, x, cutUnfittedRegion_,
-					      applySmoothing, cfgSmoothing);
+					      fitSimultaneously, applySmoothing, cfgSmoothing);
   if ( model1dEntry->error_ ) error_ = 1;
   model1dEntries_[varName] = model1dEntry;
   
@@ -454,6 +466,9 @@ void TemplateBgEstFit::modelNdType::fluctuate(bool fluctStat, bool fluctSys)
 TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
   : fitData_(0),
     fitModel_(0),
+    fitAlgorithm_(0),
+    auxConcatenatedData_(0),
+    auxConcatenatedTemplates_(0),
     fitCategories_(0),
     fitResult_(0),
     error_(0)
@@ -461,6 +476,16 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
   std::cout << "<TemplateBgEstFit::TemplateBgEstFit>:" << std::endl;
 
   edm::ParameterSet cfgFit = cfg.getParameter<edm::ParameterSet>("fit");
+
+  std::string fitAlgorithmType_string = cfgFit.getParameter<std::string>("algorithm");
+  if ( fitAlgorithmType_string == "RooFit" ) {
+    fitAlgorithmType_ = kRooFit;
+  } else if ( fitAlgorithmType_string == "TFractionFitter" ) {
+    fitAlgorithmType_ = kTFractionFitter;
+  } else {
+    edm::LogError ("TemplateBgEstFit") << " Invalid 'algorithm' parameter = " << fitAlgorithmType_string << " !!";
+    error_ = 1;
+  }
 
   std::map<std::string, bool> applyNormConstraints;
   std::map<std::string, double> meanNormConstraints;
@@ -533,11 +558,19 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 
       std::string meName = cfgTemplate.getParameter<std::string>("meName");
 
+      bool fitSimultaneously = ( cfgTemplate.exists("fitSimultaneously") ) ? 
+	cfgTemplate.getParameter<bool>("fitSimultaneously") : false;
+
       bool applySmoothing = cfgTemplate.exists("smoothing");
       edm::ParameterSet cfgSmoothing = ( applySmoothing ) ? 
 	cfgTemplate.getParameter<edm::ParameterSet>("smoothing") : edm::ParameterSet();
 
-      modelEntry->addVar(*varName, x_[*varName], meName, applySmoothing, cfgSmoothing);
+      if ( fitSimultaneously && applySmoothing ) {
+	edm::LogError ("TemplateBgEstFit") << " Parameters 'fitSimultaneously' and 'applySmoothing' are mutually exclusive !!";
+	error_ = 1;
+      }
+
+      modelEntry->addVar(*varName, x_[*varName], meName, fitSimultaneously, applySmoothing, cfgSmoothing);
     }
 
     modelEntries_[*processName] = modelEntry;
@@ -573,6 +606,10 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 //--- read configuration parameters specifying options for making control plots
   edm::ParameterSet cfgControlPlots = cfg.getParameter<edm::ParameterSet>("output").getParameter<edm::ParameterSet>("controlPlots");
   controlPlotsFileName_ = cfgControlPlots.getParameter<std::string>("fileName");
+
+//--- read configuration parameters specifying options for saving fit results in DQMStore
+  edm::ParameterSet cfgSaveFitResults = cfg.getParameter<edm::ParameterSet>("output").getParameter<edm::ParameterSet>("fitResults");
+  dqmDirectory_fitResult_ = cfgSaveFitResults.getParameter<std::string>("dqmDirectory");
 
 //--- read configuration parameters specifying how statistical and systematic uncertainties 
 //    on normalization factors determined by fit get estimated
@@ -673,6 +710,10 @@ TemplateBgEstFit::~TemplateBgEstFit()
   }
   
   delete fitModel_;
+
+  delete fitAlgorithm_;
+  delete auxConcatenatedData_;
+  delete auxConcatenatedTemplates_;
   
   delete fitCategories_;
   
@@ -702,7 +743,7 @@ std::string getCategoryName_template(const std::string& processName, const std::
 //-----------------------------------------------------------------------------------------------------------------------
 //
 
-void TemplateBgEstFit::buildFitData()
+void TemplateBgEstFit::buildFitData_RooFit()
 {
   std::string fitDataName = "fitData";
 
@@ -726,7 +767,7 @@ void TemplateBgEstFit::buildFitData()
       
       for ( vstring::const_iterator processName = processNames_.begin();
 	    processName != processNames_.end(); ++processName ) {
-	if ( !modelEntries_[*processName]->model1dEntries_[*varName]->applySmoothing_ ) {
+	if ( modelEntries_[*processName]->model1dEntries_[*varName]->fitSimultaneously_ ) {
 	  std::string categoryName_template = getCategoryName_template(*processName, *varName);
 	  histMap[categoryName_template] = modelEntries_[*processName]->model1dEntries_[*varName]->fluctHistogram_;
 	}
@@ -743,7 +784,7 @@ void TemplateBgEstFit::buildFitData()
   }
 }
 
-void TemplateBgEstFit::buildFitModel()
+void TemplateBgEstFit::buildFitModel_RooFit()
 {
   for ( vstring::const_iterator varName = varNames_.begin();
 	varName != varNames_.end(); ++varName ) {
@@ -781,7 +822,7 @@ void TemplateBgEstFit::buildFitModel()
       
       for ( vstring::const_iterator processName = processNames_.begin();
 	    processName != processNames_.end(); ++processName ) {
-	if ( !modelEntries_[*processName]->model1dEntries_[*varName]->applySmoothing_ ) {
+	if ( modelEntries_[*processName]->model1dEntries_[*varName]->fitSimultaneously_ ) {
 	  std::string key = std::string(*processName).append("_").append(*varName);
 	  
 	  std::string normTemplateShapeName = std::string(*processName).append("_").append(*varName).append("_normTemplateShape");
@@ -814,9 +855,9 @@ void TemplateBgEstFit::buildFitModel()
 //-----------------------------------------------------------------------------------------------------------------------
 //
 
-void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings) 
+void TemplateBgEstFit::fit_RooFit(bool saveFitResult, int printLevel, int printWarnings) 
 {
-//--- fit model to data
+//--- fit model to data using RooFit
 
 //--- build list of fit options
   RooLinkedList fitOptions;
@@ -860,6 +901,149 @@ void TemplateBgEstFit::fit(bool saveFitResult, int printLevel, int printWarnings
   }
 }
 
+void TemplateBgEstFit::unpackFitResult_RooFit()
+{
+//--- check that fit via RooFit converged
+  if ( fitStatus_ != fitStatus_converged_RooFit ) return;
+
+  const RooArgList& fitParameter = fitResult_->floatParsFinal();
+  int numFitParameter = fitParameter.getSize();
+  fitResultMean_.ResizeTo(numFitParameter);
+  fitResultCov_.ResizeTo(numFitParameter, numFitParameter);
+  for ( int iX = 0; iX < numFitParameter; ++iX ) {
+    const RooAbsArg* paramX_arg = fitParameter.at(iX);
+    const RooRealVar* paramX = dynamic_cast<const RooRealVar*>(paramX_arg);
+    assert(paramX != NULL);
+    fitResultMean_(iX) = paramX->getVal();
+    double sigmaX = paramX->getError();    
+    for ( int iY = 0; iY < numFitParameter; ++iY ) {
+      if ( iY == iX ) {
+	fitResultCov_(iX, iX) = sigmaX*sigmaX;
+      } else {
+	const RooAbsArg* paramY_arg = fitParameter.at(iY);
+	const RooRealVar* paramY = dynamic_cast<const RooRealVar*>(paramY_arg);
+	assert(paramY != NULL);
+	double sigmaY = paramY->getError();
+	double corrXY = fitResult_->correlation(*paramX_arg, *paramY_arg);
+	fitResultCov_(iX, iY) = sigmaX*sigmaY*corrXY;
+      }
+    }
+  }
+}
+
+//
+//-----------------------------------------------------------------------------------------------------------------------
+//
+
+void TemplateBgEstFit::fit_TFractionFitter() 
+{
+//--- fit model to data using TFractionFitter
+
+//--- build single concatenated histogram of all distribution observed in (pseudo)data
+  std::vector<const TH1*> dataHistograms1d;
+  std::vector<double_pair> xRanges;
+  
+  unsigned numVariables = varNames_.size();
+  for ( unsigned iVariable = 0; iVariable < numVariables; ++iVariable ) {
+    const std::string& varName = varNames_[iVariable];
+    
+    const data1dType* dataEntry1d = dataEntry_->data1dEntries_[varName];
+
+    dataHistograms1d.push_back(dataEntry1d->fluctHistogram_);
+
+    const RooAbsBinning& xRange = dataEntry1d->xRef_->getBinning();
+    double xMin = xRange.lowBound();
+    double xMax = xRange.highBound();
+    xRanges.push_back(double_pair(xMin, xMax));
+  }
+
+  delete auxConcatenatedData_;
+  auxConcatenatedData_ = makeConcatenatedHistogram("data_concatenatedHistogram", dataHistograms1d, xRanges);
+
+//--- build concatenated histogram of all template shapes 
+//    for different signal and background processes
+  delete auxConcatenatedTemplates_;
+  auxConcatenatedTemplates_ = new TObjArray(processNames_.size());
+  auxConcatenatedTemplates_->SetOwner(true);
+
+  unsigned numProcesses = processNames_.size();
+  for ( unsigned iProcess = 0; iProcess < numProcesses; ++iProcess ) {
+    const std::string& processName = processNames_[iProcess];
+    
+    std::vector<const TH1*> modelHistograms1d;
+
+    unsigned numVariables = varNames_.size();
+    for ( unsigned iVariable = 0; iVariable < numVariables; ++iVariable ) {
+      const std::string& varName = varNames_[iVariable];
+
+      const model1dType* modelEntry1d = modelEntries_[processName]->model1dEntries_[varName];
+
+      modelHistograms1d.push_back(modelEntry1d->fluctHistogram_);
+    }
+
+    std::string modelHistogramName_concatenated = std::string(processName).append("_concatenatedHistogram");
+    TH1* modelHistogram_concatenated = makeConcatenatedHistogram(modelHistogramName_concatenated, modelHistograms1d, xRanges);
+
+    auxConcatenatedTemplates_->AddAt(modelHistogram_concatenated, iProcess);
+  }
+  
+  delete fitAlgorithm_;
+  fitAlgorithm_ = new TFractionFitter(auxConcatenatedData_, auxConcatenatedTemplates_);
+  
+//--- constrain coefficients to "physical" range 0..100%
+  for ( unsigned iProcess = 0; iProcess < numProcesses; ++iProcess ) {
+    fitAlgorithm_->Constrain(iProcess, 0., 1.);
+  }
+
+//--- include all bins of concatenated histograms in fit
+  fitAlgorithm_->SetRangeX(auxConcatenatedData_->FindBin(auxConcatenatedData_->GetXaxis()->GetXmin()), 
+			   auxConcatenatedData_->FindBin(auxConcatenatedData_->GetXaxis()->GetXmax()));
+
+//--- perform fit
+  fitStatus_ = fitAlgorithm_->Fit(); 
+
+//--- set value and error of RooRealVar objects
+//    that represent the normalization parameters
+//    (values are expected to be set by code making control plots)
+  TVirtualFitter* fitResult = fitAlgorithm_->GetFitter();
+
+  for ( unsigned iProcess = 0; iProcess < numProcesses; ++iProcess ) {
+    const std::string& processName = processNames_[iProcess];
+
+    double data_norm = auxConcatenatedData_->Integral();
+    
+    double fitValue = fitResult->GetParameter(iProcess)*data_norm;
+    double fitError = fitResult->GetParError(iProcess)*data_norm;
+
+//--- set value and error of RooRealVar objects
+//    that represent the normalization parameters
+    modelEntries_[processName]->norm_->setVal(fitValue);
+    modelEntries_[processName]->norm_->setError(fitError);
+  }
+}
+
+void TemplateBgEstFit::unpackFitResult_TFractionFitter()
+{  
+//--- check that fit via TFractionFitter converged
+  if ( fitStatus_ != fitStatus_converged_TFractionFitter ) return;
+
+  TVirtualFitter* fitResult = fitAlgorithm_->GetFitter();
+  
+  double data_norm = auxConcatenatedData_->Integral();
+
+  unsigned numProcesses = processNames_.size();
+
+  for ( unsigned iX = 0; iX < numProcesses; ++iX ) {
+
+    fitResultMean_(iX) = fitResult->GetParameter(iX)*data_norm;
+
+    for ( unsigned iY = 0; iY < numProcesses; ++iY ) {
+      double fitCovarianceXY = fitResult->GetCovarianceMatrixElement(iX, iY)*data_norm*data_norm;
+      fitResultCov_(iX, iY) = ( fitCovarianceXY > 0. ) ? TMath::Sqrt(fitCovarianceXY) : 0.;
+    }
+  }
+}
+
 //
 //-----------------------------------------------------------------------------------------------------------------------
 //
@@ -893,69 +1077,80 @@ void TemplateBgEstFit::endJob()
     return;
   }
 
+  if ( fitAlgorithmType_ == kRooFit ) {
+
 //--- configure RooFit structure;
 //    print-out structure once configuration finished
-  fitCategories_ = new RooCategory("fitCategories", "fitCategories");
-  for ( vstring::const_iterator varName = varNames_.begin();
-	varName != varNames_.end(); ++varName ) {
-    std::string categoryName_data = getCategoryName_data(*varName);
-    fitCategories_->defineType(categoryName_data.data());
-    
-    for ( vstring::const_iterator processName = processNames_.begin();
-	  processName != processNames_.end(); ++processName ) {
-      if ( !modelEntries_[*processName]->model1dEntries_[*varName]->applySmoothing_ ) {
-	std::string categoryName_template = getCategoryName_template(*processName, *varName);
-	fitCategories_->defineType(categoryName_template.data());
+    fitCategories_ = new RooCategory("fitCategories", "fitCategories");
+    for ( vstring::const_iterator varName = varNames_.begin();
+	  varName != varNames_.end(); ++varName ) {
+      std::string categoryName_data = getCategoryName_data(*varName);
+      fitCategories_->defineType(categoryName_data.data());
+      
+      for ( vstring::const_iterator processName = processNames_.begin();
+	    processName != processNames_.end(); ++processName ) {
+	if ( modelEntries_[*processName]->model1dEntries_[*varName]->fitSimultaneously_ ) {
+	  std::string categoryName_template = getCategoryName_template(*processName, *varName);
+	  fitCategories_->defineType(categoryName_template.data());
+	}
       }
     }
-  }
+    
+    std::cout << "number of Categories = " << fitCategories_->numTypes() << std::endl;
+    unsigned numCategories = fitCategories_->numTypes();
+    for ( unsigned iCategory = 0; iCategory < numCategories; ++iCategory ) {
+      std::cout << "Category[" << iCategory << "] = " << fitCategories_->lookupType(iCategory)->GetName() << std::endl;
+    }
 
-  std::cout << "number of Categories = " << fitCategories_->numTypes() << std::endl;
-  unsigned numCategories = fitCategories_->numTypes();
-  for ( unsigned iCategory = 0; iCategory < numCategories; ++iCategory ) {
-    std::cout << "Category[" << iCategory << "] = " << fitCategories_->lookupType(iCategory)->GetName() << std::endl;
-  }
+    buildFitData_RooFit();
 
-  buildFitData();
+    buildFitModel_RooFit();
 
-  buildFitModel();
+    std::cout << ">>> RootFit model used for Template method Fit <<<" << std::endl;
+    fitModel_->printCompactTree();
 
-  std::cout << ">>> RootFit model used for Template method Fit <<<" << std::endl;
-  fitModel_->printCompactTree();
+    std::cout << ">>> RootFit Parameters <<<" << std::endl;
+    for ( vstring::const_iterator varName = varNames_.begin();
+	  varName != varNames_.end(); ++varName ) {
+      std::cout << "for Variable = " << (*varName) << ":" << std::endl;
+      RooAbsPdf* pdfModelSum = pdfModelSums_[*varName];
+      RooArgSet* pdfModelSumParameters = pdfModelSum->getParameters(*pdfModelSum->getComponents());
+      pdfModelSumParameters->Print("v");
+      delete pdfModelSumParameters;
+    }
 
-  std::cout << ">>> RootFit Parameters <<<" << std::endl;
-  for ( vstring::const_iterator varName = varNames_.begin();
-	varName != varNames_.end(); ++varName ) {
-    std::cout << "for Variable = " << (*varName) << ":" << std::endl;
-    RooAbsPdf* pdfModelSum = pdfModelSums_[*varName];
-    RooArgSet* pdfModelSumParameters = pdfModelSum->getParameters(*pdfModelSum->getComponents());
-    pdfModelSumParameters->Print("v");
-    delete pdfModelSumParameters;
-  }
+    std::cout << ">>> RootFit Observables <<<" << std::endl;
+    for ( vstring::const_iterator varName = varNames_.begin();
+	  varName != varNames_.end(); ++varName ) {
+      std::cout << "for Variable = " << (*varName) << ":" << std::endl;
+      RooAbsPdf* pdfModelSum = pdfModelSums_[*varName];
+      RooArgSet* pdfModelSumObservables = pdfModelSum->getObservables(*pdfModelSum->getComponents());
+      pdfModelSumObservables->Print("v");
+      delete pdfModelSumObservables;
+    }
 
-  std::cout << ">>> RootFit Observables <<<" << std::endl;
-  for ( vstring::const_iterator varName = varNames_.begin();
-	varName != varNames_.end(); ++varName ) {
-    std::cout << "for Variable = " << (*varName) << ":" << std::endl;
-    RooAbsPdf* pdfModelSum = pdfModelSums_[*varName];
-    RooArgSet* pdfModelSumObservables = pdfModelSum->getObservables(*pdfModelSum->getComponents());
-    pdfModelSumObservables->Print("v");
-    delete pdfModelSumObservables;
-  }
-
-//--- fit template shapes of different signal and background processes
+//--- fit via RooFit template shapes of different signal and background processes
 //    to distribution observed in (pseudo)data
-  fit(true, printLevel_, printWarnings_);
-  assert(fitResult_ != NULL);
+    fit_RooFit(true, printLevel_, printWarnings_);
+    assert(fitResult_ != NULL);
+
+//--- save normalization factors determined and covariance matrix estimated by RooFit
+    unpackFitResult_RooFit();
+  } else if ( fitAlgorithmType_ == kTFractionFitter ) {
+
+//--- fit via TFractionFitter template shapes of different signal and background processes
+//    to distribution observed in (pseudo)data
+    fit_TFractionFitter();
+
+//--- save normalization factors determined by TFractionFitter
+    unpackFitResult_TFractionFitter();
+  }
 
 //--- print-out fit results
   std::cout << ">>> Fit Results <<<" << std::endl;
-  std::cout << " fitStatus = " << fitResult_->status() << std::endl;
+  std::cout << " fitStatus = " << fitStatus_ << std::endl;
   std::cout << " Chi2red = " << compChi2red() << std::endl;
   print(std::cout);
-
-//--- save normalization factors determined and covariance matrix estimated by fit
-  unpackFitResult(fitResult_, fitResultMean_, fitResultCov_);
 
 //--- produce plot of different signal and background processes
 //    using scale factors determined by fit
@@ -1469,11 +1664,16 @@ void TemplateBgEstFit::estimateUncertainties(bool fluctStat, bool fluctSys, int 
       modelEntry->second->fluctuate(fluctSys, fluctSys);
     }
 
-    buildFitData();
+    if ( fitAlgorithmType_ == kRooFit ) {
+      buildFitData_RooFit();
+      
+      buildFitModel_RooFit();
+      
+      fit_RooFit(false, printLevel, printWarnings);
+    } else if ( fitAlgorithmType_ == kTFractionFitter ) {
+      fit_TFractionFitter();
+    }
 
-    buildFitModel();
-
-    fit(false, printLevel, printWarnings);
     ++numTotFits;
     
     for ( int iProcess = 0; iProcess < numProcesses; ++iProcess ) {

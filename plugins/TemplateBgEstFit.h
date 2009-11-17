@@ -25,9 +25,9 @@
  *
  * \author Christian Veelken, UC Davis
  *
- * \version $Revision: 1.11 $
+ * \version $Revision: 1.12 $
  *
- * $Id: TemplateBgEstFit.h,v 1.11 2009/10/25 15:47:13 veelken Exp $
+ * $Id: TemplateBgEstFit.h,v 1.12 2009/10/28 15:18:51 veelken Exp $
  *
  */
 
@@ -52,6 +52,8 @@
 #include <RooFitResult.h>
 #include <RooCategory.h>
 #include <RooSimultaneous.h>
+
+#include <TFractionFitter.h>
 
 #include <vector>
 #include <string>
@@ -104,13 +106,16 @@ class TemplateBgEstFit : public edm::EDAnalyzer
       int fluctMode_;
     };
 
-    model1dType(const std::string&, const std::string&, const std::string&, RooRealVar*, bool, bool, const edm::ParameterSet&);
+    model1dType(const std::string&, const std::string&, const std::string&, RooRealVar*, bool, bool, bool, const edm::ParameterSet&);
     virtual ~model1dType();
     void initialize();
     void fluctuate(bool, bool);
     void buildPdf();
     std::string pdfName_;
     RooAbsPdf* pdf_;
+    bool fitSimultaneously_;
+    std::string dataHistName_;
+    RooDataHist* dataHist_;
     bool applySmoothing_;
     edm::ParameterSet cfgSmoothing_;
     TF1WrapperBase* auxTF1Wrapper_;
@@ -124,7 +129,7 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   {
     modelNdType(const std::string&, const edm::ParameterSet&, bool, bool, double, double);
     ~modelNdType();
-    void addVar(const std::string&, RooRealVar*, const std::string&, bool, const edm::ParameterSet&);
+    void addVar(const std::string&, RooRealVar*, const std::string&, bool, bool, const edm::ParameterSet&);
     void initialize();
     void fluctuate(bool, bool);   
     std::string processName_;
@@ -156,10 +161,13 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   void endJob();
 
 //--- private auxiliary functions
-  void buildFitData();
-  void buildFitModel();
+  void buildFitData_RooFit();
+  void buildFitModel_RooFit();
+  void fit_RooFit(bool, int, int);
+  void unpackFitResult_RooFit();
 
-  void fit(bool, int, int);
+  void fit_TFractionFitter();
+  void unpackFitResult_TFractionFitter();
 
   void print(std::ostream& stream);
 
@@ -174,7 +182,8 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   void estimateUncertainties(bool, bool, int, double, const char*, int, bool);
 
 //--- configuration parameters
-  int fitMode_;
+  enum { kRooFit, kTFractionFitter };
+  int fitAlgorithmType_;
   
   bool cutUnfittedRegion_;
 
@@ -210,8 +219,11 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   normMap normTemplateShapes_;
   pdfMap pdfTemplateShapeSums_;
 
-  //RooSimultaneous* fitModel_;
   RooAbsPdf* fitModel_;
+
+  TFractionFitter* fitAlgorithm_;
+  TH1* auxConcatenatedData_;
+  TObjArray* auxConcatenatedTemplates_;
 
   RooCategory* fitCategories_;
 
@@ -219,8 +231,10 @@ class TemplateBgEstFit : public edm::EDAnalyzer
   realVarMap x_;
 
   RooFitResult* fitResult_;
+  int fitStatus_;
   TVectorD fitResultMean_;
   TMatrixD fitResultCov_;
+  std::string dqmDirectory_fitResult_;
 
   int error_;
 };
