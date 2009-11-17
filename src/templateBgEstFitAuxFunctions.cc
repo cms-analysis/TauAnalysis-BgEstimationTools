@@ -7,6 +7,9 @@
 #include <TRandom3.h>
 #include <TMath.h>
 
+#include <iostream>
+#include <iomanip>
+
 TRandom3 gRndNum;
 
 double getSampledPull(double pullRMS, double pullMin, double pullMax)
@@ -139,6 +142,65 @@ void makeHistogramPositive(TH1* fluctHistogram)
   for ( int iBin = 0; iBin < (numBins + 2); ++iBin ) {
     if ( fluctHistogram->GetBinContent(iBin) < 0. ) fluctHistogram->SetBinContent(iBin, 0.);
   }
+}
+
+TH1* makeConcatenatedHistogram(const std::string& concatHistogramName, const std::vector<TH1*>& histograms, 
+			       const std::vector<double_pair>& xRanges)
+{
+  std::cout << "<makeConcatenatedHistogram>:" << std::endl;
+
+  unsigned numHistograms = histograms.size();
+
+  int numBinsTot = 0;
+
+  for ( unsigned iHistogram = 0; iHistogram < numHistograms; ++iHistogram ) {
+    const TH1* histogram_i = histograms[iHistogram];
+    numBinsTot += (histogram_i->GetNbinsX() + 2);
+  }
+
+  TH1* concatenatedHistogram = new TH1F(concatHistogramName.data(), concatHistogramName.data(), numBinsTot, -0.5, numBinsTot - 0.5);
+
+  int iBin_concat = 0;
+
+  for ( unsigned iHistogram = 0; iHistogram < numHistograms; ++iHistogram ) {
+    const TH1* histogram_i = histograms[iHistogram];
+
+    int numBins_i = histogram_i->GetNbinsX();
+    for ( int iBin_i = 0; iBin_i < (numBins_i + 2); ++iBin_i ) {
+      double binCenter_i = histogram_i->GetBinCenter(iBin_i);
+
+      double xMin = xRanges[iHistogram].first;
+      double xMax = xRanges[iHistogram].second;
+
+//--- take care that ranges of "original" histograms excluded from fit
+//    do not get included in fit of concatenated histogram
+      if ( binCenter_i >= xMin && binCenter_i <= xMax ) {
+	double binContent_i = histogram_i->GetBinContent(iBin_i);
+	double binError_i = histogram_i->GetBinError(iBin_i);
+
+	concatenatedHistogram->SetBinContent(iBin_concat, binContent_i);
+	concatenatedHistogram->SetBinError(iBin_concat, binError_i);
+      } else {
+	concatenatedHistogram->SetBinContent(iBin_concat, 0.);
+	concatenatedHistogram->SetBinError(iBin_concat, 0.);
+      }
+
+      ++iBin_concat;
+    }
+  }
+
+//--- normalize concatenated histogram to total number of entries in first histogram
+//    (the same event enters concatenated histograms multiple times,
+//     and would hence be "double-counted" if the normalization of the concatenated histogram
+//     is not corrected for accordingly)
+  double integral_concatenated = getIntegral(concatenatedHistogram);
+  double norm = getIntegral(histograms[0]);
+  if ( integral_concatenated > 0. ) {
+    std::cout << "--> scaling concatenatedHistogram by factor = " << (norm/integral_concatenated) << std::endl;
+    concatenatedHistogram->Scale(norm/integral_concatenated);
+  }
+
+  return concatenatedHistogram;
 }
 
 void unpackFitResult(const RooFitResult* fitResult, TVectorD& mean, TMatrixD& cov)
