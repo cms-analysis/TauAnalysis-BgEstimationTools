@@ -97,12 +97,17 @@ std::vector<std::string> DataBinning::encodeStringRep() const
     std::string entry_binContent = encodeBinningStringRep(meName_binContent.str(), "float", meValue_binContent.str());
     buffer.push_back(entry_binContent);
     
-    std::ostringstream meName_binSumw2;
-    meName_binSumw2 << "binSumw2_region" << (iBin + 1);
-    std::ostringstream meValue_binSumw2;
-    meValue_binSumw2 << std::setprecision(3) << std::fixed << binSumw2_[iBin];
-    std::string entry_binSumw2 = encodeBinningStringRep(meName_binSumw2.str(), "float", meValue_binSumw2.str());
-    buffer.push_back(entry_binSumw2);
+//--- CV: bin-errors need to be stored in MonitorElements 
+//        in the format 'square-root(sum of weights)' rather then in the format 'sum of weights',
+//        in order to preserve the relation bin-error/bin-content 
+//        in case DataBinning object gets multiplied by scale-factor
+//       (e.g. to normalize Monte Carlo to integrated luminosity of data)
+    std::ostringstream meName_binError;
+    meName_binError << "binError_region" << (iBin + 1);
+    std::ostringstream meValue_binError;
+    meValue_binError << std::setprecision(3) << std::fixed << TMath::Sqrt(binSumw2_[iBin]);
+    std::string entry_binError = encodeBinningStringRep(meName_binError.str(), "float", meValue_binError.str());
+    buffer.push_back(entry_binError);
   }
 
   return buffer;
@@ -115,8 +120,8 @@ void DataBinning::decodeStringRep(std::vector<std::string>& buffer)
   TPRegexp regexpParser_numBins("numBins");
   TPRegexp regexpParser_binContents_entry("binContent_region[[:digit:]]+");
   TPRegexp regexpParser_binContents_binNumber("binContent_region([[:digit:]]+)");
-  TPRegexp regexpParser_binSumw2_entry("binSumw2_region[[:digit:]]+");
-  TPRegexp regexpParser_binSumw2_binNumber("binSumw2_region([[:digit:]]+)");
+  TPRegexp regexpParser_binError_entry("binError_region[[:digit:]]+");
+  TPRegexp regexpParser_binError_binNumber("binError_region([[:digit:]]+)");
 
   bool numBins_initialized = false;
   std::vector<bool> binContents_initialized;
@@ -167,19 +172,19 @@ void DataBinning::decodeStringRep(std::vector<std::string>& buffer)
       } else {
 	binNumber_error = true;
       }
-    } else if ( regexpParser_binSumw2_entry.Match(meName_tstring) == 1 ) {
+    } else if ( regexpParser_binError_entry.Match(meName_tstring) == 1 ) {
       if ( !numBins_initialized ) {
 	edm::LogError ("DataBinning::operator>>") << " Need to initialize numBins before setting binSumw2 !!";
 	continue;
       }
 
-      TObjArray* subStrings = regexpParser_binSumw2_binNumber.MatchS(meName_tstring);
+      TObjArray* subStrings = regexpParser_binError_binNumber.MatchS(meName_tstring);
       if ( subStrings->GetEntries() == 2 ) {
 	int binNumber = (unsigned)atoi(((TObjString*)subStrings->At(1))->GetString().Data()) - 1;
-	float binSumw2 = atof(meValue.data());
+	float binError = atof(meValue.data());
 
 	if ( binNumber >= 0 && binNumber < (int)numBins_ ) {
-	  binSumw2_[binNumber] = binSumw2;
+	  binSumw2_[binNumber] = binError*binError;
 	  binSumw2_initialized[binNumber] = true;
 	} else {
 	  edm::LogError ("DataBinning::operator>>") << " Bin number = " << binNumber << " decoded from meName = " << meName
