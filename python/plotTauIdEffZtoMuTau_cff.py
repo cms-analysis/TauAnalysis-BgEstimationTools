@@ -21,7 +21,7 @@ loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     InclusivePPmuX = copy.deepcopy(processZtoMuTau_InclusivePPmuX.config_dqmFileLoader),
     PPmuXptGt20 = copy.deepcopy(processZtoMuTau_PPmuXptGt20Sum.config_dqmFileLoader),
     TTplusJets = copy.deepcopy(processZtoMuTau_TTplusJetsSum.config_dqmFileLoader),
-    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/plots/TauIdEffIV/")
+    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/plots/TauIdEffV/")
 )
 
 addTauIdEffZtoMuTau_qcdSum = cms.EDAnalyzer("DQMHistAdder",
@@ -34,7 +34,20 @@ addTauIdEffZtoMuTau_qcdSum = cms.EDAnalyzer("DQMHistAdder",
     )                          
 )
 
-addTauIdEffZtoMuTau = cms.Sequence(addTauIdEffZtoMuTau_qcdSum)
+addTauIdEffZtoMuTau_smSum = cms.EDAnalyzer("DQMHistAdder",
+    smSum = cms.PSet(
+        dqmDirectories_input = cms.vstring(
+            'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau',
+            'harvested/Zmumu/TauIdEffAnalyzerZtoMuTau',
+            'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau',
+            'harvested/TTplusJets/TauIdEffAnalyzerZtoMuTau',
+            'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau'
+        ),
+        dqmDirectory_output = cms.string('harvested/smSum/TauIdEffAnalyzerZtoMuTau')
+    )
+)
+
+addTauIdEffZtoMuTau = cms.Sequence(addTauIdEffZtoMuTau_qcdSum + addTauIdEffZtoMuTau_smSum)
 
 plotTauIdEffZtoMuTau = copy.deepcopy(plotZtoMuTau)
 plotTauIdEffZtoMuTau.drawOptionSets.default.Ztautau = copy.deepcopy(drawOption_red_separate)
