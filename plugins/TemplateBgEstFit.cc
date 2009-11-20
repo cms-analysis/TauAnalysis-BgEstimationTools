@@ -1079,73 +1079,81 @@ TemplateBgEstFit::TemplateBgEstFit(const edm::ParameterSet& cfg)
 
 //--- read configuration parameters specifying how statistical and systematic uncertainties 
 //    on normalization factors determined by fit get estimated
-  edm::ParameterSet cfgStatErr = cfg.getParameter<edm::ParameterSet>("estStatUncertainties");
-  statErrNumSamplings_ = cfgStatErr.getParameter<int>("numSamplings");
-  statErrChi2redMax_ = cfgStatErr.getParameter<double>("chi2redMax");  
-  statErrPrintLevel_ = cfgStatErr.getParameter<edm::ParameterSet>("verbosity").getParameter<int>("printLevel");
-  statErrPrintWarnings_ = cfgStatErr.getParameter<edm::ParameterSet>("verbosity").getParameter<bool>("printWarnings");
-
-  edm::ParameterSet cfgSysErr = cfg.getParameter<edm::ParameterSet>("estSysUncertainties");
-  edm::ParameterSet cfgSysFluctuations = cfgSysErr.getParameter<edm::ParameterSet>("fluctuations");
-  vstring sysFluctNames = cfgSysFluctuations.getParameterNamesForType<edm::ParameterSet>();
-  for ( vstring::const_iterator sysFluctName = sysFluctNames.begin(); 
-	sysFluctName != sysFluctNames.end(); ++sysFluctName ) {
-    edm::ParameterSet cfgSysFluct = cfgSysFluctuations.getParameter<edm::ParameterSet>(*sysFluctName);
-
-    double pullRMS = cfgSysFluct.getParameter<double>("pullRMS");
-    double pullMin = cfgSysFluct.getParameter<double>("pullMin");
-    double pullMax = cfgSysFluct.getParameter<double>("pullMax");
-
-    std::string fluctMode_string = cfgSysFluct.getParameter<std::string>("mode");
-    int fluctMode_int = -1;
-    if ( fluctMode_string == fluctMode_coherent ) {
-      fluctMode_int = kCoherent;
-    } else if ( fluctMode_string == fluctMode_incoherent ) {
-      fluctMode_int = kIncoherent;
-    } else {
-      edm::LogError ("TemplateBgEstFit::TemplateBgEstFit") << " Invalid 'mode' parameter = " << fluctMode_string << " !!";
-      error_ = 1;
-    }
-
-    edm::ParameterSet cfgProcesses = cfgSysFluct.getParameter<edm::ParameterSet>("meNames");
-
-    for ( vstring::iterator processName = processNames_.begin();
-	  processName != processNames_.end(); ++processName ) {
-      if ( !cfgProcesses.exists(*processName) ) {
-	edm::LogError ("TemplateBgEstFit") << " No Estimate of systematic Uncertainty = " << (*sysFluctName) 
-					   << " defined for process = " << (*processName) << " !!";
-	error_ = 1;
-	continue;
-      }
-
-      edm::ParameterSet cfgProcess = cfgProcesses.getParameter<edm::ParameterSet>(*processName);
-
-      for ( vstring::const_iterator varName = varNames_.begin();
-	    varName != varNames_.end(); ++varName ) {
-	if ( !cfgProcess.exists(*varName) ) {
-	  edm::LogError ("TemplateBgEstFit") << " No Estimate of systematic Uncertainty = " << (*sysFluctName) 
-					     << " on variable = " << (*varName) << " defined for process = " << (*processName) << " !!";
-	  error_ = 1;
-	}
-
-	std::string meName = cfgProcess.getParameter<std::string>(*varName);
-
-	sysFluctDefType sysFluctDef;
-	sysFluctDef.fluctName_ = (*sysFluctName);
-	sysFluctDef.meName_ = meName;
-	sysFluctDef.pullRMS_ = pullRMS;
-	sysFluctDef.pullMin_ = pullMin;
-	sysFluctDef.pullMax_ = pullMax;
-	sysFluctDef.fluctMode_ = fluctMode_int;
-
-	processEntries_[*processName]->processEntries1d_[*varName]->sysErrFluctuations_.push_back(sysFluctDef);
-      }
-    }
+  if ( cfg.exists("estStatUncertainties") ) {
+    edm::ParameterSet cfgStatErr = cfg.getParameter<edm::ParameterSet>("estStatUncertainties");
+    statErrNumSamplings_ = cfgStatErr.getParameter<int>("numSamplings");
+    statErrChi2redMax_ = cfgStatErr.getParameter<double>("chi2redMax");  
+    statErrPrintLevel_ = cfgStatErr.getParameter<edm::ParameterSet>("verbosity").getParameter<int>("printLevel");
+    statErrPrintWarnings_ = cfgStatErr.getParameter<edm::ParameterSet>("verbosity").getParameter<bool>("printWarnings");
+  } else {
+    statErrNumSamplings_ = 0;
   }
-  sysErrNumSamplings_ = cfgSysErr.getParameter<int>("numSamplings");
-  sysErrChi2redMax_ = cfgSysErr.getParameter<double>("chi2redMax");  
-  sysErrPrintLevel_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<int>("printLevel");
-  sysErrPrintWarnings_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<bool>("printWarnings");
+
+  if ( cfg.exists("estSysUncertainties") ) {
+    edm::ParameterSet cfgSysErr = cfg.getParameter<edm::ParameterSet>("estSysUncertainties");
+    edm::ParameterSet cfgSysFluctuations = cfgSysErr.getParameter<edm::ParameterSet>("fluctuations");
+    vstring sysFluctNames = cfgSysFluctuations.getParameterNamesForType<edm::ParameterSet>();
+    for ( vstring::const_iterator sysFluctName = sysFluctNames.begin(); 
+	  sysFluctName != sysFluctNames.end(); ++sysFluctName ) {
+      edm::ParameterSet cfgSysFluct = cfgSysFluctuations.getParameter<edm::ParameterSet>(*sysFluctName);
+      
+      double pullRMS = cfgSysFluct.getParameter<double>("pullRMS");
+      double pullMin = cfgSysFluct.getParameter<double>("pullMin");
+      double pullMax = cfgSysFluct.getParameter<double>("pullMax");
+      
+      std::string fluctMode_string = cfgSysFluct.getParameter<std::string>("mode");
+      int fluctMode_int = -1;
+      if ( fluctMode_string == fluctMode_coherent ) {
+	fluctMode_int = kCoherent;
+      } else if ( fluctMode_string == fluctMode_incoherent ) {
+	fluctMode_int = kIncoherent;
+      } else {
+	edm::LogError ("TemplateBgEstFit::TemplateBgEstFit") << " Invalid 'mode' parameter = " << fluctMode_string << " !!";
+	error_ = 1;
+      }
+      
+      edm::ParameterSet cfgProcesses = cfgSysFluct.getParameter<edm::ParameterSet>("meNames");
+      
+      for ( vstring::iterator processName = processNames_.begin();
+	    processName != processNames_.end(); ++processName ) {
+	if ( !cfgProcesses.exists(*processName) ) {
+	  edm::LogError ("TemplateBgEstFit") << " No Estimate of systematic Uncertainty = " << (*sysFluctName) 
+					     << " defined for process = " << (*processName) << " !!";
+	  error_ = 1;
+	  continue;
+	}
+	
+	edm::ParameterSet cfgProcess = cfgProcesses.getParameter<edm::ParameterSet>(*processName);
+	
+	for ( vstring::const_iterator varName = varNames_.begin();
+	      varName != varNames_.end(); ++varName ) {
+	  if ( !cfgProcess.exists(*varName) ) {
+	    edm::LogError ("TemplateBgEstFit") << " No Estimate of systematic Uncertainty = " << (*sysFluctName) 
+					       << " on variable = " << (*varName) << " defined for process = " << (*processName) << " !!";
+	    error_ = 1;
+	  }
+	  
+	  std::string meName = cfgProcess.getParameter<std::string>(*varName);
+	  
+	  sysFluctDefType sysFluctDef;
+	  sysFluctDef.fluctName_ = (*sysFluctName);
+	  sysFluctDef.meName_ = meName;
+	  sysFluctDef.pullRMS_ = pullRMS;
+	  sysFluctDef.pullMin_ = pullMin;
+	  sysFluctDef.pullMax_ = pullMax;
+	  sysFluctDef.fluctMode_ = fluctMode_int;
+	  
+	  processEntries_[*processName]->processEntries1d_[*varName]->sysErrFluctuations_.push_back(sysFluctDef);
+	}
+      }
+    }
+    sysErrNumSamplings_ = cfgSysErr.getParameter<int>("numSamplings");
+    sysErrChi2redMax_ = cfgSysErr.getParameter<double>("chi2redMax");  
+    sysErrPrintLevel_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<int>("printLevel");
+    sysErrPrintWarnings_ = cfgSysErr.getParameter<edm::ParameterSet>("verbosity").getParameter<bool>("printWarnings");
+  } else {
+    sysErrNumSamplings_ = 0;
+  }
 
   fitModel_ = 0;
   fitResult_ = 0;
@@ -1325,23 +1333,29 @@ void TemplateBgEstFit::endJob()
   if ( controlPlotsFileName_ != "" ) makeControlPlots();
 
 //--- estimate statistical uncertainties
-  std::cout << ">>> Statistical Uncertainties <<<" << std::endl;
-  estimateUncertainties(true, false, statErrNumSamplings_, statErrChi2redMax_, 
-			"estStatUncertainties", statErrPrintLevel_, statErrPrintWarnings_);
+  if ( statErrNumSamplings_ > 0 ) {
+    std::cout << ">>> Statistical Uncertainties <<<" << std::endl;
+    estimateUncertainties(true, false, statErrNumSamplings_, statErrChi2redMax_, 
+			  "estStatUncertainties", statErrPrintLevel_, statErrPrintWarnings_);
+  }
  
 //--- estimate systematic uncertainties
-  std::cout << ">>> Systematic Uncertainties <<<" << std::endl;
-  estimateUncertainties(false, true, sysErrNumSamplings_, sysErrChi2redMax_,
-			"estSysUncertainties", sysErrPrintLevel_, sysErrPrintWarnings_);
+  if ( sysErrNumSamplings_ > 0 ) {
+    std::cout << ">>> Systematic Uncertainties <<<" << std::endl;
+    estimateUncertainties(false, true, sysErrNumSamplings_, sysErrChi2redMax_,
+			  "estSysUncertainties", sysErrPrintLevel_, sysErrPrintWarnings_);
+  }
 
 //--- estimate total (statistical + systematic) uncertainties
-  std::cout << ">>> Total (statistical + systematic) Uncertainties <<<" << std::endl;
-  double chi2redMax = TMath::Max(statErrChi2redMax_, sysErrChi2redMax_);
-  int totErrPrintLevel = TMath::Min(statErrPrintLevel_, sysErrPrintLevel_);
-  bool totErrPrintWarnings = (statErrPrintWarnings_ && sysErrPrintWarnings_);
-  estimateUncertainties(true, true, sysErrNumSamplings_, chi2redMax,
-			"estTotUncertainties", totErrPrintLevel, totErrPrintWarnings);
-  
+  if ( statErrNumSamplings_ > 0 && sysErrNumSamplings_ > 0 ) {
+    std::cout << ">>> Total (statistical + systematic) Uncertainties <<<" << std::endl;
+    double chi2redMax = TMath::Max(statErrChi2redMax_, sysErrChi2redMax_);
+    int totErrPrintLevel = TMath::Min(statErrPrintLevel_, sysErrPrintLevel_);
+    bool totErrPrintWarnings = (statErrPrintWarnings_ && sysErrPrintWarnings_);
+    estimateUncertainties(true, true, sysErrNumSamplings_, chi2redMax,
+			  "estTotUncertainties", totErrPrintLevel, totErrPrintWarnings);
+  }
+
   std::cout << "done." << std::endl;
 }
 
