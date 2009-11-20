@@ -45,7 +45,7 @@ drawJobConfigurator_TauIdEffZtoMuTau = drawJobConfigurator(
 #--------------------------------------------------------------------------------
 
 drawJobConfigurator_TauIdEffZtoMuTau.add(
-    afterCut = "uniqueTauCandidateCut",
+    afterCut = "diTauCandidateBackToBackCut",
     plots = [
         drawJobConfigEntry(
             meName = 'MuonQuantities/Muon#PAR#',
@@ -119,20 +119,38 @@ for iRegion in [ 1, 2, 5, 6 ]:
     name_region = "region%(i)02d" % {"i" : iRegion}
             
     drawJobConfigurator_TauIdEffZtoMuTau.add(
-        afterCut = "uniqueTauCandidateCut",
+        afterCut = "diTauCandidateBackToBackCut",
         plots = [        
+            ##drawJobConfigEntry(
+            ##    meName = dqmSubDirectory_region + 'MuonQuantities/Muon#PAR#',
+            ##    PAR = [ 'Pt', 'Eta', 'Phi' ],
+            ##    title = "Muon (" + title_region + ")",
+            ##    xAxis = '#PAR#',
+            ##    name = name_region + "_muon"
+            ##),
+            ##drawJobConfigEntry(
+            ##    meName = dqmSubDirectory_region + 'MuonQuantities/MuonTrkIsoPt',
+            ##    title = "Muon Track Isolation (" + title_region + ")",
+            ##    xAxis = 'Pt',
+            ##    name = name_region + "_muonTrackIsoPt"
+            ##),
             drawJobConfigEntry(
-                meName = dqmSubDirectory_region + 'MuonQuantities/Muon#PAR#',
-                PAR = [ 'Pt', 'Eta', 'Phi' ],
-                title = "Muon (" + title_region + ")",
-                xAxis = '#PAR#',
-                name = name_region + "_muon"
+                meName = dqmSubDirectory_region + 'TauIdEffSpecificQuantities/MuonPt',
+                title = "Muon P_{T} (" + title_region + ")",
+                xAxis = 'Pt',
+                name = name_region + "_muonPt"
             ),
             drawJobConfigEntry(
-                meName = dqmSubDirectory_region + 'MuonQuantities/MuonTrkIsoPt',
-                title = "Muon Track Isolation (" + title_region + ")",
+                meName = dqmSubDirectory_region + 'TauIdEffSpecificQuantities/MuonAbsEta',
+                title = "Muon |#eta| (" + title_region + ")",
+                xAxis = 'Eta',
+                name = name_region + "_muonAbsEta"
+            ),
+            drawJobConfigEntry(
+                meName = dqmSubDirectory_region + 'TauIdEffSpecificQuantities/MuonExtTrkIsoPt',
+                title = "Muon Track Isolation in ext. #DeltaR = 1.0 Cone (" + title_region + ")",
                 xAxis = 'Pt',
-                name = name_region + "_muonTrackIsoPt"
+                name = name_region + "_muonExtTrackIso"
             ),
             drawJobConfigEntry(
                 meName = dqmSubDirectory_region + 'MuonQuantities/MuonEcalIsoPt',
@@ -142,7 +160,7 @@ for iRegion in [ 1, 2, 5, 6 ]:
             ),
             drawJobConfigEntry(
                 meName = dqmSubDirectory_region + 'MuonQuantities/MuonIsoSumPt',
-                title = "Muon Track+ ECAL Isolation (" + title_region + ")",
+                title = "Muon Track + ECAL Isolation (" + title_region + ")",
                 xAxis = 'Pt',
                 name = name_region + "_muonIsoSumPt"
             ),
@@ -222,7 +240,7 @@ def addDrawJob(drawJobs, meName, xAxis, label):
                       5: 2,
                       6: 3 }[iRegion]
         
-            dqmDirectory = 'harvested/' + process + '/TauIdEffAnalyzerZtoMuTau/afterUniqueTauCandidateCut/'    
+            dqmDirectory = 'harvested/' + process + '/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/'    
             dqmSubDirectory_region = 'tauIdEffHistograms4regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
             meName_full = dqmDirectory + dqmSubDirectory_region + meName
             drawJob_process.plots[index].dqmMonitorElements = cms.vstring(meName_full)
@@ -244,6 +262,7 @@ def addDrawJob(drawJobs, meName, xAxis, label):
 
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonPt', "Pt", "muonPt")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonAbsEta', "Eta", "muonAbsEta")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonExtTrkIsoPt', "Pt", "muonExtTrackIso")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'DiTauCandidateQuantities/VisMass', "Mass", "mVis")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauQuantities/TauPt', "Pt", "tauPt")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauQuantities/TauEta', "Eta", "tauEta")
