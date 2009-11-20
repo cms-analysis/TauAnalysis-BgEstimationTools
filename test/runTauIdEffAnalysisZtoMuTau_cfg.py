@@ -99,7 +99,7 @@ changeCut(process, "selectedLayer1TausForMuTauMuonVeto", "tauID('againstMuon') >
 # disable cut on muon + tau-jet charge
 changeCut(process, "selectedMuTauPairsZeroCharge", "charge > -1000.")
 
-# require muon and tau-jet to be "back-to-back" (acoplanarity angle > 170°)
+# require muon and tau-jet to be "back-to-back" (acoplanarity angle > 170 degrees)
 # (in order to reduce contamination from quark/gluon jets in Z --> tau+ tau- signal events)
 ##changeCut(process, "selectedMuTauPairsAcoplanarity12", "dPhi12 > 2.967")
 #--------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ process.uniqueMuonCandidateCut = cms.EDFilter("BoolEventSelFlagProducer",
 
 process.selectZtoMuTauEvents._seq = process.selectZtoMuTauEvents._seq * process.uniqueMuonCandidateCut
 
-process.selectedMuTauPairsBackToBack = cms.EDFilter("PATJetSelector",
+process.selectedMuTauPairsBackToBack = cms.EDFilter("PATMuTauPairSelector",
     src = cms.InputTag('selectedMuTauPairsPzetaDiffCumulative'),                                                             
     cut = cms.string('dPhi12 > 2.967'),
     filter = cms.bool(False)
@@ -134,7 +134,7 @@ process.selectedMuTauPairsBackToBack = cms.EDFilter("PATJetSelector",
 process.diTauCandidateBackToBackCut = cms.EDFilter("BoolEventSelFlagProducer",
     pluginName = cms.string('diTauCandidateBackToBackCut'),
     pluginType = cms.string('PATCandViewMinEventSelector'),
-    src = cms.InputTag('selectedMuTauPairsBackToBack')
+    src = cms.InputTag('selectedMuTauPairsBackToBack'),
     minNumber = cms.uint32(1)
 )
 
@@ -544,7 +544,7 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
         #  mass reconstructed via collinear approximation before acoplanarity cut is applied)
         cms.PSet(
             filter = cms.string('diTauCandidateBackToBackCut'),
-            title = cms.string('dPhi(Muon+Tau) > 170°'),
+            title = cms.string('dPhi(Muon,Tau) > 170 deg.'),
             saveRunEventNumbers = cms.vstring('')
         ),
 
