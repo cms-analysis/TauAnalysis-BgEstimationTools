@@ -5,7 +5,7 @@ from TauAnalysis.Configuration.makeReplacementsAnalysis import makeReplacementsA
 
 # name of the directory (either on afs area or castor)
 # to which all .root files produced by the cmsRun job will be copied
-outputFilePath = "/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoMuTau/"
+outputFilePath = "/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoMuTau_frCDFII/"
 
 inputFileType = "RECO/AOD"
 
