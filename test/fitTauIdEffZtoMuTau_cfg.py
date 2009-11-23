@@ -29,8 +29,8 @@ process.maxEvents = cms.untracked.PSet(
 process.source = cms.Source("EmptySource")
 
 process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
-    all = cms.PSet(
-        inputFileNames = cms.vstring('plotsTauIdEffZtoMuTau_all.root'),
+    all = cms.PSet(        
+        inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_2_2_10/src/TauAnalysis/BgEstimationTools/test/plotsTauIdEffZtoMuTau_all.root'),
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
     )
@@ -77,7 +77,8 @@ meName_muonExtTrackIso_rebinned = 'MuonExtTrkIsoPt_rebinned'
 
 process.loadTemplateHistTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(
-        inputFileNames = cms.vstring('fitTauIdEffZtoMuTau.root'),
+        #inputFileNames = cms.vstring('tauIdEffTemplatesZtoMuTau.root'),
+        inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_2_2_10/src/TauAnalysis/BgEstimationTools/test/fitTauIdEffZtoMuTau.root'),
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
     )
@@ -154,6 +155,11 @@ process.prodTemplateHistTauIdEffZtoMuTau = cms.Sequence(
    * process.prodTemplateHistTauIdEffZtoMuTau_muonAbsEta
    * process.prodTemplateHistTauIdEffZtoMuTau_muonExtTrackIso
 )    
+
+process.saveTemplateHistTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
+    outputFileName = cms.string('tauIdEffTemplatesZtoMuTau.root'),
+    drop = cms.vstring('')                       
+)
 
 #--------------------------------------------------------------------------------
 # rebin template histogram for muon track isolation in (extended) dR = 1.0 cone
@@ -361,8 +367,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
     meNames = [
         dqmDirectory_WplusJets_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt,
         dqmDirectory_WplusJets_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt,
-        dqmDirectory_WplusJets_all + dqmSubDirectory_muonPt + meName_muonPt
-        #processName + '/WplusJets/data/' + meName_muonPt
+        #dqmDirectory_WplusJets_all + dqmSubDirectory_muonPt + meName_muonPt
+        processName + '/WplusJets/data/' + meName_muonPt
         
     ],
     name = "WplusJets_muonPt",
@@ -373,8 +379,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
     meNames = [
         dqmDirectory_WplusJets_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
         dqmDirectory_WplusJets_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-        dqmDirectory_WplusJets_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
-        #processName + '/WplusJets/data/' + meName_muonAbsEta
+        #dqmDirectory_WplusJets_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
+        processName + '/WplusJets/data/' + meName_muonAbsEta
     ],
     name = "WplusJets_muonAbsEta",
     title = "|#eta_{#mu}| in W + jets Background"
@@ -384,8 +390,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonExtTrackIso.add(
     meNames = [
         dqmDirectory_WplusJets_tauIdPassed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned,
         dqmDirectory_WplusJets_tauIdFailed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned,
-        dqmDirectory_WplusJets_all + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned
-        #processName + '/WplusJets/data/' + meName_muonExtTrackIso_rebinned
+        #dqmDirectory_WplusJets_all + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned
+        processName + '/WplusJets/data/' + meName_muonExtTrackIso_rebinned
     ],
     name = "WplusJets_muonExtTrackIso",
     title = "|Track iso. P_{T}| in W + jets Background"
@@ -436,8 +442,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
     meNames = [
         dqmDirectory_QCD_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt,
         dqmDirectory_QCD_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt,
-        dqmDirectory_QCD_all + dqmSubDirectory_muonPt + meName_muonPt
-        #processName + '/QCD/data/' + meName_muonPt
+        #dqmDirectory_QCD_all + dqmSubDirectory_muonPt + meName_muonPt
+        processName + '/QCD/data/' + meName_muonPt
     ],
     name = "QCD_muonPt",
     title = "P_{T}^{#mu} in QCD Background"
@@ -447,8 +453,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
     meNames = [
         dqmDirectory_QCD_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
         dqmDirectory_QCD_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-        dqmDirectory_QCD_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
-        #processName + '/QCD/data/' + meName_muonAbsEta
+        #dqmDirectory_QCD_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
+        processName + '/QCD/data/' + meName_muonAbsEta
     ],
     name = "QCD_muonAbsEta",
     title = "|#eta_{#mu}| in QCD Background"
@@ -458,8 +464,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonExtTrackIso.add(
     meNames = [
         dqmDirectory_QCD_tauIdPassed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned,
         dqmDirectory_QCD_tauIdFailed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned,
-        dqmDirectory_QCD_all + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned
-        #processName + '/QCD/data/' + meName_muonExtTrackIso_rebinned
+        #dqmDirectory_QCD_all + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned
+        processName + '/QCD/data/' + meName_muonExtTrackIso_rebinned
     ],
     name = "QCD_muonExtTrackIso",
     title = "|Track iso. P_{T}| in QCD Background"
@@ -551,16 +557,16 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateBgEstFit",
         Ztautau = cms.PSet(
             templates = cms.PSet(
                 muonPt = cms.PSet(
-                    meName = cms.string(dqmDirectory_Ztautau_all + dqmSubDirectory_muonPt + meName_muonPt),
+                    meName = cms.string(dqmDirectory_Ztautau_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt),
                     fitSimultaneously = cms.bool(False)
                 ),
                 muonAbsEta = cms.PSet(
-                    meName = cms.string(dqmDirectory_Ztautau_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta),
+                    meName = cms.string(dqmDirectory_Ztautau_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta),
                     fitSimultaneously = cms.bool(False)
-                ),
-                muonExtTrackIso = cms.PSet(
-                    meName = cms.string(dqmDirectory_Ztautau_all + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned),
-                    fitSimultaneously = cms.bool(False)
+                ##),
+                ##muonExtTrackIso = cms.PSet(
+                ##    meName = cms.string(dqmDirectory_Ztautau_tauIdPassed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned),
+                ##    fitSimultaneously = cms.bool(False)
                 )
             ),    
             norm = cms.PSet(
@@ -571,16 +577,18 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateBgEstFit",
         WplusJets = cms.PSet(
             templates = cms.PSet(
                 muonPt = cms.PSet(
-                    meName = cms.string(dqmDirectory_WplusJets_all + dqmSubDirectory_muonPt + meName_muonPt),
+                    #meName = cms.string(dqmDirectory_WplusJets_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt),
+                    meName = cms.string(processName + '/WplusJets/data/' + meName_muonPt),
                     fitSimultaneously = cms.bool(False)
                 ),
                 muonAbsEta = cms.PSet(
-                    meName = cms.string(dqmDirectory_WplusJets_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta),
+                    #meName = cms.string(dqmDirectory_WplusJets_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta),
+                    meName = cms.string(processName + '/WplusJets/data/' + meName_muonAbsEta),
                     fitSimultaneously = cms.bool(False)
-                ),
-                muonExtTrackIso = cms.PSet(
-                    meName = cms.string(dqmDirectory_WplusJets_all + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned),
-                    fitSimultaneously = cms.bool(False)
+                ##),
+                ##muonExtTrackIso = cms.PSet(
+                ##    meName = cms.string(dqmDirectory_WplusJets_tauIdPassed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned),
+                ##    fitSimultaneously = cms.bool(False)
                 )
             ),    
             norm = cms.PSet(
@@ -591,16 +599,18 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateBgEstFit",
         QCD = cms.PSet(
             templates = cms.PSet(
                 muonPt = cms.PSet(
-                    meName = cms.string(dqmDirectory_QCD_all + dqmSubDirectory_muonPt + meName_muonPt),
+                    #meName = cms.string(dqmDirectory_QCD_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt),
+                    meName = cms.string(processName + '/QCD/data/' + meName_muonPt),
                     fitSimultaneously = cms.bool(False)
                 ),
                 muonAbsEta = cms.PSet(
-                    meName = cms.string(dqmDirectory_QCD_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta),
+                    meName = cms.string(dqmDirectory_QCD_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta),
+                    #meName = cms.string(processName + '/QCD/data/' + meName_muonAbsEta),
                     fitSimultaneously = cms.bool(False)
-                ),
-                muonExtTrackIso = cms.PSet(
-                    meName = cms.string(dqmDirectory_QCD_all + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned),
-                    fitSimultaneously = cms.bool(False)
+                ##),
+                ##muonExtTrackIso = cms.PSet(
+                ##    meName = cms.string(dqmDirectory_QCD_tauIdPassed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned),
+                ##    fitSimultaneously = cms.bool(False)
                 )
             ),    
             norm = cms.PSet(
@@ -618,14 +628,15 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateBgEstFit",
             ),
             muonAbsEta = cms.PSet(
                 meName = cms.string(dqmDirectory_Data_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta)
-            ),
-            muonExtTrackIso = cms.PSet(
-                meName = cms.string(dqmDirectory_Data_tauIdPassed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned)
+            ##),
+            ##muonExtTrackIso = cms.PSet(
+            ##    meName = cms.string(dqmDirectory_Data_tauIdPassed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned)
             )
         )
     ),
 
     fit = cms.PSet(
+        algorithm = cms.string("TFractionFitter"), # either "RooFit" or "TFractionFitter"
         variables = cms.PSet(
             muonPt = cms.PSet(
                name = cms.string("muonPt"),
@@ -638,12 +649,12 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateBgEstFit",
                title = cms.string("|#eta_{#mu}|"),
                xMin = cms.double(0.),
                xMax = cms.double(2.1)
-            ),
-            muonExtTrackIso = cms.PSet(
-               name = cms.string("muonExtTrackIso"),
-               title = cms.string("Track iso. P_{T}"),
-               xMin = cms.double(0.),
-               xMax = cms.double(8.)
+            ##),
+            ##muonExtTrackIso = cms.PSet(
+            ##   name = cms.string("muonExtTrackIso"),
+            ##   title = cms.string("Track iso. P_{T}"),
+            ##   xMin = cms.double(0.),
+            ##   xMax = cms.double(8.)
             )
         ),
         cutUnfittedRegion = cms.bool(False),
@@ -678,38 +689,67 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateBgEstFit",
             fileName = cms.string("./plots/fitTauIdEffZtoMuTau_tauIdPassed_#PLOT#.eps")
         ),
         fitResults = cms.PSet(
-            dqmDirectory = cms.string("fitTauIdEffZtoMuTau/fitResults/")
+            dqmDirectory = cms.string("fitTauIdEffZtoMuTau_tauIdPassed/fitResults/")
         )
     )                                      
 )                          
 
 process.fitTauIdEffZtoMuTau_tauIdFailed = copy.deepcopy(process.fitTauIdEffZtoMuTau_tauIdPassed)
+process.fitTauIdEffZtoMuTau_tauIdFailed.processes.Ztautau.templates.muonPt.meName = cms.string(dqmDirectory_Ztautau_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt)
+process.fitTauIdEffZtoMuTau_tauIdFailed.processes.Ztautau.templates.muonAbsEta.meName = cms.string(dqmDirectory_Ztautau_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta)
+##process.fitTauIdEffZtoMuTau_tauIdFailed.processes.Ztautau.templates.muonExtTrackIso.meName = cms.string(dqmDirectory_Ztautau_tauIdFailed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned)
 process.fitTauIdEffZtoMuTau_tauIdFailed.processes.Ztautau.norm.initial = cms.double(500.)
+process.fitTauIdEffZtoMuTau_tauIdFailed.processes.WplusJets.templates.muonPt.meName = cms.string(dqmDirectory_WplusJets_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt)
+process.fitTauIdEffZtoMuTau_tauIdFailed.processes.WplusJets.templates.muonAbsEta.meName = cms.string(dqmDirectory_WplusJets_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta)
+##process.fitTauIdEffZtoMuTau_tauIdFailed.processes.WplusJets.templates.muonExtTrackIso.meName = cms.string(dqmDirectory_WplusJets_tauIdFailed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned)
 process.fitTauIdEffZtoMuTau_tauIdFailed.processes.WplusJets.norm.initial = cms.double(2500.)
+process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.templates.muonPt.meName = cms.string(dqmDirectory_QCD_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt)
+process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.templates.muonAbsEta.meName = cms.string(dqmDirectory_QCD_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta)
+##process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.templates.muonExtTrackIso.meName = cms.string(dqmDirectory_QCD_tauIdFailed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned)
 process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.norm.initial = cms.double(2500.)
 process.fitTauIdEffZtoMuTau_tauIdFailed.data.distributions.muonPt.meName = cms.string(dqmDirectory_Data_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt)
 process.fitTauIdEffZtoMuTau_tauIdFailed.data.distributions.muonAbsEta.meName = cms.string(dqmDirectory_Data_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta)
-process.fitTauIdEffZtoMuTau_tauIdFailed.data.distributions.muonExtTrackIso.meName = cms.string(dqmDirectory_Data_tauIdFailed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned)
+##process.fitTauIdEffZtoMuTau_tauIdFailed.data.distributions.muonExtTrackIso.meName = cms.string(dqmDirectory_Data_tauIdFailed + dqmSubDirectory_muonExtTrackIso + meName_muonExtTrackIso_rebinned)
 process.fitTauIdEffZtoMuTau_tauIdFailed.output.controlPlots.fileName = cms.string("./plots/fitTauIdEffZtoMuTau_tauIdFailed_#PLOT#.eps")
+process.fitTauIdEffZtoMuTau_tauIdFailed.output.fitResults.dqmDirectory = cms.string("fitTauIdEffZtoMuTau_tauIdFailed/fitResults/")
 
 process.fitTauIdEffZtoMuTau = cms.Sequence(
     process.fitTauIdEffZtoMuTau_tauIdPassed
    * process.fitTauIdEffZtoMuTau_tauIdFailed
 )
 
-process.saveAllHistTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
-    outputFileName = cms.string('fitTauIdEffZtoMuTau.root'),
-    drop = cms.vstring('')                       
+meName_norm = 'Ztautau/Ztautau_norm/value'
+
+process.dumpBinErrorsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMBinErrorCalculator",
+    config = cms.VPSet(
+        cms.PSet(
+            meName_passed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults2regions/binContent_region2'),
+            meName_failed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults2regions/binContent_region1'),
+            label = cms.string("Tau id., true")
+        ),
+        cms.PSet(
+            meName_passed = cms.string(process.fitTauIdEffZtoMuTau_tauIdPassed.output.fitResults.dqmDirectory.value() + meName_norm),
+            meName_failed = cms.string(process.fitTauIdEffZtoMuTau_tauIdFailed.output.fitResults.dqmDirectory.value() + meName_norm),
+            label = cms.string("Tau id., fitted")
+        )
+    )
+)
+
+process.saveFitResultsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
+    outputFileName = cms.string('fitTauIdEffZtoMuTau_results.root'),
+    drop = cms.vstring(),
 )
 
 process.p = cms.Path(
     process.loadTauIdEffZtoMuTau
-   #+ process.loadTemplateHistTauIdEffZtoMuTau
-   + process.prodTemplateHistTauIdEffZtoMuTau
-   + process.rebinTemplateHistTauIdEffZtoMuTau_muonExtTrackIso
-   + process.saveAllHistTauIdEffZtoMuTau
+   + process.loadTemplateHistTauIdEffZtoMuTau
+   #+ process.prodTemplateHistTauIdEffZtoMuTau
+   #+ process.saveTemplateHistTauIdEffZtoMuTau
+   #+ process.rebinTemplateHistTauIdEffZtoMuTau_muonExtTrackIso
    + process.plotTemplateHistTauIdEffZtoMuTau
    + process.fitTauIdEffZtoMuTau
+   + process.saveFitResultsTauIdEffZtoMuTau 
+   + process.dumpBinErrorsTauIdEffZtoMuTau
 )
 
 # print-out all python configuration parameter information
