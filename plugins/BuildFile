@@ -5,6 +5,7 @@
   <use name=FWCore/PluginManager>
   <use name=FWCore/ParameterSet>
   <use name=PhysicsTools/IsolationAlgos>
+  <use name=PhysicsTools/RooStatsCms>
   <use name=PhysicsTools/UtilAlgos>
   <use name=DataFormats/Common>
   <use name=DataFormats/MuonReco>
@@ -14,6 +15,7 @@
   <use name=TauAnalysis/BgEstimationTools>
   <use name=TauAnalysis/Core>
   <use name=TauAnalysis/DQMTools>
+  <use name=TauAnalysis/FittingTools>
   <use name=root>
   <use name=rootroofit>
 </library>
