@@ -468,7 +468,7 @@ process.prodSysBiasHistZtoMuTau = cms.Sequence(
 #--------------------------------------------------------------------------------
 
 process.saveAllHistZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
-    outputFileName = cms.string('bgEstTemplatesZtoMuTau.root'),
+    outputFileName = cms.string('bgEstTemplatesZtoMuTau_all.root'),
     drop = cms.vstring('harvested/')                       
 )
 
@@ -756,6 +756,15 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
     )                                      
 )                          
 
+process.saveFitResultsZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
+    outputFileName = cms.string('fitTemplateZtoMuTau_results.root'),
+    drop = cms.vstring(
+        'harvested/', 'Ztautau/', 'Zmumu/', 'ZmumuPlusJets/', 'WplusJets/', 'TTplusJets/', 'qcdSum/', 'smSum/', 'Ztautau_from_selZmumu/',
+        'fitTemplateZtoMuTau/Ztautau/', 'fitTemplateZtoMuTau/Zmumu/', 'fitTemplateZtoMuTau/WplusJets/',
+        'fitTemplateZtoMuTau/TTplusJets/', 'fitTemplateZtoMuTau/QCD/'
+    )
+)
+
 process.prodAllHistZtoMuTau = cms.Sequence(
     process.prodTemplateHistZtoMuTau
    + process.loadTemplateHistZtoMuTau_Ztautau
@@ -764,7 +773,7 @@ process.prodAllHistZtoMuTau = cms.Sequence(
    + process.extrAnalysisHistZtoMuTau
    + process.normalizeAnalysisHistZtoMuTau
    + process.prodSysBiasHistZtoMuTau
-   + process.saveAllHistZtoMuTau  
+   + process.saveAllHistZtoMuTau 
 )
 
 process.loadAllHistZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
@@ -780,6 +789,7 @@ process.p = cms.Path(
     process.loadAllHistZtoMuTau
    + process.plotTemplateHistZtoMuTau
    + process.fitZtoMuTau
+   + process.saveFitResultsZtoMuTau
 )
 
 # print-out all python configuration parameter information
