@@ -10,7 +10,7 @@
 #include <iomanip>
 
 BinGridHistManager::BinGridHistManager(const edm::ParameterSet& cfg)
-  : dqmError_(0)
+  : HistManagerBase(cfg)
 {
   //std::cout << "<BinGridHistManager::BinGridHistManager>:" << std::endl;
 
@@ -19,9 +19,6 @@ BinGridHistManager::BinGridHistManager(const edm::ParameterSet& cfg)
   binGrid_ = new BinGrid(cfgBinning); 
 
   cfgHistManagers_ = cfg.getParameter<vParameterSet>("histManagers");
-
-  dqmDirectory_store_ = cfg.getParameter<std::string>("dqmDirectory_store");
-  //std::cout << " dqmDirectory_store = " << dqmDirectory_store_ << std::endl;
 }
 
 BinGridHistManager::~BinGridHistManager()
@@ -38,15 +35,9 @@ BinGridHistManager::~BinGridHistManager()
   }
 }
 
-void BinGridHistManager::bookHistograms()
+void BinGridHistManager::bookHistogramsImp()
 {
-  //std::cout << "<BinGridHistManager::bookHistograms>:" << std::endl;
-
-  if ( !edm::Service<DQMStore>().isAvailable() ) {
-    edm::LogError ("bookHistograms") << " Failed to access dqmStore --> histograms will NOT be booked !!";
-    dqmError_ = 1;
-    return;
-  }
+  //std::cout << "<BinGridHistManager::bookHistogramsImp>:" << std::endl;
 
   unsigned numRegions = binGrid_->numBins();
   for ( unsigned iRegion = 0; iRegion < numRegions; ++iRegion ) {
@@ -78,15 +69,10 @@ void BinGridHistManager::bookHistograms()
   }
 }
 
-void BinGridHistManager::fillHistograms(const edm::Event& evt, const edm::EventSetup& es, double evtWeight)
+void BinGridHistManager::fillHistogramsImp(const edm::Event& evt, const edm::EventSetup& es, double evtWeight)
 
 {  
-  //std::cout << "<BinGridHistManager::fillHistograms>:" << std::endl; 
-
-  if ( dqmError_ ) {
-    edm::LogError ("fillHistograms") << " Failed to access dqmStore --> histograms will NOT be filled !!";
-    return;
-  }
+  //std::cout << "<BinGridHistManager::fillHistogramsImp>:" << std::endl; 
 
   std::vector<double> x = (*objValExtractor_)(evt);
   unsigned iRegion = binGrid_->binNumber(x);
@@ -101,8 +87,8 @@ void BinGridHistManager::fillHistograms(const edm::Event& evt, const edm::EventS
 //    for that region in bin-grid
   std::map<unsigned, vHistManager>::iterator histManagerList = histManagers_.find(iRegion);
   if ( histManagerList == histManagers_.end() ) {
-    edm::LogError ("BinGridHistManager::fillHistograms") << " No histogram Managers defined for region = " << iRegion 
-							 << " --> skipping !!";
+    edm::LogError ("BinGridHistManager::fillHistogramsImp") << " No histogram Managers defined for region = " << iRegion 
+							    << " --> skipping !!";
     return;
   }
 
