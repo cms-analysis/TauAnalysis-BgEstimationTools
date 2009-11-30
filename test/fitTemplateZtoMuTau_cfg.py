@@ -10,11 +10,11 @@ import copy
 #
 #--------------------------------------------------------------------------------
 
-from TauAnalysis.Configuration.recoSampleDefinitionsZtoMuTau_cfi import *
+#from TauAnalysis.Configuration.recoSampleDefinitionsZtoMuTau_10TeV_cfi import *
 from TauAnalysis.BgEstimationTools.bgEstNtupleDefinitionsZtoMuTau_cfi import *
 from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
 from TauAnalysis.BgEstimationTools.templateHistDefinitions_cfi import *
-from TauAnalysis.BgEstimationTools.tools.prodTemplateHistConfigurator import makeTemplateHistProdSequence
+from TauAnalysis.BgEstimationTools.tools.prodTemplateHistConfigurator import makeTemplateHistProdSequence1d
 from TauAnalysis.BgEstimationTools.tools.drawTemplateHistConfigurator import drawTemplateHistConfigurator
 from TauAnalysis.BgEstimationTools.bgEstTemplateEvtSelZtoMuTau_cfi import *
 
@@ -124,9 +124,10 @@ print("bgEstEventSelection_WplusJets = " + bgEstEventSelections["WplusJets"])
 print("bgEstEventSelection_TTplusJets = " + bgEstEventSelections["TTplusJets"])
 print("bgEstEventSelection_QCD = " + bgEstEventSelections["QCD"])
 
-process.prodTemplateHistZtoMuTau = makeTemplateHistProdSequence(
-    process, prodTemplateHist, fileNames, bgEstEventSelections, branchNames_diTauMvis12, kineEventReweights_diTauMvis12,
-    dqmDirectory = processName, meName = meName_diTauMvis12_norm, numBinsX = 40, xMin = 0., xMax = 200.
+process.prodTemplateHistZtoMuTau = makeTemplateHistProdSequence1d(
+    process, prodTemplateHist, fileNames, bgEstEventSelections, kineEventReweights_diTauMvis12,
+    dqmDirectory = processName, meName = meName_diTauMvis12_norm,
+    branchNames = branchNames_diTauMvis12, numBins = 40, min = 0., max = 200.
 )
 
 #--------------------------------------------------------------------------------
@@ -508,7 +509,7 @@ diTauMvis12_smoothing = cms.PSet(
     )
 )
 
-process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",                                          
+process.fitZtoMuTau = cms.EDAnalyzer("TemplateHistFitter",                                          
     processes = cms.PSet(
         Ztautau = cms.PSet(
             templates = cms.PSet(
@@ -657,13 +658,17 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
     ),
 
     fit = cms.PSet(
-        algorithm = cms.string("RooFit"), # either "RooFit" or "TFractionFitter"
+        algorithm = cms.PSet(
+            pluginName = cms.string("fitTauIdEffZtoMuTauAlgorithm_tauIdPassed"),
+            #pluginType = cms.string("TemplateFitAdapter_TFractionFitter")
+            pluginType = cms.string("TemplateFitAdapter_RooFit")
+        ),
         variables = cms.PSet(
             diTauMvis12 = cms.PSet(
-               name = cms.string("diTauMvis12"),
-               title = cms.string("M_{vis}^{#mu + #tau-jet}"),
-               xMin = cms.double(20.), # default:  20.
-               xMax = cms.double(200.)  # default: 200.
+                name = cms.string("diTauMvis12"),
+                title = cms.string("M_{vis}^{#mu + #tau-jet}"),
+                min = cms.double(20.), # default:  20.
+                max = cms.double(200.) # default: 200.
             )
         ),
         # constrain normalization of W + jets, ttbar + jets and QCD backgrounds
@@ -704,7 +709,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
     ),
 
     estStatUncertainties = cms.PSet(
-        numSamplings = cms.int32(100),
+        numSamplings = cms.int32(0),
         chi2redMax = cms.double(3.),
         verbosity = cms.PSet(
             printLevel = cms.int32(-1),
@@ -738,7 +743,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateBgEstFit",
                 mode = cms.string("coherent") # coherent/incoherent
             )
         ),       
-        numSamplings = cms.int32(100),
+        numSamplings = cms.int32(0),
         chi2redMax = cms.double(3.),
         verbosity = cms.PSet(
             printLevel = cms.int32(-1),
