@@ -275,7 +275,8 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
         muonHistManager,
         tauHistManager,
         diTauCandidateHistManagerForMuTau,
-        metHistManager,
+        caloMEtHistManager,
+        pfMEtHistManager,
         tauIdEffZtoMuTauHistManager,
         cms.PSet(
             pluginName = cms.string('tauIdEffDataBinner2regions'),
@@ -334,16 +335,19 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
             hltPathsToPrint = cms.vstring('HLT_Mu15', 'HLT_IsoMu11'),
     
             genParticleSource = cms.InputTag('genParticles'),
+            genJetSource = cms.InputTag('iterativeCone5GenJets'),
             genTauJetSource = cms.InputTag('tauGenJets'),
+            
             electronSource = cms.InputTag('cleanLayer1Electrons'),
             muonSource = cms.InputTag('selectedLayer1MuonsTrkIPcumulative'),
             tauSource = cms.InputTag('selectedLayer1TausForMuTauMuonVetoCumulative'),
             diTauCandidateSource = cms.InputTag('selectedMuTauPairsPzetaDiffCumulative'),
             muTauZmumuHypothesisSource = cms.InputTag('muTauPairZmumuHypotheses'),
             diMuZmumuHypothesisSource = cms.InputTag('allDiMuPairZmumuHypotheses'),
-            metSource = cms.InputTag('layer1METs'),
-            genMEtSource = cms.InputTag('genMETWithMu'),
             jetSource = cms.InputTag('selectedLayer1JetsEt20Cumulative'),
+            caloMEtSource = cms.InputTag('layer1METs'),
+            pfMEtSource = cms.InputTag('layer1PFMETs'),
+            genMEtSource = cms.InputTag('genMETWithMu'),
 
             output = cms.string("std::cout"),
     
@@ -418,12 +422,21 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
         # selection of muon candidate (isolation & id.)
         # produced in muonic tau decay
         cms.PSet(
+            analyzers = cms.vstring('muonHistManager')
+        ),
+        cms.PSet(
             filter = cms.string('evtSelMuonTrkIso'),
             title = cms.string('Muon Track iso.')
         ),
         cms.PSet(
+            analyzers = cms.vstring('muonHistManager')
+        ),
+        cms.PSet(
             filter = cms.string('evtSelMuonEcalIso'),
             title = cms.string('Muon ECAL iso.')
+        ),
+        cms.PSet(
+            analyzers = cms.vstring('muonHistManager')
         ),
         cms.PSet(
             filter = cms.string('evtSelMuonAntiPion'),
@@ -530,7 +543,8 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
                 'muonHistManager',
                 'tauHistManager',
                 'diTauCandidateHistManagerForMuTau',
-                'metHistManager',
+                'caloMEtHistManager',
+                'pfMEtHistManager',
                 'tauIdEffZtoMuTauHistManager',
                 'tauIdEffDataBinner2regions',
                 'tauIdEffBinGridHistManager2regions',
@@ -554,7 +568,8 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
                 'muonHistManager',
                 'tauHistManager',
                 'diTauCandidateHistManagerForMuTau',
-                'metHistManager',
+                'caloMEtHistManager',
+                'pfMEtHistManager',
                 'tauIdEffZtoMuTauHistManager',
                 'tauIdEffDataBinner2regions',
                 'tauIdEffBinGridHistManager2regions',
