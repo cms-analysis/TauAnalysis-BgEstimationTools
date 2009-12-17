@@ -224,7 +224,10 @@ fileNamesZtoMuTau_PPmuXptGt20_part01 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part02.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part03.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part04.root',
-    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part05.root',
+    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part05.root'
+)
+
+fileNamesZtoMuTau_PPmuXptGt20_part02 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part06.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part07.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part08.root',
@@ -232,12 +235,15 @@ fileNamesZtoMuTau_PPmuXptGt20_part01 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part10.root'
 )
 
-fileNamesZtoMuTau_PPmuXptGt20_part02 = cms.untracked.vstring(
+fileNamesZtoMuTau_PPmuXptGt20_part03 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part11.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part12.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part13.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part14.root',
-    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part15.root',
+    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part15.root'
+)
+
+fileNamesZtoMuTau_PPmuXptGt20_part04 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part16.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part17.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part18.root',
@@ -245,12 +251,15 @@ fileNamesZtoMuTau_PPmuXptGt20_part02 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part20.root'
 )
 
-fileNamesZtoMuTau_PPmuXptGt20_part03 = cms.untracked.vstring(
+fileNamesZtoMuTau_PPmuXptGt20_part05 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part21.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part22.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part23.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part24.root',
-    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part25.root',
+    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part25.root'
+)
+
+fileNamesZtoMuTau_PPmuXptGt20_part06 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part26.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part27.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part28.root',
@@ -258,25 +267,31 @@ fileNamesZtoMuTau_PPmuXptGt20_part03 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part30.root'
 )
 
-fileNamesZtoMuTau_PPmuXptGt20_part04 = cms.untracked.vstring(
+fileNamesZtoMuTau_PPmuXptGt20_part07 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part31.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part32.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part33.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part34.root',
-    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part35.root',
-    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part36.root',
+    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part35.root'
+)
+
+fileNamesZtoMuTau_PPmuXptGt20_part08 = cms.untracked.vstring(
+    #'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part36.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part37.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part38.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part39.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part40.root'
 )
 
-fileNamesZtoMuTau_PPmuXptGt20_part05 = cms.untracked.vstring(
-    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part41.root',
+fileNamesZtoMuTau_PPmuXptGt20_part09 = cms.untracked.vstring(
+    #'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part41.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part42.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part43.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part44.root',
-    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part45.root',
+    'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part45.root'
+)
+
+fileNamesZtoMuTau_PPmuXptGt20_part10 = cms.untracked.vstring(
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part46.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part47.root',
     'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_PPmuXptGt20_part48.root',
