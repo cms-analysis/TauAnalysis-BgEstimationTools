@@ -5,7 +5,7 @@ from TauAnalysis.Configuration.makeReplacementsAnalysis import makeReplacementsA
 
 # name of the directory (either on afs area or castor)
 # to which all .root files produced by the cmsRun job will be copied
-outputFilePath = "/castor/cern.ch/user/v/veelken/plots/TauIdEffV/"
+outputFilePath = "/castor/cern.ch/user/v/veelken/plots/TauIdEff/"
 
 inputFileType = "RECO/AOD"
 #inputFileType = "PATTuple"
@@ -48,7 +48,7 @@ submitToBatch(configFile = "runTauIdEffAnalysisZtoMuTau_cfg.py", channel = "ZtoM
               "maxEvents = -1; inputFileType = " + inputFileType + "; inputFilePath = " + inputFilePath + "; applyFactorization = false",
               job = "tauIdEffAnalysis", queue = "1nd", outputFilePath = outputFilePath)
 
-for i in range(5):
+for i in range(10):
     submitToBatch(configFile = "runTauIdEffAnalysisZtoMuTau_cfg.py", channel = "ZtoMuTau",
                   sample = "PPmuXptGt20_part%(i)02d" % {"i" : (i + 1)},
                   replFunction = makeReplacementsAnalysis, replacements =
