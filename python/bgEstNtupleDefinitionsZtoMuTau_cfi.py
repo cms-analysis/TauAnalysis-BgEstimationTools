@@ -1,10 +1,12 @@
 import FWCore.ParameterSet.Config as cms
 import copy
 
+#--------------------------------------------------------------------------------
 # define Ntuple files used for data-driven background estimation methods
 # in Z --> mu + tau-jet channel
+#--------------------------------------------------------------------------------
 
-bgEstNtupleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau_looseTauSel/")
+bgEstNtupleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstNtuples/ZtoMuTau/")
 
 # Z --> tau+ tau+ sample
 fileNamesZtoMuTau_Ztautau = cms.vstring(
