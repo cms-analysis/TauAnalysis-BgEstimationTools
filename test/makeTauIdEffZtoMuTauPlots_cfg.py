@@ -13,6 +13,9 @@ process.maxEvents = cms.untracked.PSet(
 
 process.source = cms.Source("EmptySource")
 
+# define directory from which .root files containing the histograms get loaded
+process.loadTauIdEffZtoMuTau.inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/plots/TauIdEff/")
+
 process.dumpTauIdEffZtoMuTau = cms.EDAnalyzer("DQMDumpFilterStatisticsTables",
     dqmDirectories = cms.PSet(
         Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTau/FilterStatistics'),
