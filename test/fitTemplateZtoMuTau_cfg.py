@@ -93,7 +93,7 @@ branchNames_diTauMvis12 = dict()
 branchNames_diTauMvis12["Zmumu"] = "diTauMvis12Zmumu_0"
 branchNames_diTauMvis12["WplusJets"] = "diTauMvis12WplusJets_0"
 branchNames_diTauMvis12["TTplusJets"] = "diTauMvis12TTplusJets_0"
-branchNames_diTauMvis12["QCD"] = "diTauMvis12QCD_0"
+branchNames_diTauMvis12["QCD"] = "diTauMvis12QCDlooseMuonIso_0"
 
 kineEventReweights_diTauMvis12 = dict()
 kineEventReweights_diTauMvis12["Zmumu"] = None
@@ -790,8 +790,8 @@ process.loadAllHistZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
 )
 
 process.p = cms.Path(
-   #process.prodAllHistZtoMuTau
-    process.loadAllHistZtoMuTau
+    process.prodAllHistZtoMuTau
+   #process.loadAllHistZtoMuTau
    + process.plotTemplateHistZtoMuTau
    + process.fitZtoMuTau
    + process.saveFitResultsZtoMuTau
