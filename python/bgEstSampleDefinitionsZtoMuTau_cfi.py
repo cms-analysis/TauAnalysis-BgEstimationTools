@@ -4,7 +4,7 @@ import copy
 # define configuration parameters for submission of Z --> mu + tau-jet jobs to CERN batch system
 # (running over skimmed samples stored on CASTOR)
 
-bgEstSampleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstSkim/ZtoMuTau_looseTauSel/")
+bgEstSampleDirectoryName = cms.string("rfio:/castor/cern.ch/user/v/veelken/bgEstSkim/ZtoMuTau/")
 
 # definitions for producing skimmed samples
 bgEstSampleOutputFileNameZtoMuTau_Ztautau = cms.untracked.string('bgEstSampleZtoMuTau_Ztautau_partXX.root')
