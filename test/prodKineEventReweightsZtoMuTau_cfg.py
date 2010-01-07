@@ -64,8 +64,8 @@ process.prodKineEventReweightsZtoMuTau = cms.EDAnalyzer("DQMHistEffProducer",
 
 
 process.saveKineEventReweightsZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
-    outputFileName = cms.string('bgEstKineEventReweightsZtoMuTauII.root'),
-    drop = cms.vstring('harvested')
+    outputFileName = cms.string('bgEstKineEventReweightsZtoMuTau.root'),
+    outputCommands = cms.vstring('drop harvested/*')
 )
 
 process.p = cms.Path(
