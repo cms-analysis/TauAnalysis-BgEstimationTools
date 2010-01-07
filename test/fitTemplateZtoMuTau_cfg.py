@@ -96,8 +96,8 @@ bgEstEventSelection_TTplusJets = (
 print("bgEstEventSelection_TTplusJets = " + bgEstEventSelection_TTplusJets)
 
 bgEstEventSelection_QCD = (
-    "numDiTausQCD >= 1 && muonTrackIsoQCD_0 > 4. && muonEcalIsoQCD_0 > 4."
-    " && tauDiscrAgainstMuonsQCD_0 > 0.5"
+    "numDiTausQCDlooseMuonIso >= 1 && muonTrackIsoQCDlooseMuonIso_0 > 4. && muonEcalIsoQCDlooseMuonIso_0 > 4."
+    " && tauDiscrAgainstMuonsQCDlooseMuonIso_0 > 0.5"
     " && numGlobalMuons < 2"
 )
 
@@ -154,7 +154,7 @@ meName_diTauMvis12_norm = "VisMassShape"
 branchName_diTauMvis12_Zmumu = "diTauMvis12Zmumu_0"
 branchName_diTauMvis12_WplusJets = "diTauMvis12WplusJets_0"
 branchName_diTauMvis12_TTplusJets = "diTauMvis12TTplusJets_0"
-branchName_diTauMvis12_QCD = "diTauMvis12QCD_0"
+branchName_diTauMvis12_QCD = "diTauMvis12QCDlooseMuonIso_0"
 
 #--------------------------------------------------------------------------------
 # produce template histograms 
@@ -204,7 +204,7 @@ prodTemplateHistConfiguratorTTplusJetsEnriched.addTemplate(meName_diTauMvis12_no
 process.prodTemplateHistBgEstTTplusJetsEnriched = prodTemplateHistConfiguratorTTplusJetsEnriched.configure(process)
 
 prodTemplateHistConfiguratorQCDenriched = prodTemplateHistConfigurator(
-    "prodTemplateHistBgEstWplusJetsEnriched", prodTemplateHist, dqmDirectory = processName
+    "prodTemplateHistBgEstQCDenriched", prodTemplateHist, dqmDirectory = processName
 )
 prodTemplateHistConfiguratorQCDenriched.addProcess("Ztautau", fileNamesZtoMuTau_Ztautau)
 prodTemplateHistConfiguratorQCDenriched.addProcess("Zmumu", fileNamesZtoMuTau_ZmumuPlusJets)
