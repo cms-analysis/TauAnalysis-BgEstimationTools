@@ -44,20 +44,20 @@ fileNames["QCD"] = fileNamesZtoMuTau_qcdSum
 fileNames["data"] = fileNamesZtoMuTau_pseudoData
 
 bgEstEventSelection_QCDbeforeMuonTrkIso = (
-    "numDiTausQCD >= 1"
-    " && tauDiscrAgainstMuonsQCD_0 > 0.5"
+    "numDiTausQCDnoMuonIso >= 1"
+    " && tauDiscrAgainstMuonsQCDnoMuonIso_0 > 0.5"
     " && numGlobalMuons < 2"
-    " && diTauMt1MEtQCD_0 < 30."
-    " && diTauAbsChargeQCD_0 > 0.5"
+    " && diTauMt1MEtQCDnoMuonIso_0 < 30."
+    " && diTauAbsChargeQCDnoMuonIso_0 > 0.5"
     " && metPt_0 < 20."
 )
 
 bgEstEventSelection_QCDafterMuonTrkIso = (
-    "numDiTausQCD >= 1 && muonTrackIsoQCD_0 < 1."
-    " && tauDiscrAgainstMuonsQCD_0 > 0.5"
+    "numDiTausQCDnoMuonIso >= 1 && muonTrackIsoQCDnoMuonIso_0 < 1."
+    " && tauDiscrAgainstMuonsQCDnoMuonIso_0 > 0.5"
     " && numGlobalMuons < 2"
-    " && diTauMt1MEtQCD_0 < 30."
-    " && diTauAbsChargeQCD_0 > 0.5"
+    " && diTauMt1MEtQCDnoMuonIso_0 < 30."
+    " && diTauAbsChargeQCDnoMuonIso_0 > 0.5"
     " && metPt_0 < 20."
 )
 
