@@ -347,7 +347,7 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
             jetSource = cms.InputTag('selectedLayer1JetsEt20Cumulative'),
             caloMEtSource = cms.InputTag('layer1METs'),
             pfMEtSource = cms.InputTag('layer1PFMETs'),
-            genMEtSource = cms.InputTag('genMETWithMu'),
+            genMEtSource = cms.InputTag('genMetTrue'),
 
             output = cms.string("std::cout"),
     
