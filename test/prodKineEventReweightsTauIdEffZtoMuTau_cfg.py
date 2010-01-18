@@ -69,11 +69,11 @@ print("bgEstEventSelection_QCDbeforeMuonTrkIso = " + bgEstEventSelections["QCDbe
 print("bgEstEventSelection_QCDafterMuonTrkIso = " + bgEstEventSelections["QCDafterMuonTrkIso"])
 
 branchNames_muonPt = dict()
-branchNames_muonPt["QCDbeforeMuonTrkIso"] = "muonPtQCD_0"
+branchNames_muonPt["QCDbeforeMuonTrkIso"] = "muonPtQCDnoMuonIso_0"
 branchNames_muonPt["QCDafterMuonTrkIso"] = branchNames_muonPt["QCDbeforeMuonTrkIso"]
 
 branchNames_muonAbsEta = dict()
-branchNames_muonAbsEta["QCDbeforeMuonTrkIso"] = "muonAbsEtaQCD_0"
+branchNames_muonAbsEta["QCDbeforeMuonTrkIso"] = "muonAbsEtaQCDnoMuonIso_0"
 branchNames_muonAbsEta["QCDafterMuonTrkIso"] = branchNames_muonAbsEta["QCDbeforeMuonTrkIso"]
 
 kineEventReweights = dict()
