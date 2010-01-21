@@ -44,20 +44,20 @@ fileNames["QCD"] = fileNamesZtoMuTau_qcdSum
 fileNames["data"] = fileNamesZtoMuTau_pseudoData
 
 bgEstEventSelection_QCDbeforeMuonTrkIso = (
-    "numDiTausQCDnoMuonIso >= 1"
-    " && tauDiscrAgainstMuonsQCDnoMuonIso_0 > 0.5"
+    "numDiTausQCDnoIso >= 1"
+    " && tauDiscrAgainstMuonsQCDnoIso_0 > 0.5"
     " && numGlobalMuons < 2"
-    " && diTauMt1MEtQCDnoMuonIso_0 < 30."
-    " && diTauAbsChargeQCDnoMuonIso_0 > 0.5"
+    " && diTauMt1MEtQCDnoIso_0 < 30."
+    " && diTauAbsChargeQCDnoIso_0 > 0.5"
     " && metPt_0 < 20."
 )
 
 bgEstEventSelection_QCDafterMuonTrkIso = (
-    "numDiTausQCDnoMuonIso >= 1 && muonTrackIsoQCDnoMuonIso_0 < 1."
-    " && tauDiscrAgainstMuonsQCDnoMuonIso_0 > 0.5"
+    "numDiTausQCDnoIso >= 1 && muonTrackIsoQCDnoIso_0 < 1."
+    " && tauDiscrAgainstMuonsQCDnoIso_0 > 0.5"
     " && numGlobalMuons < 2"
-    " && diTauMt1MEtQCDnoMuonIso_0 < 30."
-    " && diTauAbsChargeQCDnoMuonIso_0 > 0.5"
+    " && diTauMt1MEtQCDnoIso_0 < 30."
+    " && diTauAbsChargeQCDnoIso_0 > 0.5"
     " && metPt_0 < 20."
 )
 
@@ -69,11 +69,11 @@ print("bgEstEventSelection_QCDbeforeMuonTrkIso = " + bgEstEventSelections["QCDbe
 print("bgEstEventSelection_QCDafterMuonTrkIso = " + bgEstEventSelections["QCDafterMuonTrkIso"])
 
 branchNames_muonPt = dict()
-branchNames_muonPt["QCDbeforeMuonTrkIso"] = "muonPtQCDnoMuonIso_0"
+branchNames_muonPt["QCDbeforeMuonTrkIso"] = "muonPtQCDnoIso_0"
 branchNames_muonPt["QCDafterMuonTrkIso"] = branchNames_muonPt["QCDbeforeMuonTrkIso"]
 
 branchNames_muonAbsEta = dict()
-branchNames_muonAbsEta["QCDbeforeMuonTrkIso"] = "muonAbsEtaQCDnoMuonIso_0"
+branchNames_muonAbsEta["QCDbeforeMuonTrkIso"] = "muonAbsEtaQCDnoIso_0"
 branchNames_muonAbsEta["QCDafterMuonTrkIso"] = branchNames_muonAbsEta["QCDbeforeMuonTrkIso"]
 
 kineEventReweights = dict()
