@@ -42,9 +42,6 @@ process.maxEvents = cms.untracked.PSet(
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         'file:/afs/cern.ch/user/v/veelken/scratch0/CMSSW_2_2_10/src/TauAnalysis/Configuration/test/muTauSkim.root'
-        #'rfio:/castor/cern.ch/user/v/veelken/tauIdEff/selEvents_ZtoMuTau_Ztautau_part01.root'
-        #'rfio:/castor/cern.ch/user/v/veelken/patTuples/tauIdEff/patTupleZtoMuTau_Ztautau_part01.root'
-        #'file:/afs/cern.ch/user/v/veelken/scratch0/CMSSW_2_2_10/src/TauAnalysis/BgEstimationTools/test/patTuple.root'
     )
     #skipBadFiles = cms.untracked.bool(True) 
 )
