@@ -5,7 +5,7 @@ from TauAnalysis.BgEstimationTools.makeReplacementsBgEstSkim import makeReplacem
 
 # name of the directory (either on afs area or castor)
 # to which all .root files produced by the cmsRun job will be copied
-outputFilePath = "/castor/cern.ch/user/v/veelken/bgEstSkim/ZtoMuTau/"
+outputFilePath = "/castor/cern.ch/user/v/veelken/bgEstSkim/ZtoMuTauII/"
 
 # small cmsRun job for testing purposes...
 #submitToBatch(configFile = "skimZtoMuTau_cfg.py", channel = "ZtoMuTau", sample = "Ztautau_part01",
