@@ -5,7 +5,7 @@ import copy
 from TauAnalysis.Configuration.tools.changeCut import changeCut
 
 # import utility function to enable factorization
-from TauAnalysis.Configuration.factorizationTools import enableFactorization_makeZtoMuTauPlots
+from TauAnalysis.Configuration.tools.factorizationTools import enableFactorization_makeZtoMuTauPlots
 
 #--------------------------------------------------------------------------------
 # auxiliary functions needed for reconfiguration of analysis sequences
@@ -214,65 +214,42 @@ def enableFakeRates_runZtoMuTau(process):
 def enableFakeRates_makeZtoMuTauPlots(process):
 
     # get list of fake-rates types to be processed
-    process.load("TauAnalysis.RecoTools.fakeRateJetWeightProducer_cfi")
+    process.load("TauAnalysis.BgEstimationTools.fakeRateJetWeightProducer_cfi")
     frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
 
     addSequence = None
     dumpSequence = None
 
     for frType in frTypes:
+
+        mod_addZtoMuTau_qcdSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate)
+        modName_addZtoMuTau_qcdSum = "addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate" + "_" + frType
+        setattr(process, modName_addZtoMuTau_qcdSum, mod_addZtoMuTau_qcdSum)
+
+        seq_addZtoMuTau = cms.Sequence(getattr(process, modName_addZtoMuTau_qcdSum))
+
+        modName_addZtoMuTau_smSum = "undefined"
+        if hasattr(process, "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate"):
+            mod_addZtoMuTau_smSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_smSum_tauFakeRate)
+            modName_addZtoMuTau_smSum = "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate" + "_" + frType
+            setattr(process, modName_addZtoMuTau_smSum, mod_addZtoMuTau_smSum)
+            
+            seq_addZtoMuTau._seq = seq_addZtoMuTau._seq * getattr(process, modName_addZtoMuTau_smSum)
+
+        seqName_addZtoMuTau = "addBgEstFakeRateZtoMuTau_tauFakeRate" + "_" + frType
+        setattr(process, seqName_addZtoMuTau, seq_addZtoMuTau)
+
         enableFactorization_makeZtoMuTauPlots(process,
             dqmDirectoryIn_InclusivePPmuX = 'tauFakeRate/harvested/InclusivePPmuX/zMuTauAnalyzer' + '_' + frType,
             dqmDirectoryOut_InclusivePPmuX = 'tauFakeRate/harvested/InclusivePPmuX_factorized/zMuTauAnalyzer' + '_' + frType,
             dqmDirectoryIn_PPmuXptGt20 = 'tauFakeRate/harvested/PPmuXptGt20/zMuTauAnalyzer' + '_' + frType,
             dqmDirectoryOut_PPmuXptGt20 = 'tauFakeRate/harvested/PPmuXptGt20_factorized/zMuTauAnalyzer' + '_' + frType,
-            moduleName_addZtoMuTau_qcdSum = "addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate",
-            moduleName_addZtoMuTau = "addBgEstFakeRateZtoMuTau_tauFakeRate")
+            modName_addZtoMuTau_qcdSum = modName_addZtoMuTau_qcdSum,
+            modName_addZtoMuTau_smSum = modName_addZtoMuTau_smSum,
+            seqName_addZtoMuTau = seqName_addZtoMuTau,
+            pyObjectLabel = frType)
 
-        for processName in [ "InclusivePPmuX", "PPmuXptGt20" ]:
-            for moduleType in [ "plotsFactorizedTightEvtSel",
-                                "filterStatFactorizedTightEvtSel",
-                                "plotsFactorizedLooseEvtSel",
-                                "filterStatFactorizedLooseEvtSel" ]:
-                moduleName_scale = "dqmHistScaler" + "_" + moduleType + "_" + processName
-                module_scale = getattr(process, moduleName_scale)
-                bgEstFakeRateModuleName_scale = moduleName_scale + "_" + frType
-                setattr(process, bgEstFakeRateModName_scale, module_scale)
+        process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq = process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq * getattr(process, seqName_addZtoMuTau)
+        
+        
 
-                if addSequence is None:
-                    addSequence = module_scale
-                else:
-                    addSequence *= module_scale
-
-        moduleName_qcdSum = "addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate"
-        module_qcdSum = getattr(process, moduleName_qcdSum)
-        bgEstFakeRateModuleName_qcdSum = moduleName_qcdSum + "_" + frType
-        setattr(process, bgEstFakeRateModuleName_qcdSum, module_qcdSum)
-        process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq = process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq * module_qcdSum
-
-        if hasattr(process, "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate"):
-            moduleName_smSum = "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate"
-            module_smSum = getattr(process, moduleName_smSum)
-            bgEstFakeRateModuleName_smSum = moduleName_smSum + "_" + frType
-            setattr(process, bgEstFakeRateModuleName_smSum, module_smSum)
-            process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq = process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq * module_smSum
-
-        moduleName_dump = "dumpZtoMuTau"
-        module_dump = getattr(process, moduleName_dump)
-        bgEstFakeRateModule_dump = copy.deepcopy(module_dump)
-
-        processNames = getPSetAttributes(bgEstFakeRateModule_dump.dqmDirectories)
-        for processName in processNames:
-            directory = getattr(bgEstFakeRateModule_dump.dqmDirectories, processName)
-            bgEstFakeRateDirectory = directory.replace("/zMuTauAnalyzer/", "/zMuTauAnalyzer" + "_" + frType + "/")
-            setattr(bgEstFakeRateModule_dump.dqmDirectories, processName, bgEstFakeRateDirectory)
-        bgEstFakeRateModuleName_dump = moduleName_dump + "_" + frType
-        setattr(process, bgEstFakeRateModuleName_dump, module_dump)
-
-        if dumpSequence is None:
-            dumpSequence = module_dump
-        else:
-            dumpSequence *= module_dump
-
-    process.addZtoMuTau = cms.Sequence(addSequence)
-    process.dumpZtoMuTau = cms.Sequence(dumpSequence)
