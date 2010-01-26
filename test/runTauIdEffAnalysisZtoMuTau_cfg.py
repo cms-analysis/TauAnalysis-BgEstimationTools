@@ -596,6 +596,13 @@ process.p = cms.Path(
 )
 
 #--------------------------------------------------------------------------------
+# disable estimation of systematic uncertainties
+from TauAnalysis.Configuration.tools.sysUncertaintyTools import disableSysUncertainties_runZtoMuTau
+#
+disableSysUncertainties_runZtoMuTau(process)
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
 #
 process.producePatTupleAll = cms.Sequence(process.producePatTuple + process.producePatTupleZtoMuTauSpecific)
 #
