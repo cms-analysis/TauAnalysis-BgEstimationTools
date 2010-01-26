@@ -217,8 +217,7 @@ def enableFakeRates_makeZtoMuTauPlots(process):
     process.load("TauAnalysis.BgEstimationTools.fakeRateJetWeightProducer_cfi")
     frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
 
-    addSequence = None
-    dumpSequence = None
+    seq_isFirstModule = True
 
     for frType in frTypes:
 
@@ -249,7 +248,11 @@ def enableFakeRates_makeZtoMuTauPlots(process):
             seqName_addZtoMuTau = seqName_addZtoMuTau,
             pyObjectLabel = frType)
 
-        process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq = process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq * getattr(process, seqName_addZtoMuTau)
+        if seq_isFirstModule:
+            setattr(process, "addBgEstFakeRateZtoMuTau_tauFakeRate", cms.Sequence(getattr(process, seqName_addZtoMuTau)))
+            seq_isFirstModule = False
+        else:
+            process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq = process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq * getattr(process, seqName_addZtoMuTau)
         
         
 
