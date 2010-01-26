@@ -70,16 +70,16 @@ fileNamesZtoMuTau_qcdSum = cms.vstring(
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part05.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part06.root',
     #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part07.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part08.root',
+    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part08.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part09.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part10.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part11.root',
     bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part12.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part13.root',
+    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part13.root'
     #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part14.root',
     #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part15.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part16.root',
-    bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part17.root'
+    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part16.root',
+    #bgEstNtupleDirectoryName.value() + 'bgEstNtupleZtoMuTau_PPmuXptGt20_part17.root'
 )
 
 #--------------------------------------------------------------------------------
