@@ -22,7 +22,7 @@ def pruneAnalysisSequence(genAnalyzer):
 
     # disable filling of histograms after all stages of the event selection
     # except for the last occurence (after all cuts have been applied)
-
+    
     lastEntry = {}
     for iAnalysisSequenceEntry in range(len(genAnalyzer.analysisSequence)):
         analysisSequenceEntry = genAnalyzer.analysisSequence[iAnalysisSequenceEntry]
@@ -58,6 +58,15 @@ def pruneAnalysisSequence(genAnalyzer):
             prunedAnalysisSequence.append(analysisSequenceEntry)
 
     genAnalyzer.analysisSequence = cms.VPSet(prunedAnalysisSequence)
+
+def disableEventDump(genAnalyzer):
+
+    # disable event print-out
+
+    disabledEventDump = copy.deepcopy(genAnalyzer.eventDumps[0])
+    disabledEventDump.output = cms.string("std::cout")
+    disabledEventDump.triggerConditions = cms.vstring()
+    genAnalyzer.eventDumps[0] = disabledEventDump
 
 def addFakeRateAnalyzer(process, genAnalyzer, frType, bgEstFakeRateAnalysisSequence):
 
@@ -174,9 +183,12 @@ def enableFakeRates_runZtoMuTau(process):
     if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and \
          hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
         pruneAnalysisSequence(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation)
+        disableEventDump(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation)
         pruneAnalysisSequence(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation)
+        disableEventDump(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation)
     else:
         pruneAnalysisSequence(process.analyzeZtoMuTauEvents)
+        disableEventDump(process.analyzeZtoMuTauEvents)
 
     bgEstFakeRateAnalysisSequence = None  
 
@@ -222,6 +234,8 @@ def enableFakeRates_makeZtoMuTauPlots(process):
     for frType in frTypes:
 
         mod_addZtoMuTau_qcdSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate)
+        modOutputDir_addZtoMuTau_qcdSum = cms.string('tauFakeRate/harvested/qcdSum/zMuTauAnalyzer' + '_' + frType)
+        setattr(mod_addZtoMuTau_qcdSum.qcdSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_qcdSum)
         modName_addZtoMuTau_qcdSum = "addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate" + "_" + frType
         setattr(process, modName_addZtoMuTau_qcdSum, mod_addZtoMuTau_qcdSum)
 
@@ -230,6 +244,8 @@ def enableFakeRates_makeZtoMuTauPlots(process):
         modName_addZtoMuTau_smSum = "undefined"
         if hasattr(process, "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate"):
             mod_addZtoMuTau_smSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_smSum_tauFakeRate)
+            modOutputDir_addZtoMuTau_smSum = cms.string('tauFakeRate/harvested/smSum/zMuTauAnalyzer' + '_' + frType)
+            setattr(mod_addZtoMuTau_smSum.smSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_smSum)
             modName_addZtoMuTau_smSum = "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate" + "_" + frType
             setattr(process, modName_addZtoMuTau_smSum, mod_addZtoMuTau_smSum)
             
