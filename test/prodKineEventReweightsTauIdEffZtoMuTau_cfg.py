@@ -27,14 +27,6 @@ process.maxEvents = cms.untracked.PSet(
 
 process.source = cms.Source("EmptySource")
 
-##process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
-##    all = cms.PSet(
-##        inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_2_2_10/src/TauAnalysis/BgEstimationTools/test/plotsTauIdEffZtoMuTau_all.root'),
-##        scaleFactor = cms.double(1.),
-##        dqmDirectory_store = cms.string('')
-##    )
-##)
-
 #--------------------------------------------------------------------------------
 # produce histogram for kinematic reweighting
 #--------------------------------------------------------------------------------
@@ -43,7 +35,7 @@ fileNames = dict()
 fileNames["QCD"] = fileNamesZtoMuTau_qcdSum
 fileNames["data"] = fileNamesZtoMuTau_pseudoData
 
-bgEstEventSelection_QCDbeforeMuonTrkIso = (
+bgEstEventSelection_QCDbeforeMuonIso = (
     "numDiTausQCDnoIso >= 1"
     " && tauDiscrAgainstMuonsQCDnoIso_0 > 0.5"
     " && numGlobalMuons < 2"
@@ -52,8 +44,14 @@ bgEstEventSelection_QCDbeforeMuonTrkIso = (
     " && metPt_0 < 20."
 )
 
-bgEstEventSelection_QCDafterMuonTrkIso = (
-    "numDiTausQCDnoIso >= 1 && muonTrackIsoQCDnoIso_0 < 1."
+bgEstEventSelection_QCDafterMuonIso = (
+    "numDiTausQCDnoIso >= 1"
+    # CV: need to apply muon track isolation, but **not** muon ECAL isolation cut,
+    #     as too much QCD events get cut otherwise
+    #     and the purity of the QCD background enriched sample drops
+    #     to 50% (from 80% in case only the muon track isolation cut is applied)
+    #" && muonTrackIsoQCDnoIso_0 < 1. && muonEcalIsoQCDnoIso_0 < 1."
+    " && muonTrackIsoQCDnoIso_0 < 1."
     " && tauDiscrAgainstMuonsQCDnoIso_0 > 0.5"
     " && numGlobalMuons < 2"
     " && diTauMt1MEtQCDnoIso_0 < 30."
@@ -62,23 +60,23 @@ bgEstEventSelection_QCDafterMuonTrkIso = (
 )
 
 bgEstEventSelections = dict()
-bgEstEventSelections["QCDbeforeMuonTrkIso"] = bgEstEventSelection_QCDbeforeMuonTrkIso
-bgEstEventSelections["QCDafterMuonTrkIso"] = bgEstEventSelection_QCDafterMuonTrkIso
+bgEstEventSelections["QCDbeforeMuonIso"] = bgEstEventSelection_QCDbeforeMuonIso
+bgEstEventSelections["QCDafterMuonIso"] = bgEstEventSelection_QCDafterMuonIso
 
-print("bgEstEventSelection_QCDbeforeMuonTrkIso = " + bgEstEventSelections["QCDbeforeMuonTrkIso"])
-print("bgEstEventSelection_QCDafterMuonTrkIso = " + bgEstEventSelections["QCDafterMuonTrkIso"])
+print("bgEstEventSelection_QCDbeforeMuonIso = " + bgEstEventSelections["QCDbeforeMuonIso"])
+print("bgEstEventSelection_QCDafterMuonIso = " + bgEstEventSelections["QCDafterMuonIso"])
 
 branchNames_muonPt = dict()
-branchNames_muonPt["QCDbeforeMuonTrkIso"] = "muonPtQCDnoIso_0"
-branchNames_muonPt["QCDafterMuonTrkIso"] = branchNames_muonPt["QCDbeforeMuonTrkIso"]
+branchNames_muonPt["QCDbeforeMuonIso"] = "muonPtQCDnoIso_0"
+branchNames_muonPt["QCDafterMuonIso"] = branchNames_muonPt["QCDbeforeMuonIso"]
 
 branchNames_muonAbsEta = dict()
-branchNames_muonAbsEta["QCDbeforeMuonTrkIso"] = "muonAbsEtaQCDnoIso_0"
-branchNames_muonAbsEta["QCDafterMuonTrkIso"] = branchNames_muonAbsEta["QCDbeforeMuonTrkIso"]
+branchNames_muonAbsEta["QCDbeforeMuonIso"] = "muonAbsEtaQCDnoIso_0"
+branchNames_muonAbsEta["QCDafterMuonIso"] = branchNames_muonAbsEta["QCDbeforeMuonIso"]
 
 kineEventReweights = dict()
-kineEventReweights["QCDbeforeMuonTrkIso"] = None
-kineEventReweights["QCDafterMuonTrkIso"] = None
+kineEventReweights["QCDbeforeMuonIso"] = None
+kineEventReweights["QCDafterMuonIso"] = None
 
 binEdges_muonPt = [ 15., 20., 25., 30., 40., 60., 120. ]
 binEdges_muonAbsEta = [ 0., 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1 ]
@@ -106,27 +104,18 @@ process.prodMuonKineReweightHistQCDenriched = cms.Sequence(
 
 process.dumpMuonKineReweightHistQCDenriched = cms.EDAnalyzer("DQMStoreDump")
 
-meName = 'MuonQuantities/MuonPtVsAbsEta'
-meName_numerator = 'TauIdEffAnalyzerZtoMuTau/afterEvtSelMuonTrkIso_beforeEvtSelMuonEcalIso/' + meName
-meName_denominator = 'TauIdEffAnalyzerZtoMuTau/afterEvtSelTauPt_beforeEvtSelMuonTrkIso/' + meName
-
 process.prodKineEventReweightsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMHistEffProducer",
     config = cms.VPSet(
-        ##cms.PSet(
-        ##    meName_numerator = cms.string('harvested/qcdSum/' + meName_numerator),
-        ##    meName_denominator = cms.string('harvested/qcdSum/' + meName_denominator),
-        ##    meName_efficiency = cms.string("muonKineReweights/QCDmc/muonPtVsAbsEta")
-        ##),
         cms.PSet(
-            meName_numerator = cms.string('muonKineReweights/QCDbeforeMuonTrkIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
-            meName_denominator = cms.string('muonKineReweights/QCDafterMuonTrkIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_numerator = cms.string('muonKineReweights/QCDbeforeMuonIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_denominator = cms.string('muonKineReweights/QCDafterMuonIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
             meName_efficiency = cms.string("muonKineReweights/QCDbgEnriched_pure/muonPtVsAbsEta")
         ),
         cms.PSet(
-            meName_numerator = cms.string('muonKineReweights/QCDbeforeMuonTrkIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
-            meName_denominator = cms.string('muonKineReweights/QCDafterMuonTrkIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_numerator = cms.string('muonKineReweights/QCDbeforeMuonIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_denominator = cms.string('muonKineReweights/QCDafterMuonIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
             meName_efficiency = cms.string("muonKineReweights/QCDbgEnriched_data/muonPtVsAbsEta")
-        ),
+        )
     )                                                     
 )
 
@@ -136,7 +125,6 @@ process.saveKineEventReweightsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSa
 )
 
 process.p = cms.Path(
-   #process.loadTauIdEffZtoMuTau
     process.prodMuonKineReweightHistQCDenriched
   #+ process.dumpMuonKineReweightHistQCDenriched
    + process.prodKineEventReweightsTauIdEffZtoMuTau
