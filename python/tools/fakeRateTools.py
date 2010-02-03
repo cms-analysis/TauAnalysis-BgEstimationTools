@@ -54,7 +54,9 @@ def pruneAnalysisSequence(genAnalyzer):
                 
                 prunedAnalysisSequence.append(analysisSequenceEntry)
         else:
-            # keep all filter entries
+            # keep all filter entries,
+            # but disable saving of run and event numbers of events passing filter
+            setattr(analysisSequenceEntry, "saveRunEventNumbers", cms.vstring(''))
             prunedAnalysisSequence.append(analysisSequenceEntry)
 
     genAnalyzer.analysisSequence = cms.VPSet(prunedAnalysisSequence)
@@ -93,6 +95,39 @@ def addFakeRateAnalyzer(process, genAnalyzer, frType, bgEstFakeRateAnalysisSeque
         bgEstFakeRateAnalysisSequence *= bgEstFakeRateAnalyzer
 
     return bgEstFakeRateAnalysisSequence
+
+def makeEventDumpSequence(process, dqmDirectory, processSubDirectories, frSubDirectories):
+
+    eventDumpAnalysisSequence = None
+
+    for processName, processSubDirectory in processSubDirectories.items():
+
+        module = cms.EDAnalyzer("DQMDumpBinningResults",
+            binningService = cms.PSet(
+                pluginType = cms.string("DataBinningService"),
+                dqmDirectories = cms.PSet()
+            )
+        )
+
+        for frType, frSubDirectory in frSubDirectories.items():
+            
+            dqmDirectory_i = dqmDirectory
+            dqmDirectory_i = dqmDirectory_i.replace("#PROCESSDIR#", processSubDirectory.value())
+            dqmDirectory_i = dqmDirectory_i.replace("#FAKERATEDIR#", frSubDirectory)
+
+            setattr(module.binningService.dqmDirectories, frType, cms.string(dqmDirectory_i))
+
+        moduleName = "dumpBgEstFakeRateZtoMuTau" + "_" + processName
+        setattr(process, moduleName, module)
+
+        module = getattr(process, moduleName)
+
+        if eventDumpAnalysisSequence is None:
+            eventDumpAnalysisSequence = module
+        else:
+            eventDumpAnalysisSequence *= module
+
+    return eventDumpAnalysisSequence
 
 def getPSetAttributes(object):
 
@@ -149,9 +184,44 @@ def reconfigDQMFileLoader(dqmFileLoaderConfig, dqmDirectory):
 
 def enableFakeRates_runZtoMuTau(process):
 
+    # preselect tau-jet candidates entering fake-rate computation
+    process.tausForFakeRateWeights = cms.EDFilter("PFTauSelector",
+        src = cms.InputTag('shrinkingConePFTauProducer'),
+        discriminators = cms.VPSet(
+            cms.PSet(
+                discriminator = cms.InputTag("shrinkingConePFTauDiscriminationByLeadingTrackFinding"),
+                selectionCut = cms.double(0.5)
+            ),
+            cms.PSet(
+                discriminator = cms.InputTag("shrinkingConePFTauDiscriminationByLeadingTrackPtCut"),
+                selectionCut = cms.double(0.5)
+            ),
+            cms.PSet(
+                discriminator = cms.InputTag("shrinkingConePFTauDiscriminationAgainstMuon"),
+                selectionCut = cms.double(0.5)
+            )
+        ),
+        filter = cms.bool(False)
+    )
+    process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('tausForFakeRateWeights')
+    process.bgEstFakeRateEventWeights.preselTauJetSource = process.bgEstFakeRateJetWeights.preselTauJetSource
+    process.produceFakeRates = cms.Sequence(
+        process.tausForFakeRateWeights
+       * process.bgEstFakeRateJetWeights * process.bgEstFakeRateEventWeights
+    )
+    process.producePrePat._seq = process.producePrePat._seq * process.produceFakeRates
+    
     # disable cuts on tau id. discriminators
-    changeCut(process, "selectedLayer1TausForMuTauLeadTrk", "tauID('leadingTrackFinding') > -1.")
-    changeCut(process, "selectedLayer1TausForMuTauLeadTrkPt", "tauID('leadingTrackPtCut') > -1.")
+    #
+    # NOTE: tau lead. track finding and lead. track Pt discriminators
+    #       must **not** be disabled, as these discriminators are already applied at the skimming stage !!
+    #       Instead, need to apply TauAnalysis specific efficiency/fake-rate values,
+    #       which represent the probability for a tau-jet candidate
+    #       passing the lead. track finding and lead. track Pt discriminators
+    #       to pass the track && ECAL isolation, 1||3 tracks in signal cone and charge = +/- 1 requirements as well
+    #
+    #changeCut(process, "selectedLayer1TausForMuTauLeadTrk", "tauID('leadingTrackFinding') > -1.")
+    #changeCut(process, "selectedLayer1TausForMuTauLeadTrkPt", "tauID('leadingTrackPtCut') > -1.")
     changeCut(process, "selectedLayer1TausForMuTauTrkIso", "tauID('trackIsolation') > -1.")
     changeCut(process, "selectedLayer1TausForMuTauEcalIso", "tauID('ecalIsolation') > -1.")
     changeCut(process, "selectedLayer1TausForMuTauProng", "signalTracks.size() > -1")
