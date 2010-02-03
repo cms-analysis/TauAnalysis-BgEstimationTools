@@ -44,14 +44,25 @@ bgEstEventSelection_QCDbeforeMuonIso = (
     " && metPt_0 < 20."
 )
 
-bgEstEventSelection_QCDafterMuonIso = (
+#--------------------------------------------------------------------------------
+# CV: need to apply either muon track isolation or muon ECAL isolation cuts, but **not** both,
+#     as too much QCD events get cut otherwise and the purity of the QCD background enriched sample drops
+#     to 50% (from 80% in case only the muon track isolation cut is applied)
+#--------------------------------------------------------------------------------
+
+bgEstEventSelection_QCDafterMuonTrkIso = (
     "numDiTausQCDnoIso >= 1"
-    # CV: need to apply muon track isolation, but **not** muon ECAL isolation cut,
-    #     as too much QCD events get cut otherwise
-    #     and the purity of the QCD background enriched sample drops
-    #     to 50% (from 80% in case only the muon track isolation cut is applied)
-    #" && muonTrackIsoQCDnoIso_0 < 1. && muonEcalIsoQCDnoIso_0 < 1."
     " && muonTrackIsoQCDnoIso_0 < 1."
+    " && tauDiscrAgainstMuonsQCDnoIso_0 > 0.5"
+    " && numGlobalMuons < 2"
+    " && diTauMt1MEtQCDnoIso_0 < 30."
+    " && diTauAbsChargeQCDnoIso_0 > 0.5"
+    " && metPt_0 < 20."
+)
+
+bgEstEventSelection_QCDafterMuonEcalIso = (
+    "numDiTausQCDnoIso >= 1"
+    " && muonEcalIsoQCDnoIso_0 < 1."
     " && tauDiscrAgainstMuonsQCDnoIso_0 > 0.5"
     " && numGlobalMuons < 2"
     " && diTauMt1MEtQCDnoIso_0 < 30."
@@ -61,22 +72,27 @@ bgEstEventSelection_QCDafterMuonIso = (
 
 bgEstEventSelections = dict()
 bgEstEventSelections["QCDbeforeMuonIso"] = bgEstEventSelection_QCDbeforeMuonIso
-bgEstEventSelections["QCDafterMuonIso"] = bgEstEventSelection_QCDafterMuonIso
+bgEstEventSelections["QCDafterMuonTrkIso"] = bgEstEventSelection_QCDafterMuonTrkIso
+bgEstEventSelections["QCDafterMuonEcalIso"] = bgEstEventSelection_QCDafterMuonEcalIso
 
 print("bgEstEventSelection_QCDbeforeMuonIso = " + bgEstEventSelections["QCDbeforeMuonIso"])
-print("bgEstEventSelection_QCDafterMuonIso = " + bgEstEventSelections["QCDafterMuonIso"])
+print("bgEstEventSelection_QCDafterMuonTrkIso = " + bgEstEventSelections["QCDafterMuonTrkIso"])
+print("bgEstEventSelection_QCDafterMuonEcalIso = " + bgEstEventSelections["QCDafterMuonEcalIso"])
 
 branchNames_muonPt = dict()
 branchNames_muonPt["QCDbeforeMuonIso"] = "muonPtQCDnoIso_0"
-branchNames_muonPt["QCDafterMuonIso"] = branchNames_muonPt["QCDbeforeMuonIso"]
+branchNames_muonPt["QCDafterMuonTrkIso"] = branchNames_muonPt["QCDbeforeMuonIso"]
+branchNames_muonPt["QCDafterMuonEcalIso"] = branchNames_muonPt["QCDbeforeMuonIso"]
 
 branchNames_muonAbsEta = dict()
 branchNames_muonAbsEta["QCDbeforeMuonIso"] = "muonAbsEtaQCDnoIso_0"
-branchNames_muonAbsEta["QCDafterMuonIso"] = branchNames_muonAbsEta["QCDbeforeMuonIso"]
+branchNames_muonAbsEta["QCDafterMuonTrkIso"] = branchNames_muonAbsEta["QCDbeforeMuonIso"]
+branchNames_muonAbsEta["QCDafterMuonEcalIso"] = branchNames_muonAbsEta["QCDbeforeMuonIso"]
 
 kineEventReweights = dict()
 kineEventReweights["QCDbeforeMuonIso"] = None
-kineEventReweights["QCDafterMuonIso"] = None
+kineEventReweights["QCDafterMuonTrkIso"] = None
+kineEventReweights["QCDafterMuonEcalIso"] = None
 
 binEdges_muonPt = [ 15., 20., 25., 30., 40., 60., 120. ]
 binEdges_muonAbsEta = [ 0., 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1 ]
@@ -107,14 +123,46 @@ process.dumpMuonKineReweightHistQCDenriched = cms.EDAnalyzer("DQMStoreDump")
 process.prodKineEventReweightsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMHistEffProducer",
     config = cms.VPSet(
         cms.PSet(
-            meName_numerator = cms.string('muonKineReweights/QCDbeforeMuonIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
-            meName_denominator = cms.string('muonKineReweights/QCDafterMuonIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
-            meName_efficiency = cms.string("muonKineReweights/QCDbgEnriched_pure/muonPtVsAbsEta")
+            meName_numerator = cms.string('muonKineReweights/QCDafterMuonTrkIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_denominator = cms.string('muonKineReweights/QCDbeforeMuonIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_efficiency = cms.string("muonKineReweights/QCDbgEnrichedTrkIso_pure/muonPtVsAbsEta")
         ),
         cms.PSet(
-            meName_numerator = cms.string('muonKineReweights/QCDbeforeMuonIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
-            meName_denominator = cms.string('muonKineReweights/QCDafterMuonIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
-            meName_efficiency = cms.string("muonKineReweights/QCDbgEnriched_data/muonPtVsAbsEta")
+            meName_numerator = cms.string('muonKineReweights/QCDafterMuonTrkIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_denominator = cms.string('muonKineReweights/QCDbeforeMuonIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_efficiency = cms.string("muonKineReweights/QCDbgEnrichedTrkIso_data/muonPtVsAbsEta")
+        ),
+        cms.PSet(
+            meName_numerator = cms.string('muonKineReweights/QCDafterMuonEcalIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_denominator = cms.string('muonKineReweights/QCDbeforeMuonIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_efficiency = cms.string("muonKineReweights/QCDbgEnrichedEcalIso_pure/muonPtVsAbsEta")
+        ),
+        cms.PSet(
+            meName_numerator = cms.string('muonKineReweights/QCDafterMuonEcalIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_denominator = cms.string('muonKineReweights/QCDbeforeMuonIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm),
+            meName_efficiency = cms.string("muonKineReweights/QCDbgEnrichedEcalIso_data/muonPtVsAbsEta")
+        ),
+        cms.PSet(
+            meNames_numerator = cms.vstring(
+                 'muonKineReweights/QCDafterMuonTrkIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm,
+                 'muonKineReweights/QCDafterMuonEcalIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm
+            ),
+            meNames_denominator = cms.vstring(
+                 'muonKineReweights/QCDbeforeMuonIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm,
+                 'muonKineReweights/QCDbeforeMuonIso/' + 'QCD' + '/' + meName_muonPtVsAbsEta_norm
+            ),                 
+            meName_efficiency = cms.string("muonKineReweights/QCDbgEnrichedCombIso_pure/muonPtVsAbsEta")
+        ),
+        cms.PSet(
+            meNames_numerator = cms.vstring(
+                 'muonKineReweights/QCDafterMuonTrkIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm,
+                 'muonKineReweights/QCDafterMuonEcalIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm
+            ),
+            meNames_denominator = cms.vstring(
+                 'muonKineReweights/QCDbeforeMuonIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm,
+                 'muonKineReweights/QCDbeforeMuonIso/' + 'data' + '/' + meName_muonPtVsAbsEta_norm
+            ),                 
+            meName_efficiency = cms.string("muonKineReweights/QCDbgEnrichedCombIso_data/muonPtVsAbsEta")
         )
     )                                                     
 )
