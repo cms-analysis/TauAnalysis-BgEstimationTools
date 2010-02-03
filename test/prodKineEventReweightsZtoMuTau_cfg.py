@@ -27,14 +27,14 @@ process.source = cms.Source("EmptySource")
 
 process.loadZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(
-        inputFileNames = cms.vstring('rfio:/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoMuTau/plotsZtoMuTau_all_shrinkingCone.root'),
+        inputFileNames = cms.vstring('rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_1_2/bgEstPlots/ZtoMuTau/10TeV/plotsZtoMuTau_all.root'),
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
     )
 )
 
 meName = 'DiTauCandidateQuantities/VisMass'
-meName_numerator = 'zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauPzetaDiff/' + meName
+meName_numerator = 'zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauPzetaDiff_beforeEvtSelDiMuPairZmumuHypothesisVeto/' + meName
 meName_denominator = 'zMuTauAnalyzer/afterEvtSelDiTauCandidateForMuTauAcoplanarity12_beforeEvtSelDiTauCandidateForMuTauMt1MET/' + meName
 
 process.prodKineEventReweightsZtoMuTau = cms.EDAnalyzer("DQMHistEffProducer",
@@ -70,8 +70,8 @@ process.saveKineEventReweightsZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
 
 process.p = cms.Path(
     process.loadZtoMuTau
-   +process.prodKineEventReweightsZtoMuTau
-   +process.saveKineEventReweightsZtoMuTau
+   + process.prodKineEventReweightsZtoMuTau
+   + process.saveKineEventReweightsZtoMuTau
 )
 
 # print-out all python configuration parameter information
