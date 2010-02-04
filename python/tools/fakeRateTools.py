@@ -70,23 +70,41 @@ def disableEventDump(genAnalyzer):
     disabledEventDump.triggerConditions = cms.vstring()
     genAnalyzer.eventDumps[0] = disabledEventDump
 
+def makeAnalyzer(process, genAnalyzer, label):
+
+    analyzer = copy.deepcopy(genAnalyzer)
+
+    analyzer.name = cms.string("".join([getattr(genAnalyzer, "name").value(), "_", label]))
+
+    analyzerName = "".join([genAnalyzer.label(), "_", label])
+    setattr(process, analyzerName, analyzer)
+    analyzer = getattr(process, analyzerName)
+
+    return analyzer
+
+def addAnalyzer(process, genAnalyzer, label, analysisSequence):
+
+    analyzer = makeAnalyzer(process, genAnalyzer, label)
+
+    # add module to sequence
+    if analysisSequence is None:
+        analysisSequence = analyzer
+    else:
+        analysisSequence *= analyzer
+
+    return analyzer
+
 def addFakeRateAnalyzer(process, genAnalyzer, frType, bgEstFakeRateAnalysisSequence):
 
-    bgEstFakeRateAnalyzer = copy.deepcopy(genAnalyzer)
+    bgEstFakeRateAnalyzer = makeAnalyzer(process, genAnalyzer, frType)
 
     srcFakeRateEventWeight = cms.VInputTag(cms.InputTag("bgEstFakeRateEventWeights", frType))
     setattr(bgEstFakeRateAnalyzer, "eventWeightSource", srcFakeRateEventWeight)
 
-    bgEstFakeRateAnalyzer.name = cms.string("".join([getattr(genAnalyzer, "name").value(), "_", frType]))
-
     srcFakeRateJetWeight = cms.vstring("".join(["bgEstFakeRateJetWeight", "_", frType]))
-    setAnalyzerParameter(genAnalyzer, "tauHistManager", "tauJetWeightSource", srcFakeRateJetWeight)
-    setAnalyzerParameter(genAnalyzer, "diTauCandidateZmumuHypothesisHistManagerForMuTau", "lepton2WeightSource", srcFakeRateJetWeight)
-    setAnalyzerParameter(genAnalyzer, "diTauCandidateHistManagerForMuTau", "diTauLeg2WeightSource", srcFakeRateJetWeight)
-
-    bgEstFakeRateAnalyzerName = "".join([genAnalyzer.label(), "_", frType])
-    setattr(process, bgEstFakeRateAnalyzerName, bgEstFakeRateAnalyzer)
-    bgEstFakeRateAnalyzer = getattr(process, bgEstFakeRateAnalyzerName)
+    setAnalyzerParameter(bgEstFakeRateAnalyzer, "tauHistManager", "tauJetWeightSource", srcFakeRateJetWeight)
+    setAnalyzerParameter(bgEstFakeRateAnalyzer, "diTauCandidateZmumuHypothesisHistManagerForMuTau", "lepton2WeightSource", srcFakeRateJetWeight)
+    setAnalyzerParameter(bgEstFakeRateAnalyzer, "diTauCandidateHistManagerForMuTau", "diTauLeg2WeightSource", srcFakeRateJetWeight)
 
     # add module to sequence
     if bgEstFakeRateAnalysisSequence is None:
@@ -96,9 +114,9 @@ def addFakeRateAnalyzer(process, genAnalyzer, frType, bgEstFakeRateAnalysisSeque
 
     return bgEstFakeRateAnalysisSequence
 
-def makeEventDumpSequence(process, dqmDirectory, processSubDirectories, frSubDirectories):
+def makeDataBinningDumpSequence(process, dqmDirectory, processSubDirectories, frSubDirectories):
 
-    eventDumpAnalysisSequence = None
+    dataBinningDumpAnalysisSequence = None
 
     for processName, processSubDirectory in processSubDirectories.items():
 
@@ -117,17 +135,48 @@ def makeEventDumpSequence(process, dqmDirectory, processSubDirectories, frSubDir
 
             setattr(module.binningService.dqmDirectories, frType, cms.string(dqmDirectory_i))
 
-        moduleName = "dumpBgEstFakeRateZtoMuTau" + "_" + processName
+        moduleName = "dumpDataBinningBgEstFakeRateZtoMuTau" + "_" + processName
         setattr(process, moduleName, module)
 
         module = getattr(process, moduleName)
 
-        if eventDumpAnalysisSequence is None:
-            eventDumpAnalysisSequence = module
+        if dataBinningDumpAnalysisSequence is None:
+            dataBinningDumpAnalysisSequence = module
         else:
-            eventDumpAnalysisSequence *= module
+            dataBinningDumpAnalysisSequence *= module
 
-    return eventDumpAnalysisSequence
+    return dataBinningDumpAnalysisSequence
+
+def makeFilterStatTableDumpSequence(process, dqmDirectory, processSubDirectories, frSubDirectories):
+
+    filterStatTableDumpAnalysisSequence = None
+
+    for processName, processSubDirectory in processSubDirectories.items():
+
+        module = cms.EDAnalyzer("DQMDumpFilterStatisticsTables",
+            dqmDirectories = cms.PSet(),
+            columnsSummaryTable = cms.vstring("Passed", "cumul. Efficiency", "margin. Efficiency", "indiv. Efficiency")
+        )
+
+        for frType, frSubDirectory in frSubDirectories.items():
+            
+            dqmDirectory_i = dqmDirectory
+            dqmDirectory_i = dqmDirectory_i.replace("#PROCESSDIR#", processSubDirectory.value())
+            dqmDirectory_i = dqmDirectory_i.replace("#FAKERATEDIR#", frSubDirectory)
+
+            setattr(module.dqmDirectories, frType, cms.string(dqmDirectory_i))
+
+        moduleName = "dumpFilterStatTableBgEstFakeRateZtoMuTau" + "_" + processName
+        setattr(process, moduleName, module)
+
+        module = getattr(process, moduleName)
+
+        if filterStatTableDumpAnalysisSequence is None:
+            filterStatTableDumpAnalysisSequence = module
+        else:
+            filterStatTableDumpAnalysisSequence *= module
+
+    return filterStatTableDumpAnalysisSequence
 
 def getPSetAttributes(object):
 
@@ -258,7 +307,7 @@ def enableFakeRates_runZtoMuTau(process):
         disableEventDump(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation)
     else:
         pruneAnalysisSequence(process.analyzeZtoMuTauEvents)
-        disableEventDump(process.analyzeZtoMuTauEvents)
+        ##disableEventDump(process.analyzeZtoMuTauEvents) !!! COMMENTED-OUT ONLY FOR TESTING !!!
 
     bgEstFakeRateAnalysisSequence = None  
 
@@ -285,13 +334,28 @@ def enableFakeRates_runZtoMuTau(process):
             bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents,
                                                                 frType, bgEstFakeRateAnalysisSequence)
 
+    # add analysis sequence:
+    #  1.) with tau id. discriminators not applied
+    #  2.) events **not** weighted by fake-rate
+    # (for the purpose of making control plots for the data sample from which contributions 
+    #  of individual background processes are estimated via the fake-rate technique)
+    if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
+         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
+        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
+                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
+        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
+                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
+    else:
+        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents,
+                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
+
     setattr(process, "bgEstFakeRateAnalysisSequence", cms.Sequence(bgEstFakeRateAnalysisSequence))
 
     if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and
          hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
         process.p.replace(process.analyzeZtoMuTauEvents_factorized, process.bgEstFakeRateAnalysisSequence)
-    else:
-        process.p.replace(process.analyzeZtoMuTauEvents, process.bgEstFakeRateAnalysisSequence)
+    ##else: !!! COMMENTED-OUT ONLY FOR TESTING !!!
+    ##    process.p.replace(process.analyzeZtoMuTauEvents, process.bgEstFakeRateAnalysisSequence) !!! COMMENTED-OUT ONLY FOR TESTING !!!
 
 def enableFakeRates_makeZtoMuTauPlots(process):
 
