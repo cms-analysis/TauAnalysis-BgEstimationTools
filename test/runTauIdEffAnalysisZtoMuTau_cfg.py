@@ -25,7 +25,8 @@ process.load("TauAnalysis.Configuration.selectZtoMuTau_cff")
 
 # import configuration parameters for submission of jobs to CERN batch system
 # (running over skimmed samples stored on CASTOR)
-from TauAnalysis.BgEstimationTools.recoSampleDefinitionsTauIdEffZtoMuTau_cfi import *
+from TauAnalysis.Configuration.recoSampleDefinitionsZtoMuTau_7TeV_cfi import *
+from TauAnalysis.Configuration.recoSampleDefinitionsZtoMuTau_10TeV_cfi import *
 #--------------------------------------------------------------------------------
 
 process.DQMStore = cms.Service("DQMStore")
@@ -71,7 +72,7 @@ setattr(process.allLayer1Taus.tauIDSources, "ewkTauId", cms.InputTag('ewkTauId')
 from TauAnalysis.Configuration.tools.metTools import *
 
 # uncomment to add pfMET
-# (set boolean parameter to true/false to enable/disable type-1 MET corrections)
+# set Boolean swich to true in order to apply type-1 corrections
 addPFMet(process, correct = False)
 
 # uncomment to replace caloMET by pfMET in all di-tau objects
