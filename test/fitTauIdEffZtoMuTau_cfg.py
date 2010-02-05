@@ -30,7 +30,7 @@ process.source = cms.Source("EmptySource")
 
 process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(        
-        inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_2_2_10/src/TauAnalysis/BgEstimationTools/test/plotsTauIdEffZtoMuTau_all.root'),
+        inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_3_1_4/src/TauAnalysis/BgEstimationTools/test/plotsTauIdEffZtoMuTau_all.root'),
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
     )
@@ -78,7 +78,7 @@ meName_muonPtVsAbsEta = 'MuonPtVsAbsEta'
 process.loadTemplateHistTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(
         #inputFileNames = cms.vstring('tauIdEffTemplatesZtoMuTau.root'),
-        inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_2_2_10/src/TauAnalysis/BgEstimationTools/test/fitTauIdEffZtoMuTau.root'),
+        inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_3_1_4/src/TauAnalysis/BgEstimationTools/test/fitTauIdEffZtoMuTau.root'),
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
     )
@@ -104,19 +104,19 @@ kineEventReweights = dict()
 kineEventReweights["Zmumu"] = None
 kineEventReweights["WplusJets"] = None
 kineEventReweights["TTplusJets"] = None
-kineEventReweights["QCD"] = None
+kineEventReweights["QCD"] = "kineEventReweightTauIdEffQCDnoIso"
 
 #--------------------------------------------------------------------------------
 # produce template histograms 
 #--------------------------------------------------------------------------------
 
 fileNames = dict()
-fileNames["Ztautau"] = fileNamesZtoMuTau_Ztautau
-fileNames["Zmumu"] = fileNamesZtoMuTau_ZmumuPlusJets
-fileNames["WplusJets"] = fileNamesZtoMuTau_WplusJets
-fileNames["TTplusJets"] = fileNamesZtoMuTau_TTplusJets
-fileNames["QCD"] = fileNamesZtoMuTau_qcdSum
-fileNames["data"] = fileNamesZtoMuTau_pseudoData
+fileNames["Ztautau"] = fileNamesZtoMuTau_Ztautau_10TeV
+fileNames["Zmumu"] = fileNamesZtoMuTau_Zmumu_10TeV
+fileNames["WplusJets"] = fileNamesZtoMuTau_WplusJets_10TeV
+fileNames["TTplusJets"] = fileNamesZtoMuTau_TTplusJets_10TeV
+fileNames["QCD"] = fileNamesZtoMuTau_qcdSum_10TeV
+fileNames["data"] = fileNamesZtoMuTau_pseudoData_10TeV
 
 bgEstEventSelections = dict()
 bgEstEventSelections["Zmumu"] = bgEstEventSelection_Zmumu
@@ -145,7 +145,7 @@ process.prodTemplateHistTauIdEffZtoMuTau = cms.Sequence(
 
 process.saveTemplateHistTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
     outputFileName = cms.string('tauIdEffTemplatesZtoMuTau.root'),
-    drop = cms.vstring('')                       
+    outputCommands = cms.vstring('')
 )
 
 #--------------------------------------------------------------------------------
@@ -216,8 +216,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 ##    meNames = [
 ##        dqmDirectory_Zmumu_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt,
 ##        dqmDirectory_Zmumu_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt,
-##        dqmDirectory_Zmumu_all + dqmSubDirectory_muonPt + meName_muonPt
-##        #processName + '/Zmumu/data/' + meName_muonPt
+##        #dqmDirectory_Zmumu_all + dqmSubDirectory_muonPt + meName_muonPt
+##        processName + '/Zmumu/data/' + meName_muonPt
 ##    ],
 ##    name = "Zmumu_muonPt",
 ##    title = "P_{T}^{#mu} in Z #rightarrow #mu^{+} #mu^{-} Background" 
@@ -227,8 +227,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 ##    meNames = [
 ##        dqmDirectory_Zmumu_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
 ##        dqmDirectory_Zmumu_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-##        dqmDirectory_Zmumu_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
-##        #processName + '/Zmumu/data/' + meName_muonAbsEta
+##        #dqmDirectory_Zmumu_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
+##        processName + '/Zmumu/data/' + meName_muonAbsEta
 ##    ],
 ##    name = "Zmumu_muonAbsEta",
 ##    title = "|#eta_{#mu}| in Z #rightarrow #mu^{+} #mu^{-} Background"
@@ -269,8 +269,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 ##    meNames = [
 ##        dqmDirectory_TTplusJets_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt,
 ##        dqmDirectory_TTplusJets_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt,
-##        dqmDirectory_TTplusJets_all + dqmSubDirectory_muonPt + meName_muonPt
-##        #processName + '/TTplusJets/data/' + meName_muonPt
+##        #dqmDirectory_TTplusJets_all + dqmSubDirectory_muonPt + meName_muonPt
+##        processName + '/TTplusJets/data/' + meName_muonPt
 ##    ],
 ##    name = "TTplusJets_muonPt",
 ##    title = "P_{T}^{#mu} in t#bar{t} + jets Background"
@@ -280,8 +280,8 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 ##    meNames = [
 ##        dqmDirectory_TTplusJets_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
 ##        dqmDirectory_TTplusJets_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-##        dqmDirectory_TTplusJets_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
-##        #processName + '/TTplusJets/data/' + meName_muonAbsEta
+##        #dqmDirectory_TTplusJets_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
+##        processName + '/TTplusJets/data/' + meName_muonAbsEta
 ##    ],
 ##    name = "TTplusJets_muonAbsEta",
 ##    title = "|#eta_{#mu}| in t#bar{t} + jets Background"
