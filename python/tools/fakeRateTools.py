@@ -231,7 +231,14 @@ def reconfigDQMFileLoader(dqmFileLoaderConfig, dqmDirectory):
 #
 #--------------------------------------------------------------------------------
 
-def enableFakeRates_runZtoMuTau(process):
+def enableFakeRates_runZtoMuTau(process, method = None):
+
+    # check validity of method parameter
+    if method is None:
+        raise ValueError("Undefined method Parameter !!")
+    else:
+        if method != "simple" and method != "CDF":
+            raise ValueError("Invalid method Parameter !!")
 
     # preselect tau-jet candidates entering fake-rate computation
     process.tausForFakeRateWeights = cms.EDFilter("PFTauSelector",
@@ -287,6 +294,10 @@ def enableFakeRates_runZtoMuTau(process):
     #
     changeCut(process, "selectedMuTauPairsZeroCharge", "leg2.leadTrack.isNonnull & (leg1.charge + leg2.leadTrack.charge) = 0")
 
+    # set method parameter in fakeRateWeight producer modules
+    process.bgEstFakeRateJetWeights.method = method
+    process.bgEstFakeRateEventWeights.method = method
+
     # get list of fake-rates types to be processed
     frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
 
@@ -307,7 +318,7 @@ def enableFakeRates_runZtoMuTau(process):
         disableEventDump(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation)
     else:
         pruneAnalysisSequence(process.analyzeZtoMuTauEvents)
-        ##disableEventDump(process.analyzeZtoMuTauEvents) !!! COMMENTED-OUT ONLY FOR TESTING !!!
+        disableEventDump(process.analyzeZtoMuTauEvents)
 
     bgEstFakeRateAnalysisSequence = None  
 
@@ -349,13 +360,41 @@ def enableFakeRates_runZtoMuTau(process):
         bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents,
                                                     "frUnweighted", bgEstFakeRateAnalysisSequence)
 
+    # if method is "simple", add one more analysis sequence:
+    #  1.) with tau id. discriminators not applied
+    #  2.) events weighted by tau id. efficiency
+    # (for the purpose of checking the tau id. efficiency values
+    #  which are used by the "CDF" method)
+    tauIdEfficiency = cms.PSet(
+        tauJetDiscriminators = cms.VPSet(
+            cms.PSet(
+                tauJetIdEffSource = cms.InputTag("shrinkingConeZTTEffSimAssociator", "effByStandardChainZTTsim"),
+                qcdJetFakeRateSource = cms.InputTag("shrinkingConeZTTEffSimAssociator", "effByStandardChainZTTsim"),
+                tauJetDiscrSource = cms.InputTag("ewkTauId")
+            )
+        )
+    )
+    setattr(process.bgEstFakeRateJetWeights.frTypes, "tauIdEfficiency", tauIdEfficiency)
+    frLabel = "".join(["bgEstFakeRateJetWeight", "_", "tauIdEfficiency"])
+    frInputTag = cms.InputTag('bgEstFakeRateJetWeights', "tauIdEfficiency")
+    setattr(process.allLayer1Taus.efficiencies, frLabel, frInputTag)
+    if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
+         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
+        bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
+                                                            "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+        bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
+                                                            "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+    else:
+        bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents,
+                                                            "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+
     setattr(process, "bgEstFakeRateAnalysisSequence", cms.Sequence(bgEstFakeRateAnalysisSequence))
 
     if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and
          hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
         process.p.replace(process.analyzeZtoMuTauEvents_factorized, process.bgEstFakeRateAnalysisSequence)
-    ##else: !!! COMMENTED-OUT ONLY FOR TESTING !!!
-    ##    process.p.replace(process.analyzeZtoMuTauEvents, process.bgEstFakeRateAnalysisSequence) !!! COMMENTED-OUT ONLY FOR TESTING !!!
+    else:
+        process.p.replace(process.analyzeZtoMuTauEvents, process.bgEstFakeRateAnalysisSequence)
 
 def enableFakeRates_makeZtoMuTauPlots(process):
 
