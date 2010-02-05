@@ -11,7 +11,7 @@ import copy
 #--------------------------------------------------------------------------------
 
 #from TauAnalysis.Configuration.recoSampleDefinitionsZtoMuTau_10TeV_cfi import *
-from TauAnalysis.BgEstimationTools.bgEstNtupleDefinitionsZtoMuTau_cfi import *
+from TauAnalysis.BgEstimationTools.bgEstNtupleDefinitionsZtoMuTau_10TeV_cfi import *
 from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
 from TauAnalysis.BgEstimationTools.templateHistDefinitions_cfi import *
 from TauAnalysis.BgEstimationTools.tools.prodTemplateHistConfigurator import makeTemplateHistProdSequence1d
@@ -106,12 +106,12 @@ kineEventReweights_diTauMvis12["QCD"] = None
 #--------------------------------------------------------------------------------
 
 fileNames = dict()
-fileNames["Ztautau"] = fileNamesZtoMuTau_Ztautau
-fileNames["Zmumu"] = fileNamesZtoMuTau_ZmumuPlusJets
-fileNames["WplusJets"] = fileNamesZtoMuTau_WplusJets
-fileNames["TTplusJets"] = fileNamesZtoMuTau_TTplusJets
-fileNames["QCD"] = fileNamesZtoMuTau_qcdSum
-fileNames["data"] = fileNamesZtoMuTau_pseudoData
+fileNames["Ztautau"] = fileNamesZtoMuTau_Ztautau_10TeV
+fileNames["Zmumu"] = fileNamesZtoMuTau_Zmumu_10TeV
+fileNames["WplusJets"] = fileNamesZtoMuTau_WplusJets_10TeV
+fileNames["TTplusJets"] = fileNamesZtoMuTau_TTplusJets_10TeV
+fileNames["QCD"] = fileNamesZtoMuTau_qcdSum_10TeV
+fileNames["data"] = fileNamesZtoMuTau_pseudoData_10TeV
 
 bgEstEventSelections = dict()
 bgEstEventSelections["Zmumu"] = bgEstEventSelection_Zmumu
@@ -167,7 +167,7 @@ process.normalizeTemplateHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMHistNormalize
 
 process.loadAnalysisHistZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     data = cms.PSet(
-        inputFileNames = cms.vstring('rfio:/castor/cern.ch/user/v/veelken/bgEstPlots/ZtoMuTau/plotsZtoMuTau_all_shrinkingCone.root'),
+        inputFileNames = cms.vstring('rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_1_2/plots/ZtoMuTau/10TeV/plotsZtoMuTau_all.root'),
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
     )
@@ -465,6 +465,70 @@ process.prodSysBiasHistZtoMuTau = cms.Sequence(
 )
 
 #--------------------------------------------------------------------------------
+# produce auxiliary histograms representing uncertainties on shape of template histograms
+# fitted to visible muon + tau-jet mass distribution
+# caused by imprecise knowledge of contributions from Ztautau signal and other background processes
+#--------------------------------------------------------------------------------
+
+process.prodSysBgEnrichedSamplePurityHistZtoMuTau_Ztautau = cms.EDAnalyzer("DQMHistSubtractor",
+    config = cms.VPSet(
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_Ztautau_ZmumuTemplate + "DiTauCandidateQuantities" + "/" + meName_diTauMvis12_norm),
+            meNameDifference = cms.string(dqmDirectory_Ztautau_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+        )
+    )    
+)
+
+process.prodSysBgEnrichedSamplePurityHistZtoMuTau_Zmumu = cms.EDAnalyzer("DQMHistSubtractor",
+    config = cms.VPSet(
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_Zmumu_bgEstEnriched_data + meName_diTauMvis12_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_Zmumu_bgEstEnriched_pure + meName_diTauMvis12_norm),
+            meNameDifference = cms.string(dqmDirectory_Zmumu_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+        )
+    )                                                       
+)
+
+process.prodSysBgEnrichedSamplePurityHistZtoMuTau_WplusJets = cms.EDAnalyzer("DQMHistSubtractor",
+    config = cms.VPSet(
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_WplusJets_bgEstEnriched_data + meName_diTauMvis12_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_WplusJets_bgEstEnriched_pure + meName_diTauMvis12_norm),
+            meNameDifference = cms.string(dqmDirectory_WplusJets_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+        )
+    )                                                       
+)
+
+process.prodSysBgEnrichedSamplePurityHistZtoMuTau_TTplusJets = cms.EDAnalyzer("DQMHistSubtractor",
+    config = cms.VPSet(
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_data + meName_diTauMvis12_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_TTplusJets_bgEstEnriched_pure + meName_diTauMvis12_norm),
+            meNameDifference = cms.string(dqmDirectory_TTplusJets_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+        )
+    )                                                       
+)
+
+process.prodSysBgEnrichedSamplePurityHistZtoMuTau_QCD = cms.EDAnalyzer("DQMHistSubtractor",
+    config = cms.VPSet(
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_QCD_bgEstEnriched_data + meName_diTauMvis12_norm),
+            meNameSubtrahend = cms.string(dqmDirectory_QCD_bgEstEnriched_pure + meName_diTauMvis12_norm),
+            meNameDifference = cms.string(dqmDirectory_QCD_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+        )
+    )                                                       
+)
+
+process.prodSysBgEnrichedSamplePurityHistZtoMuTau = cms.Sequence(
+    process.prodSysBgEnrichedSamplePurityHistZtoMuTau_Ztautau
+   + process.prodSysBgEnrichedSamplePurityHistZtoMuTau_Zmumu
+   + process.prodSysBgEnrichedSamplePurityHistZtoMuTau_WplusJets
+   + process.prodSysBgEnrichedSamplePurityHistZtoMuTau_TTplusJets
+   + process.prodSysBgEnrichedSamplePurityHistZtoMuTau_QCD
+)
+
+#--------------------------------------------------------------------------------
 # store all histograms into ROOT file
 #--------------------------------------------------------------------------------
 
@@ -741,6 +805,29 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateHistFitter",
                 pullMin = cms.double(0.),
                 pullMax = cms.double(1.),
                 mode = cms.string("coherent") # coherent/incoherent
+            ),
+            bgSamplePurity = cms.PSet(
+                meNames = cms.PSet(
+                    Ztautau = cms.PSet(
+                        diTauMvis12 = cms.string(dqmDirectory_Ztautau_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+                    ),
+                    Zmumu = cms.PSet(
+                        diTauMvis12 = cms.string(dqmDirectory_Zmumu_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+                    ),
+                    WplusJets = cms.PSet(
+                        diTauMvis12 = cms.string(dqmDirectory_WplusJets_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+                    ),
+                    TTplusJets = cms.PSet(
+                        diTauMvis12 = cms.string(dqmDirectory_TTplusJets_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+                    ),
+                    QCD = cms.PSet(
+                        diTauMvis12 = cms.string(dqmDirectory_QCD_systematics + "bgEnrichedSamplePurity" + "/" + meName_diTauMvis12_norm)
+                    )
+                ),
+                pullRMS = cms.double(1.),
+                pullMin = cms.double(-2.),
+                pullMax = cms.double(+2.),
+                mode = cms.string("coherent")
             )
         ),       
         numSamplings = cms.int32(0),
@@ -763,11 +850,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateHistFitter",
 
 process.saveFitResultsZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
     outputFileName = cms.string('fitTemplateZtoMuTau_results.root'),
-    drop = cms.vstring(
-        'harvested/', 'Ztautau/', 'Zmumu/', 'ZmumuPlusJets/', 'WplusJets/', 'TTplusJets/', 'qcdSum/', 'smSum/', 'Ztautau_from_selZmumu/',
-        'fitTemplateZtoMuTau/Ztautau/', 'fitTemplateZtoMuTau/Zmumu/', 'fitTemplateZtoMuTau/WplusJets/',
-        'fitTemplateZtoMuTau/TTplusJets/', 'fitTemplateZtoMuTau/QCD/'
-    )
+    outputCommands = cms.vstring('drop harvested/*')
 )
 
 process.prodAllHistZtoMuTau = cms.Sequence(
@@ -778,6 +861,7 @@ process.prodAllHistZtoMuTau = cms.Sequence(
    + process.extrAnalysisHistZtoMuTau
    + process.normalizeAnalysisHistZtoMuTau
    + process.prodSysBiasHistZtoMuTau
+   + process.prodSysBgEnrichedSamplePurityHistZtoMuTau
    + process.saveAllHistZtoMuTau 
 )
 
