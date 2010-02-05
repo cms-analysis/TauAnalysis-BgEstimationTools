@@ -9,7 +9,10 @@ import copy
 #
 #--------------------------------------------------------------------------------
 
-from TauAnalysis.BgEstimationTools.plotTauIdEffZtoMuTau_processes_cfi import *
+# uncomment next line to make plots for 10 TeV centre-of-mass energy
+from TauAnalysis.Configuration.plotZtoMuTau_processes_10TeV_cfi import *
+# uncomment next line to make plots for 7 TeV centre-of-mass energy
+#from TauAnalysis.Configuration.plotZtoMuTau_processes_7TeV_cfi import *
 from TauAnalysis.BgEstimationTools.plotTauIdEffZtoMuTau_drawJobs_cfi import *
 from TauAnalysis.Configuration.plotZtoMuTau_cff import plotZtoMuTau
 from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
@@ -21,13 +24,13 @@ loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     #InclusivePPmuX = copy.deepcopy(processZtoMuTau_InclusivePPmuX.config_dqmFileLoader),
     PPmuXptGt20 = copy.deepcopy(processZtoMuTau_PPmuXptGt20Sum.config_dqmFileLoader),
     TTplusJets = copy.deepcopy(processZtoMuTau_TTplusJetsSum.config_dqmFileLoader),
-    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/plots/TauIdEff/")
+    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_1_2/plots/TauIdEff/10TeV/")
 )
 
 addTauIdEffZtoMuTau_qcdSum = cms.EDAnalyzer("DQMHistAdder",
     qcdSum = cms.PSet(
         dqmDirectories_input = cms.vstring(
-            #'harvested/InclusivePPmuX/TauIdEffAnalyzerZtoMuTau',
+            'harvested/InclusivePPmuX/TauIdEffAnalyzerZtoMuTau',
             'harvested/PPmuXptGt20/TauIdEffAnalyzerZtoMuTau'
         ),
         dqmDirectory_output = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTau')
