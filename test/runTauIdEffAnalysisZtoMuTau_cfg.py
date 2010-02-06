@@ -194,7 +194,7 @@ tauIdEffBinning4regions = cms.PSet(
         cms.PSet(
             extractor = cms.PSet(
                 pluginType = cms.string("PATMuTauPairChargeSignExtractor"),
-                src = cms.InputTag('selectedMuTauPairsPzetaDiffCumulative')
+                src = cms.InputTag('selectedMuTauPairsAntiOverlapVetoCumulative')
             ),
             branchName = cms.string('diTauChargeSign'),
             binning = cms.PSet(
@@ -203,6 +203,17 @@ tauIdEffBinning4regions = cms.PSet(
                 max = cms.double(+1.01)
             )
         )
+    )
+)
+
+# define auxiliary service
+# for handling of systematic uncertainties
+from TauAnalysis.CandidateTools.sysErrDefinitions_cfi import *
+process.SysUncertaintyService = cms.Service("SysUncertaintyService",
+    config = getSysUncertaintyParameterSets(
+        [ muonSystematics,
+          tauSystematics,
+          theorySystematics ]
     )
 )
 
@@ -324,36 +335,41 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
     ),
 
     eventDumps = cms.VPSet(
-        cms.PSet(
-            pluginName = cms.string('muTauEventDump'),
-            pluginType = cms.string('MuTauEventDump'),
+        pluginName = cms.string('muTauEventDump'),
+        pluginType = cms.string('MuTauEventDump'),
 
-            l1GtReadoutRecordSource = cms.InputTag('hltGtDigis::HLT'),
-            l1GtObjectMapRecordSource = cms.InputTag('hltL1GtObjectMap::HLT'),
-            l1BitsToPrint = cms.vstring('L1_SingleMu3', 'L1_SingleMu5', 'L1_SingleMu7', 'L1_SingleMu10', 'L1_SingleMu14'),
-    
-            hltResultsSource = cms.InputTag('TriggerResults::HLT'),
-            hltPathsToPrint = cms.vstring('HLT_Mu15', 'HLT_IsoMu11'),
-    
-            genParticleSource = cms.InputTag('genParticles'),
-            genJetSource = cms.InputTag('iterativeCone5GenJets'),
-            genTauJetSource = cms.InputTag('tauGenJets'),
-            
-            electronSource = cms.InputTag('cleanLayer1Electrons'),
-            muonSource = cms.InputTag('selectedLayer1MuonsTrkIPcumulative'),
-            tauSource = cms.InputTag('selectedLayer1TausForMuTauMuonVetoCumulative'),
-            diTauCandidateSource = cms.InputTag('selectedMuTauPairsPzetaDiffCumulative'),
-            muTauZmumuHypothesisSource = cms.InputTag('muTauPairZmumuHypotheses'),
-            diMuZmumuHypothesisSource = cms.InputTag('allDiMuPairZmumuHypotheses'),
-            jetSource = cms.InputTag('selectedLayer1JetsEt20Cumulative'),
-            caloMEtSource = cms.InputTag('layer1METs'),
-            pfMEtSource = cms.InputTag('layer1PFMETs'),
-            genMEtSource = cms.InputTag('genMetTrue'),
+        # L1 trigger bits not contained in AOD;
+        # in order to process Monte Carlo samples produced by FastSimulation,
+        # disable histogram filling for now
+        #l1GtReadoutRecordSource = cms.InputTag('hltGtDigis::HLT'),
+        #l1GtObjectMapRecordSource = cms.InputTag('hltL1GtObjectMap::HLT'),
+        l1GtReadoutRecordSource = cms.InputTag(''),
+        l1GtObjectMapRecordSource = cms.InputTag(''),
+        l1BitsToPrint = cms.vstring('L1_SingleMu3', 'L1_SingleMu5', 'L1_SingleMu7', 'L1_SingleMu10', 'L1_SingleMu14'),
+        
+        hltResultsSource = cms.InputTag('TriggerResults::HLT'),
+        hltPathsToPrint = cms.vstring('HLT_Mu9', 'HLT_IsoMu9', 'HLT_Mu11', 'HLT_Mu15'),
+        
+        genParticleSource = cms.InputTag('genParticles'),
+        genJetSource = cms.InputTag('iterativeCone5GenJets'),
+        genTauJetSource = cms.InputTag('tauGenJets'),
+        genEventInfoSource = cms.InputTag('generator'),
+        
+        electronSource = cms.InputTag('cleanLayer1Electrons'),
+        muonSource = cms.InputTag('cleanLayer1Muons'),
+        tauSource = cms.InputTag('selectedLayer1TausPt20Cumulative'),
+        printTauIdEfficiencies = cms.bool(True),
+        diTauCandidateSource = cms.InputTag('allMuTauPairs'),
+        muTauZmumuHypothesisSource = cms.InputTag('muTauPairZmumuHypotheses'),
+        diMuZmumuHypothesisSource = cms.InputTag('allDiMuPairZmumuHypotheses'),
+        jetSource = cms.InputTag('allLayer1Jets'),
+        caloMEtSource = cms.InputTag('layer1METs'),
+        pfMEtSource = cms.InputTag('layer1PFMETs'),
+        genMEtSource = cms.InputTag('genMetTrue'),
+        
+        output = cms.string("std::cout"),
 
-            output = cms.string("std::cout"),
-    
-            triggerConditions = cms.vstring("uniqueTauCandidateCut: passed_cumulative")
-        )
+        triggerConditions = cms.vstring("uniqueTauCandidateCut: passed_cumulative")
     ),
    
     analysisSequence = cms.VPSet(
@@ -492,14 +508,18 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
             filter = cms.string('evtSelDiTauCandidateForMuTauAntiOverlapVeto'),
             title = cms.string('dR(Muon-Tau) > 0.7')
         ),
+        ##
+        ## CV: disable event selection criteria based on muon + tau-jet topology
+        ##     in order to a void bias of the muon Pt and eta distributions
+        ##
         ##cms.PSet(
         ##    filter = cms.string('evtSelDiTauCandidateForMuTauZeroCharge'),
         ##    title = cms.string('Charge(Muon+Tau) = 0')
         ##),
-        cms.PSet(
-            filter = cms.string('evtSelDiTauCandidateForMuTauAcoplanarity12'),
-            title = cms.string('Acoplanarity(Muon+Tau)')
-        ),
+        ##cms.PSet(
+        ##    filter = cms.string('evtSelDiTauCandidateForMuTauAcoplanarity12'),
+        ##    title = cms.string('Acoplanarity(Muon+Tau)')
+        ##),
         ##cms.PSet(
         ##    filter = cms.string('evtSelDiTauCandidateForMuTauMt1MET'),
         ##    title = cms.string('M_{T}(Muon-MET) < 50 GeV')
