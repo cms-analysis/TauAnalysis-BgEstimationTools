@@ -10,9 +10,10 @@ import copy
 #
 #--------------------------------------------------------------------------------
 
-from TauAnalysis.BgEstimationTools.bgEstNtupleDefinitionsZtoMuTau_cfi import *
+from TauAnalysis.BgEstimationTools.bgEstNtupleDefinitionsZtoMuTau_10TeV_cfi import *
 from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
 from TauAnalysis.BgEstimationTools.templateHistDefinitions_cfi import *
+from TauAnalysis.BgEstimationTools.tools.prodTemplateHistConfigurator import makeTemplateHistProdSequence1d
 from TauAnalysis.BgEstimationTools.tools.prodTemplateHistConfigurator import makeTemplateHistProdSequence2d
 from TauAnalysis.BgEstimationTools.tools.drawTemplateHistConfigurator import drawTemplateHistConfigurator
 from TauAnalysis.BgEstimationTools.bgEstTemplateEvtSelZtoMuTau_cfi import *
@@ -77,7 +78,6 @@ meName_muonPtVsAbsEta = 'MuonPtVsAbsEta'
 
 process.loadTemplateHistTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(
-        #inputFileNames = cms.vstring('tauIdEffTemplatesZtoMuTau.root'),
         inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_3_1_4/src/TauAnalysis/BgEstimationTools/test/fitTauIdEffZtoMuTau.root'),
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
@@ -129,23 +129,37 @@ print("bgEstEventSelection_WplusJets = " + bgEstEventSelections["WplusJets"])
 print("bgEstEventSelection_TTplusJets = " + bgEstEventSelections["TTplusJets"])
 print("bgEstEventSelection_QCD = " + bgEstEventSelections["QCD"])
 
-binEdges_muonPt = [ 15., 20., 25., 30., 40., 60., 120. ]
-binEdges_muonAbsEta = [ 0., 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1 ]
+binEdges1d_muonPt = [ 15., 20., 25., 30., 35., 40., 50., 60., 80., 120. ]
+binEdges2d_muonPt = [ 15., 20., 25., 30., 40., 60., 120. ]
+binEdges2d_muonAbsEta = [ 0., 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1 ]
+
+process.prodTemplateHistTauIdEffZtoMuTau_muonPt = makeTemplateHistProdSequence1d(
+    process, prodTemplateHist, fileNames, bgEstEventSelections, kineEventReweights,
+    dqmDirectory = processName, meName = meName_muonPt,
+    branchNames = branchNames_muonPt, numBins = 9, binEdges = binEdges1d_muonPt
+)
+
+process.prodTemplateHistTauIdEffZtoMuTau_muonAbsEta = makeTemplateHistProdSequence1d(
+    process, prodTemplateHist, fileNames, bgEstEventSelections, kineEventReweights,
+    dqmDirectory = processName, meName = meName_muonAbsEta,
+    branchNames = branchNames_muonAbsEta, numBins = 14, min = 0., max = 2.1
+)
 
 process.prodTemplateHistTauIdEffZtoMuTau_muonPtVsAbsEta = makeTemplateHistProdSequence2d(
     process, prodTemplateHist, fileNames, bgEstEventSelections, kineEventReweights,
     dqmDirectory = processName, meName = meName_muonPtVsAbsEta,
-    branchNamesX = branchNames_muonAbsEta, numBinsX = 7, binEdgesX = binEdges_muonAbsEta,
-    branchNamesY = branchNames_muonPt, numBinsY = 6, binEdgesY = binEdges_muonPt
+    branchNamesX = branchNames_muonAbsEta, numBinsX = 7, binEdgesX = binEdges2d_muonAbsEta,
+    branchNamesY = branchNames_muonPt, numBinsY = 6, binEdgesY = binEdges2d_muonPt
 )
 
 process.prodTemplateHistTauIdEffZtoMuTau = cms.Sequence(
-    process.prodTemplateHistTauIdEffZtoMuTau_muonPtVsAbsEta
+    process.prodTemplateHistTauIdEffZtoMuTau_muonPt + process.prodTemplateHistTauIdEffZtoMuTau_muonAbsEta
+   + process.prodTemplateHistTauIdEffZtoMuTau_muonPtVsAbsEta
 )    
 
 process.saveTemplateHistTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
     outputFileName = cms.string('tauIdEffTemplatesZtoMuTau.root'),
-    outputCommands = cms.vstring('')
+    outputCommands = cms.vstring('keep *')
 )
 
 #--------------------------------------------------------------------------------
@@ -535,15 +549,14 @@ process.dumpBinErrorsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMBinErrorCalculator",
 
 process.saveFitResultsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
     outputFileName = cms.string('fitTauIdEffZtoMuTau_results.root'),
-    drop = cms.vstring(),
+    outputCommands = cms.vstring('keep *')
 )
 
 process.p = cms.Path(
     process.loadTauIdEffZtoMuTau
-   + process.loadTemplateHistTauIdEffZtoMuTau
-   #+ process.prodTemplateHistTauIdEffZtoMuTau
-   #+ process.saveTemplateHistTauIdEffZtoMuTau 
-   #+ process.rebinTemplateHistTauIdEffZtoMuTau_muonExtTrackIso
+   #+ process.loadTemplateHistTauIdEffZtoMuTau
+   + process.prodTemplateHistTauIdEffZtoMuTau
+   + process.saveTemplateHistTauIdEffZtoMuTau 
    + process.plotTemplateHistTauIdEffZtoMuTau
    + process.fitTauIdEffZtoMuTau
    + process.saveFitResultsTauIdEffZtoMuTau 
