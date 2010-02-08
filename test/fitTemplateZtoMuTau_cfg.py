@@ -825,7 +825,7 @@ process.fitZtoMuTau = cms.EDAnalyzer("TemplateHistFitter",
                     )
                 ),
                 pullRMS = cms.double(1.),
-                pullMin = cms.double(-2.),
+                pullMin = cms.double(-1.),
                 pullMax = cms.double(+2.),
                 mode = cms.string("coherent")
             )
