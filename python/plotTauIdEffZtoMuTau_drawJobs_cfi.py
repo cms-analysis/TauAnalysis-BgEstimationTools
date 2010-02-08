@@ -10,13 +10,10 @@ plots_TauIdEffZtoMuTau = cms.PSet(
         dqmMonitorElements = cms.vstring(''),
         processes = cms.vstring(
             'Zmumu',
-            #'ZmumuPlusJets',
-            #'ZeePlusJets',
             'WplusJets',
             'TTplusJets',
             'qcdSum',
             'Ztautau'
-            #'ZtautauPlusJets'
         )
     ),
     xAxis = cms.string('unlabeled'),
@@ -224,7 +221,7 @@ plots_TauIdEffZtoMuTau_shapes = cms.PSet(
     yAxis = cms.string('numEntries_linear'),
     #yAxis = cms.string('numEntries_log'),        
     legend = cms.string('regular'),
-    labels = cms.vstring('')
+    labels = cms.vstring()
 )
 
 drawJobs_TauIdEffZtoMuTau_shapes = cms.PSet()
