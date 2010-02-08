@@ -95,7 +95,11 @@ changeCut(process, "selectedLayer1TausForMuTauTrkIso", "tauID('trackIsolation') 
 changeCut(process, "selectedLayer1TausForMuTauEcalIso", "tauID('ecalIsolation') > -1.")
 changeCut(process, "selectedLayer1TausForMuTauProng", "signalTracks.size() > -1")
 changeCut(process, "selectedLayer1TausForMuTauCharge", "abs(charge) > -1")
-changeCut(process, "selectedLayer1TausForMuTauMuonVeto", "tauID('againstMuon') > -1.")
+#
+# CV: do not disable discriminator against muon cut,
+#     in order to keep Z --> mu+ mu- background contribution low
+#
+#changeCut(process, "selectedLayer1TausForMuTauMuonVeto", "tauID('againstMuon') > -1.")
 
 # disable cut on muon + tau-jet charge
 changeCut(process, "selectedMuTauPairsZeroCharge", "charge > -1000.")
