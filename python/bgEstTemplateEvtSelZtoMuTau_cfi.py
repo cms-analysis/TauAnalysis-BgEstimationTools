@@ -51,8 +51,8 @@ bgEstEventSelection_TTplusJets = (
 )
 
 bgEstEventSelection_QCD = (
-    "numDiTausQCD >= 1 && muonTrackIsoQCD_0 > 4. && muonEcalIsoQCD_0 > 4."
-    " && tauDiscrAgainstMuonsQCD_0 > 0.5"
+    "numDiTausQCDnoIso >= 1 && muonTrackIsoQCDnoIso_0 > 4. && muonEcalIsoQCDnoIso_0 > 4."
+    " && tauDiscrAgainstMuonsQCDnoIso_0 > 0.5"
     " && numGlobalMuons < 2"
 )
 

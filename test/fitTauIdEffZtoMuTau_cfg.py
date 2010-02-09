@@ -92,13 +92,13 @@ branchNames_muonPt = dict()
 branchNames_muonPt["Zmumu"] = "muonPtZmumu_0"
 branchNames_muonPt["WplusJets"] = "muonPtWplusJets_0"
 branchNames_muonPt["TTplusJets"] = "muonPtTTplusJets_0"
-branchNames_muonPt["QCD"] = "muonPtQCD_0"
+branchNames_muonPt["QCD"] = "muonPtQCDnoIso_0"
 
 branchNames_muonAbsEta = dict()
 branchNames_muonAbsEta["Zmumu"] = "muonAbsEtaZmumu_0"
 branchNames_muonAbsEta["WplusJets"] = "muonAbsEtaWplusJets_0"
 branchNames_muonAbsEta["TTplusJets"] = "muonAbsEtaTTplusJets_0"
-branchNames_muonAbsEta["QCD"] = "muonAbsEtaQCD_0"
+branchNames_muonAbsEta["QCD"] = "muonAbsEtaQCDnoIso_0"
 
 kineEventReweights = dict()
 kineEventReweights["Zmumu"] = None
