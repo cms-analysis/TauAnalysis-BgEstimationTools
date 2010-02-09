@@ -532,10 +532,13 @@ process.analyzeZtoMuTauEvents = cms.EDAnalyzer("GenericAnalyzer",
         ##    filter = cms.string('evtSelDiTauCandidateForMuTauPzetaDiff'),
         ##    title = cms.string('P_{#zeta} - 1.5*P_{#zeta}^{vis} > -20 GeV')
         ##),
-        ##cms.PSet(
-        ##    filter = cms.string('evtSelDiMuPairZmumuHypothesisVeto'),
-        ##    title = cms.string('not 80 < M (Muon-Muon) < 100 GeV')
-        ##),
+
+        # veto events compatible with Z --> mu+ mu- hypothesis
+        # (based on reconstructed invariant mass of di-muon pair)
+        cms.PSet(
+            filter = cms.string('evtSelDiMuPairZmumuHypothesisVeto'),
+            title = cms.string('not 80 < M (Muon-Muon) < 100 GeV')
+        ),
 
         cms.PSet(
             analyzers = cms.vstring(
