@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import copy
 
-from TauAnalysis.DQMTools.drawJobConfigurator import *
+from TauAnalysis.DQMTools.tools.drawJobConfigurator import *
 
 # define template for all kinds of plots
 # (specific to tau id. efficiency measurement in Z --> mu + tau-jet events)
