@@ -6,7 +6,7 @@
 <use name=PhysicsTools/Utilities>
 <use name=TauAnalysis/DQMTools>
 <use name=root>
-<use name=rootroofit>
+<use name=roofit>
 
 <export>
   <lib name=TauAnalysisBgEstimationTools>
@@ -18,5 +18,5 @@
   <use name=PhysicsTools/Utilities>
   <use name=TauAnalysis/DQMTools>
   <use name=root>
-  <use name=rootroofit>
+  <use name=roofit>
 </export>

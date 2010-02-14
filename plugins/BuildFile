@@ -17,5 +17,5 @@
   <use name=TauAnalysis/DQMTools>
   <use name=TauAnalysis/FittingTools>
   <use name=root>
-  <use name=rootroofit>
+  <use name=roofit>
 </library>
