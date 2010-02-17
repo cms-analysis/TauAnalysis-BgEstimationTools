@@ -114,7 +114,7 @@ def addFakeRateAnalyzer(process, genAnalyzer, frType, bgEstFakeRateAnalysisSeque
 
     return bgEstFakeRateAnalysisSequence
 
-def makeDataBinningDumpSequence(process, dqmDirectory, processSubDirectories, frSubDirectories):
+def makeDataBinningDumpSequence(process, dqmDirectory, processSubDirectories, frSubDirectories, moduleLabel):
 
     dataBinningDumpAnalysisSequence = None
 
@@ -135,7 +135,7 @@ def makeDataBinningDumpSequence(process, dqmDirectory, processSubDirectories, fr
 
             setattr(module.binningService.dqmDirectories, frType, cms.string(dqmDirectory_i))
 
-        moduleName = "".join(["dumpDataBinningBgEstFakeRateZtoMuTau", "_", processName, "_", frType])
+        moduleName = "".join(["dumpDataBinningBgEstFakeRateZtoMuTau", "_", processName, "_", moduleLabel])
         setattr(process, moduleName, module)
 
         module = getattr(process, moduleName)
@@ -147,7 +147,7 @@ def makeDataBinningDumpSequence(process, dqmDirectory, processSubDirectories, fr
 
     return dataBinningDumpAnalysisSequence
 
-def makeFilterStatTableDumpSequence(process, dqmDirectory, processSubDirectories, frSubDirectories):
+def makeFilterStatTableDumpSequence(process, dqmDirectory, processSubDirectories, frSubDirectories, moduleLabel):
 
     filterStatTableDumpAnalysisSequence = None
 
@@ -155,7 +155,9 @@ def makeFilterStatTableDumpSequence(process, dqmDirectory, processSubDirectories
 
         module = cms.EDAnalyzer("DQMDumpFilterStatisticsTables",
             dqmDirectories = cms.PSet(),
-            columnsSummaryTable = cms.vstring("Passed", "cumul. Efficiency", "margin. Efficiency")
+            #columnsSummaryTable = cms.vstring("Passed", "cumul. Efficiency", "margin. Efficiency"),
+            columnsSummaryTable = cms.vstring("Passed"),
+            printSummaryTableOnly = cms.bool(True)                    
         )
 
         for frType, frSubDirectory in frSubDirectories.items():
@@ -166,7 +168,7 @@ def makeFilterStatTableDumpSequence(process, dqmDirectory, processSubDirectories
 
             setattr(module.dqmDirectories, frType, cms.string(dqmDirectory_i))
 
-        moduleName = "".join(["dumpFilterStatTableBgEstFakeRateZtoMuTau", "_", processName, "_", frType])
+        moduleName = "".join(["dumpFilterStatTableBgEstFakeRateZtoMuTau", "_", processName, "_", moduleLabel])
         setattr(process, moduleName, module)
 
         module = getattr(process, moduleName)
