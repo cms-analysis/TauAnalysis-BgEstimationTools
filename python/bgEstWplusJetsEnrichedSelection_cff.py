@@ -28,7 +28,7 @@ muonsBgEstWplusJetsEnrichedTrkIso = copy.deepcopy(selectedLayer1MuonsTrkIso)
 muonsBgEstWplusJetsEnrichedTrkIso.sumPtMax = cms.double(1.)
 
 muonsBgEstWplusJetsEnrichedEcalIso = copy.deepcopy(selectedLayer1MuonsEcalIso)
-muonsBgEstWplusJetsEnrichedEcalIso.cut = cms.string('ecalIso < 1.')
+muonsBgEstWplusJetsEnrichedEcalIso.cut = cms.string('userIsolation("pat::EcalIso") < 1.')
 
 muonSelConfiguratorBgEstWplusJetsEnriched = objSelConfigurator(
     [ muonsBgEstWplusJetsEnrichedPt,
@@ -222,6 +222,7 @@ tauHistManagerWplusJetsEnriched.tauSource = cms.InputTag('tausBgEstWplusJetsEnri
 diTauCandidateHistManagerWplusJetsEnriched = copy.deepcopy(diTauCandidateHistManagerForMuTau)
 diTauCandidateHistManagerWplusJetsEnriched.pluginName = cms.string('diTauCandidateHistManagerWplusJetsEnriched')
 diTauCandidateHistManagerWplusJetsEnriched.diTauCandidateSource = cms.InputTag('muTauPairsBgEstWplusJetsEnrichedMt1MET')
+diTauCandidateHistManagerWplusJetsEnriched.visMassHypothesisSource = cms.InputTag('')
 
 analyzeEventsBgEstWplusJetsEnriched = cms.EDAnalyzer("GenericAnalyzer",
   

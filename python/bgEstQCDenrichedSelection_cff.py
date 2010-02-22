@@ -19,7 +19,7 @@ muonsBgEstQCDenrichedTrkIso.sumPtMin = cms.double(4.)
 muonsBgEstQCDenrichedTrkIso.sumPtMax = cms.double(8.)
 
 muonsBgEstQCDenrichedEcalIso = copy.deepcopy(selectedLayer1MuonsEcalIso)
-muonsBgEstQCDenrichedEcalIso.cut = cms.string('userIsolation(1) > 4. & userIsolation(1) < 8.')
+muonsBgEstQCDenrichedEcalIso.cut = cms.string('userIsolation("pat::EcalIso") > 4. & userIsolation("pat::EcalIso") < 8.')
 
 muonsBgEstQCDenrichedPionVeto = copy.deepcopy(selectedLayer1MuonsPionVeto)
 
