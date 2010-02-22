@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import copy
 
-process = cms.Process('runTauIdEffAnalysisZtoMuTau')
+process = cms.Process('prodBgEstTemplateProductionZtoMuTau')
 
 # import of standard configurations for RECOnstruction
 # of electrons, muons and tau-jets with non-standard isolation cones
@@ -31,8 +31,8 @@ from TauAnalysis.Configuration.recoSampleDefinitionsZtoMuTau_10TeV_cfi import *
 
 process.DQMStore = cms.Service("DQMStore")
 
-process.saveTauIdEffZtoMuTauPlots = cms.EDAnalyzer("DQMSimpleFileSaver",
-    outputFileName = cms.string('plotsTauIdEffZtoMuTau.root')
+process.saveTemplatesZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
+    outputFileName = cms.string('bgEstTemplatesZtoMuTau.root')
 )
 
 process.maxEvents = cms.untracked.PSet(
@@ -57,7 +57,7 @@ process.source = cms.Source("PoolSource",
 #__process.source.fileNames = #inputFileNames#
 #__process.maxEvents.input = cms.untracked.int32(#maxEvents#)
 #__setattr(process, "genPhaseSpaceCut", copy.deepcopy(#genPhaseSpaceCut#))
-#__process.saveTauIdEffZtoMuTauPlots.outputFileName = #plotsOutputFileName#
+#__process.saveTemplatesZtoMuTau.outputFileName = #plotsOutputFileName#
 #__#isBatchMode#
 #
 #--------------------------------------------------------------------------------
@@ -76,7 +76,6 @@ from PhysicsTools.PatAlgos.tools.tauTools import *
 # as input for pat::Tau production
 switchToPFTauShrinkingCone(process)
 #switchToPFTauFixedCone(process)
-setattr(process.allLayer1Taus.tauIDSources, "ewkTauId", cms.InputTag('ewkTauId'))
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -100,7 +99,6 @@ process.load("TauAnalysis.CandidateTools.diTauPairProductionAllKinds_cff")
 replaceMETforDiTaus(process, cms.InputTag('layer1METs'), cms.InputTag('layer1PFMETs'))
 #--------------------------------------------------------------------------------
 
-process.load('TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauSelection_cff')
 process.load('TauAnalysis.BgEstimationTools.bgEstWplusJetsEnrichedSelection_cff')
 process.load('TauAnalysis.BgEstimationTools.bgEstTTplusJetsEnrichedSelection_cff')
 process.load('TauAnalysis.BgEstimationTools.bgEstZmumuEnrichedSelection_cff')
@@ -109,54 +107,45 @@ process.load('TauAnalysis.BgEstimationTools.bgEstQCDenrichedSelection_cff')
 # set generator level phase-space selection
 # (to avoid overlap of different  Monte Carlo samples in simulated phase-space)
 if hasattr(process, "isBatchMode"):
-    process.analyzeEventsTauIdEffZtoMuTau.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstWplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstTTplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstZmumuEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstQCDenriched.filters[0] = getattr(process, "genPhaseSpaceCut")
 
 # produce event weight variable for correcting "bias"
-# of muon |eta| distribution caused by cuts on muon track and ECAL isolation variables
-# in QCD background events
-process.kineEventReweightTauIdEffQCD = cms.EDProducer("ObjValProducer",
+# of visible invariant muon + tau-jet mass distribution
+# caused by Mt(muon + tau-jet) transverse mass cut
+# and cut on CDF (Pzeta - 1.5*PzetaVis) variable
+process.kineEventReweightBgEstTemplateWplusJets = cms.EDProducer("ObjValProducer",
     config = cms.PSet(
         pluginType = cms.string("KineEventReweightExtractor"),
         weightLookupTable = cms.PSet(
             fileName = cms.string(
-                'rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/kineEventReweights/muonKineReweightsTauIdEffZtoMuTau.root'
+                'rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/kineEventReweights/bgEstKineEventReweightsZtoMuTau.root.root'
             ),
-            meName = cms.string('DQMData/tauIdEffKineEventReweights/QCDenrichedMuonTrkIso_data/MuonPtVsAbsEta')
+            meName = cms.string('DQMData/bgEstTemplateKineEventReweights/WplusJets/diTauMvis')
         ),
         variables = cms.PSet(
-            x = cms.PSet(
-                pluginType = cms.string("PATMuTauPairValExtractor"),
-                src = cms.InputTag('muTauPairsForBgEstQCDenrichedNoIsolation'),
-                value = cms.string("abs(leg1.eta)"),
-                indices = cms.vuint32(0)
-            ),
-            y = cms.PSet(
-                pluginType = cms.string("PATMuTauPairValExtractor"),
-                src = cms.InputTag('muTauPairsForBgEstQCDenrichedNoIsolation'),
-                value = cms.string("leg1.pt"),
-                indices = cms.vuint32(0)
-            )
+            pluginType = cms.string("PATMuTauPairValExtractor"),
+            src = cms.InputTag('muTauPairsBgEstWplusJetsEnriched'),
+            value = cms.string("p4Vis.mass"),
+            indices = cms.vuint32(0)
         )
     )
 )
 
 # add event weight variable to analysis sequence
 # for producing W + jets templates
-setattr(process.analyzeEventsBgEstQCDenriched, "eventWeightSource", cms.VInputTag("kineEventReweightTauIdEffQCD"))
+setattr(process.analyzeEventsBgEstWplusJetsEnriched, "eventWeightSource", cms.VInputTag("kineEventReweightBgEstTemplateWplusJets"))
 
 process.p = cms.Path(
    process.producePatTupleZtoMuTauSpecific
   + process.selectZtoMuTauEvents
-  + process.bgEstTauIdEffZtoMuTauAnalysisSequence
-  + process.bgEstWplusJetsEnrichedAnalysisSequence
+  + process.kineEventReweightBgEstTemplateWplusJets + process.bgEstWplusJetsEnrichedAnalysisSequence
   + process.bgEstTTplusJetsEnrichedAnalysisSequence
   + process.bgEstZmumuEnrichedAnalysisSequence
-  + process.kineEventReweightTauIdEffQCD + process.bgEstQCDenrichedAnalysisSequence 
-  + process.saveTauIdEffZtoMuTauPlots 
+  + process.bgEstQCDenrichedAnalysisSequence 
+  + process.saveTemplatesZtoMuTau
 )
 
 #--------------------------------------------------------------------------------

@@ -29,9 +29,15 @@ process.maxEvents = cms.untracked.PSet(
 
 process.source = cms.Source("EmptySource")
 
+#--------------------------------------------------------------------------------
+# load template histograms and histograms to be fitted
+#--------------------------------------------------------------------------------
+
 process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(        
-        inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_3_1_4/src/TauAnalysis/BgEstimationTools/test/plotsTauIdEffZtoMuTau_all.root'),
+        inputFileNames = cms.vstring(
+            'rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeV/plotsZtoMuTau_all.root')
+        ),        
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
     )
@@ -45,20 +51,20 @@ region_tauIdPassed = "region02"
 region_tauIdFailed = "region01"
 
 dqmDirectory_Ztautau_all = "harvested/Ztautau/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/"
-dqmDirectory_Ztautau_tauIdPassed = dqmDirectory_Ztautau_all + "tauIdEffHistograms2regions/" + region_tauIdPassed + "/"
-dqmDirectory_Ztautau_tauIdFailed = dqmDirectory_Ztautau_all + "tauIdEffHistograms2regions/" + region_tauIdFailed + "/"
+dqmDirectory_Ztautau_tauIdPassed = dqmDirectory_Ztautau_all + "tauIdEffHistograms/" + region_tauIdPassed + "/"
+dqmDirectory_Ztautau_tauIdFailed = dqmDirectory_Ztautau_all + "tauIdEffHistograms/" + region_tauIdFailed + "/"
 
 dqmDirectory_WplusJets_all = "harvested/WplusJets/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/"
-dqmDirectory_WplusJets_tauIdPassed = dqmDirectory_WplusJets_all + "tauIdEffHistograms2regions/" + region_tauIdPassed + "/"
-dqmDirectory_WplusJets_tauIdFailed = dqmDirectory_WplusJets_all + "tauIdEffHistograms2regions/" + region_tauIdFailed + "/"
+dqmDirectory_WplusJets_tauIdPassed = dqmDirectory_WplusJets_all + "tauIdEffHistograms/" + region_tauIdPassed + "/"
+dqmDirectory_WplusJets_tauIdFailed = dqmDirectory_WplusJets_all + "tauIdEffHistograms/" + region_tauIdFailed + "/"
 
 dqmDirectory_QCD_all = "harvested/qcdSum/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/"
-dqmDirectory_QCD_tauIdPassed = dqmDirectory_QCD_all + "tauIdEffHistograms2regions/" + region_tauIdPassed + "/"
-dqmDirectory_QCD_tauIdFailed = dqmDirectory_QCD_all + "tauIdEffHistograms2regions/" + region_tauIdFailed + "/"
+dqmDirectory_QCD_tauIdPassed = dqmDirectory_QCD_all + "tauIdEffHistograms/" + region_tauIdPassed + "/"
+dqmDirectory_QCD_tauIdFailed = dqmDirectory_QCD_all + "tauIdEffHistograms/" + region_tauIdFailed + "/"
 
 dqmDirectory_Data_all = "harvested/smSum/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/"
-dqmDirectory_Data_tauIdPassed = dqmDirectory_Data_all + "tauIdEffHistograms2regions/" + region_tauIdPassed + "/"
-dqmDirectory_Data_tauIdFailed = dqmDirectory_Data_all + "tauIdEffHistograms2regions/" + region_tauIdFailed + "/"
+dqmDirectory_Data_tauIdPassed = dqmDirectory_Data_all + "tauIdEffHistograms/" + region_tauIdPassed + "/"
+dqmDirectory_Data_tauIdFailed = dqmDirectory_Data_all + "tauIdEffHistograms/" + region_tauIdFailed + "/"
 
 #--------------------------------------------------------------------------------
 # define names of histograms used in fit
@@ -71,96 +77,6 @@ meName_muonAbsEta = 'MuonAbsEta'
 
 dqmSubDirectory_muonPtVsAbsEta  = 'TauIdEffSpecificQuantities/'
 meName_muonPtVsAbsEta = 'MuonPtVsAbsEta'
-
-#--------------------------------------------------------------------------------
-# load template histograms
-#--------------------------------------------------------------------------------
-
-process.loadTemplateHistTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
-    all = cms.PSet(
-        inputFileNames = cms.vstring('/afs/cern.ch/user/v/veelken/scratch0/CMSSW_3_1_4/src/TauAnalysis/BgEstimationTools/test/fitTauIdEffZtoMuTau.root'),
-        scaleFactor = cms.double(1.),
-        dqmDirectory_store = cms.string('')
-    )
-)
-
-#--------------------------------------------------------------------------------
-# define names of branches in Ntuple from which template histograms get produced
-#--------------------------------------------------------------------------------
-
-branchNames_muonPt = dict()
-branchNames_muonPt["Zmumu"] = "muonPtZmumu_0"
-branchNames_muonPt["WplusJets"] = "muonPtWplusJets_0"
-branchNames_muonPt["TTplusJets"] = "muonPtTTplusJets_0"
-branchNames_muonPt["QCD"] = "muonPtQCDnoIso_0"
-
-branchNames_muonAbsEta = dict()
-branchNames_muonAbsEta["Zmumu"] = "muonAbsEtaZmumu_0"
-branchNames_muonAbsEta["WplusJets"] = "muonAbsEtaWplusJets_0"
-branchNames_muonAbsEta["TTplusJets"] = "muonAbsEtaTTplusJets_0"
-branchNames_muonAbsEta["QCD"] = "muonAbsEtaQCDnoIso_0"
-
-kineEventReweights = dict()
-kineEventReweights["Zmumu"] = None
-kineEventReweights["WplusJets"] = None
-kineEventReweights["TTplusJets"] = None
-kineEventReweights["QCD"] = "kineEventReweightTauIdEffQCDnoIso"
-
-#--------------------------------------------------------------------------------
-# produce template histograms 
-#--------------------------------------------------------------------------------
-
-fileNames = dict()
-fileNames["Ztautau"] = fileNamesZtoMuTau_Ztautau_10TeV
-fileNames["Zmumu"] = fileNamesZtoMuTau_Zmumu_10TeV
-fileNames["WplusJets"] = fileNamesZtoMuTau_WplusJets_10TeV
-fileNames["TTplusJets"] = fileNamesZtoMuTau_TTplusJets_10TeV
-fileNames["QCD"] = fileNamesZtoMuTau_qcdSum_10TeV
-fileNames["data"] = fileNamesZtoMuTau_pseudoData_10TeV
-
-bgEstEventSelections = dict()
-bgEstEventSelections["Zmumu"] = bgEstEventSelection_Zmumu
-bgEstEventSelections["WplusJets"] = bgEstEventSelection_WplusJets 
-bgEstEventSelections["TTplusJets"] = bgEstEventSelection_TTplusJets
-bgEstEventSelections["QCD"] = bgEstEventSelection_QCD
-
-print("bgEstEventSelection_Zmumu = " + bgEstEventSelections["Zmumu"])
-print("bgEstEventSelection_WplusJets = " + bgEstEventSelections["WplusJets"])
-print("bgEstEventSelection_TTplusJets = " + bgEstEventSelections["TTplusJets"])
-print("bgEstEventSelection_QCD = " + bgEstEventSelections["QCD"])
-
-binEdges1d_muonPt = [ 15., 20., 25., 30., 35., 40., 50., 60., 80., 120. ]
-binEdges2d_muonPt = [ 15., 20., 25., 30., 40., 60., 120. ]
-binEdges2d_muonAbsEta = [ 0., 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1 ]
-
-process.prodTemplateHistTauIdEffZtoMuTau_muonPt = makeTemplateHistProdSequence1d(
-    process, prodTemplateHist, fileNames, bgEstEventSelections, kineEventReweights,
-    dqmDirectory = processName, meName = meName_muonPt,
-    branchNames = branchNames_muonPt, numBins = 9, binEdges = binEdges1d_muonPt
-)
-
-process.prodTemplateHistTauIdEffZtoMuTau_muonAbsEta = makeTemplateHistProdSequence1d(
-    process, prodTemplateHist, fileNames, bgEstEventSelections, kineEventReweights,
-    dqmDirectory = processName, meName = meName_muonAbsEta,
-    branchNames = branchNames_muonAbsEta, numBins = 14, min = 0., max = 2.1
-)
-
-process.prodTemplateHistTauIdEffZtoMuTau_muonPtVsAbsEta = makeTemplateHistProdSequence2d(
-    process, prodTemplateHist, fileNames, bgEstEventSelections, kineEventReweights,
-    dqmDirectory = processName, meName = meName_muonPtVsAbsEta,
-    branchNamesX = branchNames_muonAbsEta, numBinsX = 7, binEdgesX = binEdges2d_muonAbsEta,
-    branchNamesY = branchNames_muonPt, numBinsY = 6, binEdgesY = binEdges2d_muonPt
-)
-
-process.prodTemplateHistTauIdEffZtoMuTau = cms.Sequence(
-    process.prodTemplateHistTauIdEffZtoMuTau_muonPt + process.prodTemplateHistTauIdEffZtoMuTau_muonAbsEta
-   + process.prodTemplateHistTauIdEffZtoMuTau_muonPtVsAbsEta
-)    
-
-process.saveTemplateHistTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
-    outputFileName = cms.string('tauIdEffTemplatesZtoMuTau.root'),
-    outputCommands = cms.vstring('keep *')
-)
 
 #--------------------------------------------------------------------------------
 # plot template histograms of "pure" Monte Carlo processes
@@ -535,8 +451,8 @@ meName_norm = 'Ztautau/norm/value'
 process.dumpBinErrorsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMBinErrorCalculator",
     config = cms.VPSet(
         cms.PSet(
-            meName_passed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults2regions/binContent_region2'),
-            meName_failed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults2regions/binContent_region1'),
+            meName_passed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults/binContent_region2'),
+            meName_failed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults/binContent_region1'),
             label = cms.string("Tau id., true")
         ),
         cms.PSet(
@@ -554,9 +470,6 @@ process.saveFitResultsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
 
 process.p = cms.Path(
     process.loadTauIdEffZtoMuTau
-   #+ process.loadTemplateHistTauIdEffZtoMuTau
-   + process.prodTemplateHistTauIdEffZtoMuTau
-   + process.saveTemplateHistTauIdEffZtoMuTau 
    + process.plotTemplateHistTauIdEffZtoMuTau
    + process.fitTauIdEffZtoMuTau
    + process.saveFitResultsTauIdEffZtoMuTau 
