@@ -321,25 +321,7 @@ def enableFakeRates_runZtoMuTau(process, method = None):
 
     bgEstFakeRateAnalysisSequence = None  
 
-    # add analysis sequence:
-    #  1.) with tau id. discriminators not applied
-    #  2.) events **not** weighted by fake-rate
-    # (for the purpose of making control plots for the data sample from which contributions 
-    #  of individual background processes are estimated via the fake-rate technique)
-    #
-    # NOTE: event print-out **not** disabled for this analysis sequence
-    #
-    if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
-         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
-        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
-                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
-        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
-                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
-    else:
-        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents,
-                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
-
-    # disable event print-out for all other analysis sequences
+    # disable event print-out for all analysis sequences
     if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and \
          hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
         disableEventDump(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation)
@@ -369,6 +351,21 @@ def enableFakeRates_runZtoMuTau(process, method = None):
         else:
             bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents,
                                                                 frType, bgEstFakeRateAnalysisSequence)
+
+    # add analysis sequence:
+    #  1.) with tau id. discriminators not applied
+    #  2.) events **not** weighted by fake-rate
+    # (for the purpose of making control plots for the data sample from which contributions 
+    #  of individual background processes are estimated via the fake-rate technique)
+    if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
+         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
+        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
+                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
+        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
+                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
+    else:
+        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents,
+                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)        
 
     # if method is "simple", add one more analysis sequence:
     #  1.) with tau id. discriminators not applied
