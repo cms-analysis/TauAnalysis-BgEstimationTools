@@ -33,7 +33,7 @@ plots_TauIdEffZtoMuTau = cms.PSet(
 
 drawJobConfigurator_TauIdEffZtoMuTau = drawJobConfigurator(
     template = plots_TauIdEffZtoMuTau,
-    dqmDirectory = '#PROCESSDIR#/TauIdEffAnalyzerZtoMuTau/'
+    dqmDirectory = '#PROCESSDIR#/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/'
 )
 
 #--------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ drawJobConfigurator_TauIdEffZtoMuTau = drawJobConfigurator(
 #--------------------------------------------------------------------------------
 
 drawJobConfigurator_TauIdEffZtoMuTau.add(
-    afterCut = "diTauCandidateBackToBackCut",
+    afterCut = "uniqueTauCandidateCutTauIdEffZtoMuTau",
     plots = [
         drawJobConfigEntry(
             meName = 'MuonQuantities/Muon#PAR#',
@@ -93,30 +93,24 @@ drawJobConfigurator_TauIdEffZtoMuTau.add(
 
 #--------------------------------------------------------------------------------
 # define distributions to be plotted
-# for separately for events in four different regions:
-#
-#  o tau id. passed && opposite sign of muon and tau-jet charge
-#  o tau id. failed && opposite sign of muon and tau-jet charge
-#  o tau id. passed && same sign of muon and tau-jet charge
-#  o tau id. failed && same sign of muon and tau-jet charge
-#
+# for separately for events in the two different regions:
+#  o tau id. passed
+#  o tau id. failed#
 # ("tau id." = leading track finding && leading track Pt cut && track isolation && ECAL isolation 
 #             && 1||3 tracks in signal cone && charge +1||-1)
 #--------------------------------------------------------------------------------
 
-for iRegion in [ 1, 2, 5, 6 ]:
+for iRegion in [ 1, 2]:
     
-    dqmSubDirectory_region = 'tauIdEffHistograms4regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
+    dqmSubDirectory_region = 'tauIdEffHistograms2regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
     
-    title_region = { 1: "Tau id. failed && OS",
-                     2: "Tau id. passed && OS",
-                     5: "Tau id. failed && SS",
-                     6: "Tau id. passed && SS" }[iRegion]
+    title_region = { 1: "Tau id. failed",
+                     2: "Tau id. passed" }[iRegion]
     
     name_region = "region%(i)02d" % {"i" : iRegion}
             
     drawJobConfigurator_TauIdEffZtoMuTau.add(
-        afterCut = "diTauCandidateBackToBackCut",
+        afterCut = "uniqueTauCandidateCutTauIdEffZtoMuTau",
         plots = [        
             ##drawJobConfigEntry(
             ##    meName = dqmSubDirectory_region + 'MuonQuantities/Muon#PAR#',
@@ -186,7 +180,7 @@ for iRegion in [ 1, 2, 5, 6 ]:
 
 #--------------------------------------------------------------------------------
 # plot shapes of the muon track, ECAL and combined isolation distributions
-# compared for the four different regions
+# compared for the two different regions
 #--------------------------------------------------------------------------------
 
 plots_TauIdEffZtoMuTau_shapes = cms.PSet(
@@ -230,24 +224,20 @@ def addDrawJob(drawJobs, meName, xAxis, label):
     for process in [ 'Zmumu', 'WplusJets', 'qcdSum', 'Ztautau' ]:
         drawJob_process = copy.deepcopy(plots_TauIdEffZtoMuTau_shapes)
 
-        for iRegion in [ 1, 2, 5, 6 ]:
+        for iRegion in [ 1, 2 ]:
         
             index = { 1: 0,
-                      2: 1,
-                      5: 2,
-                      6: 3 }[iRegion]
+                      2: 1 }[iRegion]
         
-            dqmDirectory = 'harvested/' + process + '/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/'    
-            dqmSubDirectory_region = 'tauIdEffHistograms4regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
+            dqmDirectory = 'harvested/' + process + '/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau/'    
+            dqmSubDirectory_region = 'tauIdEffHistograms2regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
             meName_full = dqmDirectory + dqmSubDirectory_region + meName
             drawJob_process.plots[index].dqmMonitorElements = cms.vstring(meName_full)
             
             drawJob_process.plots[index].process = cms.string(process)
             
-            title_region = { 1: "Tau id. failed && OS",
-                             2: "Tau id. passed && OS",
-                             5: "Tau id. failed && SS",
-                             6: "Tau id. passed && SS" }[iRegion]
+            title_region = { 1: "Tau id. failed",
+                             2: "Tau id. passed" }[iRegion]
             title = title_region
             drawJob_process.plots[index].legendEntry = cms.string(title)
             
