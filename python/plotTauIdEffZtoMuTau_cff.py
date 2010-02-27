@@ -24,29 +24,29 @@ loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     #InclusivePPmuX = copy.deepcopy(processZtoMuTau_InclusivePPmuX.config_dqmFileLoader),
     PPmuXptGt20 = copy.deepcopy(processZtoMuTau_PPmuXptGt20Sum.config_dqmFileLoader),
     TTplusJets = copy.deepcopy(processZtoMuTau_TTplusJetsSum.config_dqmFileLoader),
-    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_1_2/plots/TauIdEff/10TeV/")
+    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeV/")
 )
 
 addTauIdEffZtoMuTau_qcdSum = cms.EDAnalyzer("DQMHistAdder",
     qcdSum = cms.PSet(
         dqmDirectories_input = cms.vstring(
-            'harvested/InclusivePPmuX/TauIdEffAnalyzerZtoMuTau',
-            'harvested/PPmuXptGt20/TauIdEffAnalyzerZtoMuTau'
+            'harvested/InclusivePPmuX',
+            'harvested/PPmuXptGt20'
         ),
-        dqmDirectory_output = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTau')
+        dqmDirectory_output = cms.string('harvested/qcdSum')
     )                          
 )
 
 addTauIdEffZtoMuTau_smSum = cms.EDAnalyzer("DQMHistAdder",
     smSum = cms.PSet(
         dqmDirectories_input = cms.vstring(
-            'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau',
-            'harvested/Zmumu/TauIdEffAnalyzerZtoMuTau',
-            'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau',
-            'harvested/TTplusJets/TauIdEffAnalyzerZtoMuTau',
-            'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau'
+            'harvested/Ztautau',
+            'harvested/Zmumu',
+            'harvested/WplusJets',
+            'harvested/TTplusJets',
+            'harvested/qcdSum'
         ),
-        dqmDirectory_output = cms.string('harvested/smSum/TauIdEffAnalyzerZtoMuTau')
+        dqmDirectory_output = cms.string('harvested/smSum')
     )
 )
 

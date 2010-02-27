@@ -10,13 +10,9 @@ import copy
 #
 #--------------------------------------------------------------------------------
 
-from TauAnalysis.BgEstimationTools.bgEstNtupleDefinitionsZtoMuTau_10TeV_cfi import *
 from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
-from TauAnalysis.BgEstimationTools.templateHistDefinitions_cfi import *
-from TauAnalysis.BgEstimationTools.tools.prodTemplateHistConfigurator import makeTemplateHistProdSequence1d
-from TauAnalysis.BgEstimationTools.tools.prodTemplateHistConfigurator import makeTemplateHistProdSequence2d
 from TauAnalysis.BgEstimationTools.tools.drawTemplateHistConfigurator import drawTemplateHistConfigurator
-from TauAnalysis.BgEstimationTools.bgEstTemplateEvtSelZtoMuTau_cfi import *
+from TauAnalysis.BgEstimationTools.templateHistDefinitions_cfi import drawJobTemplateHist
 
 processName = 'fitTauIdEffZtoMuTau'
 process = cms.Process(processName)
@@ -36,7 +32,7 @@ process.source = cms.Source("EmptySource")
 process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(        
         inputFileNames = cms.vstring(
-            'rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeV/plotsZtoMuTau_all.root')
+            'rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeVii/plotsTauIdEffZtoMuTau_all.root'
         ),        
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
@@ -47,36 +43,39 @@ process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
 # define directories in which histograms are stored in DQMStore
 #--------------------------------------------------------------------------------
 
-region_tauIdPassed = "region02"
-region_tauIdFailed = "region01"
+region_tauIdPassed = 'region02'
+region_tauIdFailed = 'region01'
 
-dqmDirectory_Ztautau_all = "harvested/Ztautau/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/"
-dqmDirectory_Ztautau_tauIdPassed = dqmDirectory_Ztautau_all + "tauIdEffHistograms/" + region_tauIdPassed + "/"
-dqmDirectory_Ztautau_tauIdFailed = dqmDirectory_Ztautau_all + "tauIdEffHistograms/" + region_tauIdFailed + "/"
+dqmDirectory_Ztautau_all = 'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+#dqmDirectory_Ztautau_all = 'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+dqmDirectory_Ztautau_tauIdPassed = dqmDirectory_Ztautau_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed 
+dqmDirectory_Ztautau_tauIdFailed = dqmDirectory_Ztautau_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed 
 
-dqmDirectory_WplusJets_all = "harvested/WplusJets/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/"
-dqmDirectory_WplusJets_tauIdPassed = dqmDirectory_WplusJets_all + "tauIdEffHistograms/" + region_tauIdPassed + "/"
-dqmDirectory_WplusJets_tauIdFailed = dqmDirectory_WplusJets_all + "tauIdEffHistograms/" + region_tauIdFailed + "/"
+dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+#dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+dqmDirectory_WplusJets_tauIdPassed = dqmDirectory_WplusJets_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed
+dqmDirectory_WplusJets_tauIdFailed = dqmDirectory_WplusJets_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed
+dqmDirectory_WplusJets_template = 'harvested/smSum/BgEstTemplateAnalyzer_WplusJetsEnriched/afterDiMuonVetoBgEstWplusJetsEnriched'
 
-dqmDirectory_QCD_all = "harvested/qcdSum/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/"
-dqmDirectory_QCD_tauIdPassed = dqmDirectory_QCD_all + "tauIdEffHistograms/" + region_tauIdPassed + "/"
-dqmDirectory_QCD_tauIdFailed = dqmDirectory_QCD_all + "tauIdEffHistograms/" + region_tauIdFailed + "/"
+dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+#dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+dqmDirectory_QCD_tauIdPassed = dqmDirectory_QCD_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed
+dqmDirectory_QCD_tauIdFailed = dqmDirectory_QCD_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed 
+dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched_reweighted/afterDiMuonVetoBgEstQCDenriched'
+#dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched/afterDiMuonVetoBgEstQCDenriched'
 
-dqmDirectory_Data_all = "harvested/smSum/TauIdEffAnalyzerZtoMuTau/afterDiTauCandidateBackToBackCut/"
-dqmDirectory_Data_tauIdPassed = dqmDirectory_Data_all + "tauIdEffHistograms/" + region_tauIdPassed + "/"
-dqmDirectory_Data_tauIdFailed = dqmDirectory_Data_all + "tauIdEffHistograms/" + region_tauIdFailed + "/"
+dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+#dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+dqmDirectory_Data_tauIdPassed = dqmDirectory_Data_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed 
+dqmDirectory_Data_tauIdFailed = dqmDirectory_Data_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed
 
 #--------------------------------------------------------------------------------
 # define names of histograms used in fit
 #--------------------------------------------------------------------------------
 
-dqmSubDirectory_muonPt  = 'TauIdEffSpecificQuantities/'
-meName_muonPt = 'MuonPt'
-dqmSubDirectory_muonAbsEta  = 'TauIdEffSpecificQuantities/'
-meName_muonAbsEta = 'MuonAbsEta'
-
-dqmSubDirectory_muonPtVsAbsEta  = 'TauIdEffSpecificQuantities/'
-meName_muonPtVsAbsEta = 'MuonPtVsAbsEta'
+meName_muonPt = 'TauIdEffSpecificQuantities/MuonPt'
+meName_muonAbsEta = 'TauIdEffSpecificQuantities/MuonAbsEta'
+meName_muonPtVsAbsEta = 'TauIdEffSpecificQuantities/MuonPtVsAbsEta'
 
 #--------------------------------------------------------------------------------
 # plot template histograms of "pure" Monte Carlo processes
@@ -120,9 +119,9 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta = drawTemplateHistConfig
 
 drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
     meNames = [
-        dqmDirectory_Ztautau_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt,
-        dqmDirectory_Ztautau_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt,
-        dqmDirectory_Ztautau_all + dqmSubDirectory_muonPt + meName_muonPt
+        dqmDirectory_Ztautau_tauIdPassed + '/' + meName_muonPt,
+        dqmDirectory_Ztautau_tauIdFailed + '/' + meName_muonPt,
+        dqmDirectory_Ztautau_all + '/' + meName_muonPt
     ],
     name = "Ztautau_muonPt",
     title = "P_{T}^{#mu} in Z #rightarrow #tau^{+} #tau^{-} Signal" 
@@ -130,9 +129,9 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
 
 drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
     meNames = [
-        dqmDirectory_Ztautau_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-        dqmDirectory_Ztautau_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-        dqmDirectory_Ztautau_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
+        dqmDirectory_Ztautau_tauIdPassed + '/' + meName_muonAbsEta,
+        dqmDirectory_Ztautau_tauIdFailed + '/' + meName_muonAbsEta,
+        dqmDirectory_Ztautau_all + '/' + meName_muonAbsEta
     ],
     name = "Ztautau_muonAbsEta",
     title = "|#eta_{#mu}| in Z #rightarrow #tau^{+} #tau^{-} Signal" 
@@ -144,10 +143,10 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 
 ##drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
 ##    meNames = [
-##        dqmDirectory_Zmumu_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt,
-##        dqmDirectory_Zmumu_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt,
-##        #dqmDirectory_Zmumu_all + dqmSubDirectory_muonPt + meName_muonPt
-##        processName + '/Zmumu/data/' + meName_muonPt
+##        dqmDirectory_Zmumu_tauIdPassed + '/' + meName_muonPt,
+##        dqmDirectory_Zmumu_tauIdFailed + '/' + meName_muonPt,
+##        #dqmDirectory_Zmumu_all + '/' + meName_muonPt
+##        dqmDirectory_Zmumu_template + '/' + meName_muonPt
 ##    ],
 ##    name = "Zmumu_muonPt",
 ##    title = "P_{T}^{#mu} in Z #rightarrow #mu^{+} #mu^{-} Background" 
@@ -155,10 +154,10 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 
 ##drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 ##    meNames = [
-##        dqmDirectory_Zmumu_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-##        dqmDirectory_Zmumu_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-##        #dqmDirectory_Zmumu_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
-##        processName + '/Zmumu/data/' + meName_muonAbsEta
+##        dqmDirectory_Zmumu_tauIdPassed + '/' + meName_muonAbsEta,
+##        dqmDirectory_Zmumu_tauIdFailed + '/' + meName_muonAbsEta,
+##        #dqmDirectory_Zmumu_all + '/' + meName_muonAbsEta
+##        dqmDirectory_Zmumu_template + '/' + meName_muonAbsEta
 ##    ],
 ##    name = "Zmumu_muonAbsEta",
 ##    title = "|#eta_{#mu}| in Z #rightarrow #mu^{+} #mu^{-} Background"
@@ -170,11 +169,10 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 
 drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
     meNames = [
-        dqmDirectory_WplusJets_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt,
-        dqmDirectory_WplusJets_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt,
-        #dqmDirectory_WplusJets_all + dqmSubDirectory_muonPt + meName_muonPt
-        processName + '/WplusJets/data/' + meName_muonPt
-        
+        dqmDirectory_WplusJets_tauIdPassed + '/' + meName_muonPt,
+        dqmDirectory_WplusJets_tauIdFailed + '/' + meName_muonPt,
+        #dqmDirectory_WplusJets_all + '/' + meName_muonPt
+        dqmDirectory_WplusJets_template + '/' + meName_muonPt
     ],
     name = "WplusJets_muonPt",
     title = "P_{T}^{#mu} in W + jets Background"
@@ -182,10 +180,10 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
 
 drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
     meNames = [
-        dqmDirectory_WplusJets_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-        dqmDirectory_WplusJets_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-        #dqmDirectory_WplusJets_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
-        processName + '/WplusJets/data/' + meName_muonAbsEta
+        dqmDirectory_WplusJets_tauIdPassed + '/' + meName_muonAbsEta,
+        dqmDirectory_WplusJets_tauIdFailed + '/' + meName_muonAbsEta,
+        #dqmDirectory_WplusJets_all + '/' + meName_muonAbsEta
+        dqmDirectory_WplusJets_template + '/' + meName_muonAbsEta
     ],
     name = "WplusJets_muonAbsEta",
     title = "|#eta_{#mu}| in W + jets Background"
@@ -197,10 +195,10 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 
 ##drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
 ##    meNames = [
-##        dqmDirectory_TTplusJets_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt,
-##        dqmDirectory_TTplusJets_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt,
-##        #dqmDirectory_TTplusJets_all + dqmSubDirectory_muonPt + meName_muonPt
-##        processName + '/TTplusJets/data/' + meName_muonPt
+##        dqmDirectory_TTplusJets_tauIdPassed + '/' + meName_muonPt,
+##        dqmDirectory_TTplusJets_tauIdFailed + '/' + meName_muonPt,
+##        #dqmDirectory_TTplusJets_all + '/' + meName_muonPt
+##        dqmDirectory_TTplusJets_template + '/' + meName_muonPt
 ##    ],
 ##    name = "TTplusJets_muonPt",
 ##    title = "P_{T}^{#mu} in t#bar{t} + jets Background"
@@ -208,10 +206,10 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 
 ##drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 ##    meNames = [
-##        dqmDirectory_TTplusJets_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-##        dqmDirectory_TTplusJets_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-##        #dqmDirectory_TTplusJets_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
-##        processName + '/TTplusJets/data/' + meName_muonAbsEta
+##        dqmDirectory_TTplusJets_tauIdPassed + '/' + meName_muonAbsEta,
+##        dqmDirectory_TTplusJets_tauIdFailed + '/' + meName_muonAbsEta,
+##        #dqmDirectory_TTplusJets_all + '/' + meName_muonAbsEta
+##        dqmDirectory_TTplusJets_template + '/' + meName_muonAbsEta
 ##    ],
 ##    name = "TTplusJets_muonAbsEta",
 ##    title = "|#eta_{#mu}| in t#bar{t} + jets Background"
@@ -223,10 +221,10 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
 
 drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
     meNames = [
-        dqmDirectory_QCD_tauIdPassed + dqmSubDirectory_muonPt + meName_muonPt,
-        dqmDirectory_QCD_tauIdFailed + dqmSubDirectory_muonPt + meName_muonPt,
-        #dqmDirectory_QCD_all + dqmSubDirectory_muonPt + meName_muonPt
-        processName + '/QCD/data/' + meName_muonPt
+        dqmDirectory_QCD_tauIdPassed + '/' + meName_muonPt,
+        dqmDirectory_QCD_tauIdFailed + '/' + meName_muonPt,
+        #dqmDirectory_QCD_all + '/' + meName_muonPt
+        dqmDirectory_QCD_template + '/' + meName_muonPt
     ],
     name = "QCD_muonPt",
     title = "P_{T}^{#mu} in QCD Background"
@@ -234,10 +232,10 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonPt.add(
 
 drawTemplateHistConfiguratorTauIdEffZtoMuTau_muonAbsEta.add(
     meNames = [
-        dqmDirectory_QCD_tauIdPassed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-        dqmDirectory_QCD_tauIdFailed + dqmSubDirectory_muonAbsEta + meName_muonAbsEta,
-        #dqmDirectory_QCD_all + dqmSubDirectory_muonAbsEta + meName_muonAbsEta
-        processName + '/QCD/data/' + meName_muonAbsEta
+        dqmDirectory_QCD_tauIdPassed + '/' + meName_muonAbsEta,
+        dqmDirectory_QCD_tauIdFailed + '/' + meName_muonAbsEta,
+        #dqmDirectory_QCD_all + '/' + meName_muonAbsEta
+        dqmDirectory_QCD_template + '/' + meName_muonAbsEta
     ],
     name = "QCD_muonAbsEta",
     title = "|#eta_{#mu}| in QCD Background"
@@ -278,7 +276,7 @@ plotTemplateHistZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
             posY = cms.double(0.69),             
             sizeX = cms.double(0.44),        
             sizeY = cms.double(0.20),            
-            header = cms.string(''),          
+            header = cms.string(''),
             option = cms.string('brNDC'),       
             borderSize = cms.int32(0),          
             fillColor = cms.int32(0)             
@@ -325,7 +323,7 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateHistFitter",
         Ztautau = cms.PSet(
             templates = cms.PSet(
                 muonPtVsAbsEta = cms.PSet(
-                    meName = cms.string(dqmDirectory_Ztautau_tauIdPassed + dqmSubDirectory_muonPtVsAbsEta + meName_muonPtVsAbsEta),
+                    meName = cms.string(dqmDirectory_Ztautau_tauIdPassed + '/' + meName_muonPtVsAbsEta),
                     fitSimultaneously = cms.bool(False)
                 )
             ),    
@@ -337,8 +335,8 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateHistFitter",
         WplusJets = cms.PSet(
             templates = cms.PSet(
                 muonPtVsAbsEta = cms.PSet(
-                    meName = cms.string(dqmDirectory_WplusJets_all + dqmSubDirectory_muonPtVsAbsEta + meName_muonPtVsAbsEta),
-                    #meName = cms.string(processName + '/WplusJets/data/' + meName_muonPtVsAbsEta),
+                    #meName = cms.string(dqmDirectory_WplusJets_all + '/' + meName_muonPtVsAbsEta),
+                    meName = cms.string(dqmDirectory_WplusJets_template + '/' + meName_muonPtVsAbsEta),
                     fitSimultaneously = cms.bool(False)
                 )
             ),    
@@ -350,8 +348,8 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateHistFitter",
         QCD = cms.PSet(
             templates = cms.PSet(
                 muonPtVsAbsEta = cms.PSet(
-                    meName = cms.string(dqmDirectory_QCD_all + dqmSubDirectory_muonPtVsAbsEta + meName_muonPtVsAbsEta),
-                    #meName = cms.string(processName + '/QCD/data/' + meName_muonPtVsAbsEta),
+                    #meName = cms.string(dqmDirectory_QCD_all + '/' + meName_muonPtVsAbsEta),
+                    meName = cms.string(dqmDirectory_QCD_template + '/' + meName_muonPtVsAbsEta),
                     fitSimultaneously = cms.bool(False)
                 )
             ),    
@@ -366,7 +364,7 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateHistFitter",
     data = cms.PSet(
         distributions = cms.PSet(
             muonPtVsAbsEta = cms.PSet(
-                meName = cms.string(dqmDirectory_Data_tauIdPassed + dqmSubDirectory_muonPtVsAbsEta + meName_muonPtVsAbsEta)
+                meName = cms.string(dqmDirectory_Data_tauIdPassed + '/' + meName_muonPtVsAbsEta)
             )
         )
     ),
@@ -422,21 +420,21 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateHistFitter",
             fileName = cms.string("./plots/fitTauIdEffZtoMuTau_tauIdPassed_#PLOT#.png")
         ),
         fitResults = cms.PSet(
-            dqmDirectory = cms.string("fitTauIdEffZtoMuTau_tauIdPassed/fitResults/")
+            dqmDirectory = cms.string("fitTauIdEffZtoMuTau_tauIdPassed/fitResults")
         )
     )                                      
 )                          
 
 process.fitTauIdEffZtoMuTau_tauIdFailed = copy.deepcopy(process.fitTauIdEffZtoMuTau_tauIdPassed)
-process.fitTauIdEffZtoMuTau_tauIdFailed.processes.Ztautau.templates.muonPtVsAbsEta.meName = cms.string(dqmDirectory_Ztautau_tauIdFailed + dqmSubDirectory_muonPtVsAbsEta + meName_muonPtVsAbsEta)
+process.fitTauIdEffZtoMuTau_tauIdFailed.processes.Ztautau.templates.muonPtVsAbsEta.meName = cms.string(dqmDirectory_Ztautau_tauIdFailed + '/' + meName_muonPtVsAbsEta)
 process.fitTauIdEffZtoMuTau_tauIdFailed.processes.Ztautau.norm.initial = cms.double(500.)
-process.fitTauIdEffZtoMuTau_tauIdFailed.processes.WplusJets.templates.muonPtVsAbsEta.meName = cms.string(dqmDirectory_WplusJets_tauIdFailed + dqmSubDirectory_muonPtVsAbsEta + meName_muonPtVsAbsEta)
-#process.fitTauIdEffZtoMuTau_tauIdFailed.processes.WplusJets.templates.muonPtVsAbsEta.meName = cms.string(processName + '/WplusJets/data/' + meName_muonPtVsAbsEta)
+#process.fitTauIdEffZtoMuTau_tauIdFailed.processes.WplusJets.templates.muonPtVsAbsEta.meName = cms.string(dqmDirectory_WplusJets_tauIdFailed + '/' + meName_muonPtVsAbsEta)
+process.fitTauIdEffZtoMuTau_tauIdFailed.processes.WplusJets.templates.muonPtVsAbsEta.meName = cms.string(dqmDirectory_WplusJets_template + '/' + meName_muonPtVsAbsEta)
 process.fitTauIdEffZtoMuTau_tauIdFailed.processes.WplusJets.norm.initial = cms.double(2500.)
-process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.templates.muonPtVsAbsEta.meName = cms.string(dqmDirectory_QCD_tauIdFailed + dqmSubDirectory_muonPtVsAbsEta + meName_muonPtVsAbsEta)
-#process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.templates.muonPtVsAbsEta.meName = cms.string(processName + '/QCD/data/' + meName_muonPtVsAbsEta)
+#process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.templates.muonPtVsAbsEta.meName = cms.string(dqmDirectory_QCD_tauIdFailed + '/' + meName_muonPtVsAbsEta)
+process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.templates.muonPtVsAbsEta.meName = cms.string(dqmDirectory_QCD_template + '/' + meName_muonPtVsAbsEta)
 process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.norm.initial = cms.double(2500.)
-process.fitTauIdEffZtoMuTau_tauIdFailed.data.distributions.muonPtVsAbsEta.meName = cms.string(dqmDirectory_Data_tauIdFailed + dqmSubDirectory_muonPtVsAbsEta + meName_muonPtVsAbsEta)
+process.fitTauIdEffZtoMuTau_tauIdFailed.data.distributions.muonPtVsAbsEta.meName = cms.string(dqmDirectory_Data_tauIdFailed + '/' + meName_muonPtVsAbsEta)
 process.fitTauIdEffZtoMuTau_tauIdFailed.fit.algorithm.pluginName = cms.string("fitTauIdEffZtoMuTauAlgorithm_tauIdFailed")
 process.fitTauIdEffZtoMuTau_tauIdFailed.output.controlPlots.fileName = cms.string("./plots/fitTauIdEffZtoMuTau_tauIdFailed_#PLOT#.eps")
 process.fitTauIdEffZtoMuTau_tauIdFailed.output.fitResults.dqmDirectory = cms.string("fitTauIdEffZtoMuTau_tauIdFailed/fitResults/")
@@ -451,13 +449,13 @@ meName_norm = 'Ztautau/norm/value'
 process.dumpBinErrorsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMBinErrorCalculator",
     config = cms.VPSet(
         cms.PSet(
-            meName_passed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults/binContent_region2'),
-            meName_failed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults/binContent_region1'),
+            meName_passed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults2regions/binContent_region2'),
+            meName_failed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults2regions/binContent_region1'),
             label = cms.string("Tau id., true")
         ),
         cms.PSet(
-            meName_passed = cms.string(process.fitTauIdEffZtoMuTau_tauIdPassed.output.fitResults.dqmDirectory.value() + meName_norm),
-            meName_failed = cms.string(process.fitTauIdEffZtoMuTau_tauIdFailed.output.fitResults.dqmDirectory.value() + meName_norm),
+            meName_passed = cms.string(process.fitTauIdEffZtoMuTau_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_norm),
+            meName_failed = cms.string(process.fitTauIdEffZtoMuTau_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_norm),
             label = cms.string("Tau id., fitted")
         )
     )
@@ -465,11 +463,14 @@ process.dumpBinErrorsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMBinErrorCalculator",
 
 process.saveFitResultsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
     outputFileName = cms.string('fitTauIdEffZtoMuTau_results.root'),
-    outputCommands = cms.vstring('keep *')
+    outputCommands = cms.vstring('drop harvested/*')
 )
+
+process.dumpDQMStore = cms.EDAnalyzer("DQMStoreDump")
 
 process.p = cms.Path(
     process.loadTauIdEffZtoMuTau
+   + process.dumpDQMStore
    + process.plotTemplateHistTauIdEffZtoMuTau
    + process.fitTauIdEffZtoMuTau
    + process.saveFitResultsTauIdEffZtoMuTau 
