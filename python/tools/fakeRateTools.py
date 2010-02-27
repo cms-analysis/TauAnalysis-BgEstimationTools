@@ -7,25 +7,32 @@ from TauAnalysis.Configuration.tools.changeCut import changeCut
 # import utility function to enable factorization
 from TauAnalysis.Configuration.tools.factorizationTools import enableFactorization_makeZtoMuTauPlots
 
+# import configuration parameters of histogram manager
+# for validation of tau id. efficiencies/fake-rates
+from TauAnalysis.BgEstimationTools.tauIdEffValidationHistManager_cfi import tauIdEffValidationHistManager
+
+# import utility function for add histogram manager to analysis sequence
+from TauAnalysis.Configuration.tools.analysisSequenceTools import addAnalyzer
+
 #--------------------------------------------------------------------------------
 # auxiliary functions needed for reconfiguration of analysis sequences
 #--------------------------------------------------------------------------------
 
-def setAnalyzerParameter(genAnalyzer, pluginName, parameterName, parameterValue):
-    for analyzerPlugin in genAnalyzer.analyzers:
+def setAnalyzerParameter(genAnalyzerModule, pluginName, parameterName, parameterValue):
+    for analyzerPlugin in genAnalyzerModule.analyzers:
         if hasattr(analyzerPlugin, "pluginName"):
             analyzerPluginName = getattr(analyzerPlugin, "pluginName").value()
             if analyzerPluginName == pluginName:
                 setattr(analyzerPlugin, parameterName, parameterValue)
 
-def pruneAnalysisSequence(genAnalyzer):
+def pruneAnalysisSequence(genAnalyzerModule):
 
     # disable filling of histograms after all stages of the event selection
     # except for the last occurence (after all cuts have been applied)
     
     lastEntry = {}
-    for iAnalysisSequenceEntry in range(len(genAnalyzer.analysisSequence)):
-        analysisSequenceEntry = genAnalyzer.analysisSequence[iAnalysisSequenceEntry]
+    for iAnalysisSequenceEntry in range(len(genAnalyzerModule.analysisSequence)):
+        analysisSequenceEntry = genAnalyzerModule.analysisSequence[iAnalysisSequenceEntry]
         if hasattr(analysisSequenceEntry, "analyzers"):
             analyzerPlugins = getattr(analysisSequenceEntry, "analyzers")
             for analyzerPlugin in analyzerPlugins:
@@ -33,8 +40,8 @@ def pruneAnalysisSequence(genAnalyzer):
                 lastEntry[analyzerPluginName] = iAnalysisSequenceEntry
 
     prunedAnalysisSequence = []
-    for iAnalysisSequenceEntry in range(len(genAnalyzer.analysisSequence)):
-        analysisSequenceEntry = genAnalyzer.analysisSequence[iAnalysisSequenceEntry]
+    for iAnalysisSequenceEntry in range(len(genAnalyzerModule.analysisSequence)):
+        analysisSequenceEntry = genAnalyzerModule.analysisSequence[iAnalysisSequenceEntry]
         if hasattr(analysisSequenceEntry, "analyzers"):
             # keep analyzer entry only in case it contains at least one histogram manager
             # not filled at a later stage of the event selection
@@ -50,7 +57,7 @@ def pruneAnalysisSequence(genAnalyzer):
                 analysisSequenceEntry.analyzers = cms.vstring(keepAnalyzers)
                 
                 # in all cases, disable storing run and events numbers
-                setattr(genAnalyzer.analysisSequence[iAnalysisSequenceEntry], "saveRunEventNumbers", cms.vstring())
+                setattr(genAnalyzerModule.analysisSequence[iAnalysisSequenceEntry], "saveRunEventNumbers", cms.vstring())
                 
                 prunedAnalysisSequence.append(analysisSequenceEntry)
         else:
@@ -59,32 +66,32 @@ def pruneAnalysisSequence(genAnalyzer):
             setattr(analysisSequenceEntry, "saveRunEventNumbers", cms.vstring(''))
             prunedAnalysisSequence.append(analysisSequenceEntry)
 
-    genAnalyzer.analysisSequence = cms.VPSet(prunedAnalysisSequence)
+    genAnalyzerModule.analysisSequence = cms.VPSet(prunedAnalysisSequence)
 
-def disableEventDump(genAnalyzer):
+def disableEventDump(genAnalyzerModule):
 
     # disable event print-out
 
-    disabledEventDump = copy.deepcopy(genAnalyzer.eventDumps[0])
+    disabledEventDump = copy.deepcopy(genAnalyzerModule.eventDumps[0])
     disabledEventDump.output = cms.string("std::cout")
     disabledEventDump.triggerConditions = cms.vstring()
-    genAnalyzer.eventDumps[0] = disabledEventDump
+    genAnalyzerModule.eventDumps[0] = disabledEventDump
 
-def makeAnalyzer(process, genAnalyzer, label):
+def makeGenAnalyzerModule(process, genAnalyzerModule, label):
 
-    analyzer = copy.deepcopy(genAnalyzer)
+    analyzer = copy.deepcopy(genAnalyzerModule)
 
-    analyzer.name = cms.string("".join([getattr(genAnalyzer, "name").value(), "_", label]))
+    analyzer.name = cms.string("".join([getattr(genAnalyzerModule, "name").value(), "_", label]))
 
-    analyzerName = "".join([genAnalyzer.label(), "_", label])
+    analyzerName = "".join([genAnalyzerModule.label(), "_", label])
     setattr(process, analyzerName, analyzer)
     analyzer = getattr(process, analyzerName)
 
     return analyzer
 
-def addAnalyzer(process, genAnalyzer, label, analysisSequence):
+def addGenAnalyzerModule(process, genAnalyzerModule, label, analysisSequence):
 
-    analyzer = makeAnalyzer(process, genAnalyzer, label)
+    analyzer = makeGenAnalyzerModule(process, genAnalyzerModule, label)
 
     # add module to sequence
     if analysisSequence is None:
@@ -94,9 +101,9 @@ def addAnalyzer(process, genAnalyzer, label, analysisSequence):
 
     return analysisSequence
 
-def addFakeRateAnalyzer(process, genAnalyzer, frType, bgEstFakeRateAnalysisSequence):
+def addFakeRateGenAnalyzerModule(process, genAnalyzerModule, frType, bgEstFakeRateAnalysisSequence):
 
-    bgEstFakeRateAnalyzer = makeAnalyzer(process, genAnalyzer, frType)
+    bgEstFakeRateAnalyzer = makeGenAnalyzerModule(process, genAnalyzerModule, frType)
 
     srcFakeRateEventWeight = cms.VInputTag(cms.InputTag("bgEstFakeRateEventWeights", frType))
     setattr(bgEstFakeRateAnalyzer, "eventWeightSource", srcFakeRateEventWeight)
@@ -344,13 +351,16 @@ def enableFakeRates_runZtoMuTau(process, method = None):
         # else apply fake-rate event weights to "standard" analysis path
         if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
              hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
-            bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
-                                                                frType, bgEstFakeRateAnalysisSequence)
-            bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
-                                                                frType, bgEstFakeRateAnalysisSequence)
+            bgEstFakeRateAnalysisSequence = \
+              addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
+                                           frType, bgEstFakeRateAnalysisSequence)            
+            bgEstFakeRateAnalysisSequence = \
+              addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
+                                           frType, bgEstFakeRateAnalysisSequence)
         else:
-            bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents,
-                                                                frType, bgEstFakeRateAnalysisSequence)
+            bgEstFakeRateAnalysisSequence = \
+              addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents,
+                                           frType, bgEstFakeRateAnalysisSequence)
 
     # add analysis sequence:
     #  1.) with tau id. discriminators not applied
@@ -358,14 +368,32 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     # (for the purpose of making control plots for the data sample from which contributions 
     #  of individual background processes are estimated via the fake-rate technique)
     if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
-         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
-        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
-                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
-        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
-                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)
+         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):        
+        bgEstFakeRateAnalysisSequence = \
+          addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
+                               "frUnweighted", bgEstFakeRateAnalysisSequence)
+        addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation_frUnweighted,
+                    tauIdEffValidationHistManager, "evtSelTauPt")
+        addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation_frUnweighted,
+                    tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
+                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
+        bgEstFakeRateAnalysisSequence = \
+          addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
+                               "frUnweighted", bgEstFakeRateAnalysisSequence)
+        addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation_frUnweighted,
+                    tauIdEffValidationHistManager, "evtSelTauPt")
+        addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation_frUnweighted,
+                    tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
+                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
     else:
-        bgEstFakeRateAnalysisSequence = addAnalyzer(process, process.analyzeZtoMuTauEvents,
-                                                    "frUnweighted", bgEstFakeRateAnalysisSequence)        
+        bgEstFakeRateAnalysisSequence = \
+          addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents,
+                               "frUnweighted", bgEstFakeRateAnalysisSequence)
+        addAnalyzer(process.analyzeZtoMuTauEvents_frUnweighted,
+                    tauIdEffValidationHistManager, "evtSelTauPt")
+        addAnalyzer(process.analyzeZtoMuTauEvents_frUnweighted,
+                    tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
+                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
 
     # if method is "simple", add one more analysis sequence:
     #  1.) with tau id. discriminators not applied
@@ -388,13 +416,16 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     setattr(process.allLayer1Taus.efficiencies, frLabel, frInputTag)
     if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
          hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
-        bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
-                                                            "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
-        bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
-                                                            "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+        bgEstFakeRateAnalysisSequence = \
+          addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
+                                       "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+        bgEstFakeRateAnalysisSequence = \
+          addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
+                                       "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
     else:
-        bgEstFakeRateAnalysisSequence = addFakeRateAnalyzer(process, process.analyzeZtoMuTauEvents,
-                                                            "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+        bgEstFakeRateAnalysisSequence = \
+          addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents,
+                                       "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
 
     setattr(process, "bgEstFakeRateAnalysisSequence", cms.Sequence(bgEstFakeRateAnalysisSequence))
 
