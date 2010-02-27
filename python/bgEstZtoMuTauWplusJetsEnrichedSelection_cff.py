@@ -211,18 +211,33 @@ selectEventsBgEstWplusJetsEnriched = evtSelConfiguratorBgEstWplusJetsEnriched.co
 
 from TauAnalysis.Configuration.analyzeZtoMuTau_cfi import *
 
-muonHistManagerWplusJetsEnriched = copy.deepcopy(muonHistManager)
-muonHistManagerWplusJetsEnriched.pluginName = cms.string('muonHistManagerWplusJetsEnriched')
-muonHistManagerWplusJetsEnriched.muonSource = cms.InputTag('muonsBgEstWplusJetsEnrichedEcalIsoCumulative')
+muonHistManagerBgEstWplusJetsEnriched = copy.deepcopy(muonHistManager)
+muonHistManagerBgEstWplusJetsEnriched.pluginName = cms.string('muonHistManagerBgEstWplusJetsEnriched')
+muonHistManagerBgEstWplusJetsEnriched.muonSource = cms.InputTag('muonsBgEstWplusJetsEnrichedEcalIsoCumulative')
 
-tauHistManagerWplusJetsEnriched = copy.deepcopy(tauHistManager)
-tauHistManagerWplusJetsEnriched.pluginName = cms.string('tauHistManagerWplusJetsEnriched')
-tauHistManagerWplusJetsEnriched.tauSource = cms.InputTag('tausBgEstWplusJetsEnrichedMuonVetoCumulative')
+tauHistManagerBgEstWplusJetsEnriched = copy.deepcopy(tauHistManager)
+tauHistManagerBgEstWplusJetsEnriched.pluginName = cms.string('tauHistManagerBgEstWplusJetsEnriched')
+tauHistManagerBgEstWplusJetsEnriched.tauSource = cms.InputTag('tausBgEstWplusJetsEnrichedMuonVetoCumulative')
 
-diTauCandidateHistManagerWplusJetsEnriched = copy.deepcopy(diTauCandidateHistManagerForMuTau)
-diTauCandidateHistManagerWplusJetsEnriched.pluginName = cms.string('diTauCandidateHistManagerWplusJetsEnriched')
-diTauCandidateHistManagerWplusJetsEnriched.diTauCandidateSource = cms.InputTag('muTauPairsBgEstWplusJetsEnrichedMt1MET')
-diTauCandidateHistManagerWplusJetsEnriched.visMassHypothesisSource = cms.InputTag('')
+diTauCandidateHistManagerBgEstWplusJetsEnriched = copy.deepcopy(diTauCandidateHistManagerForMuTau)
+diTauCandidateHistManagerBgEstWplusJetsEnriched.pluginName = cms.string('diTauCandidateHistManagerBgEstWplusJetsEnriched')
+diTauCandidateHistManagerBgEstWplusJetsEnriched.diTauCandidateSource = cms.InputTag('muTauPairsBgEstWplusJetsEnrichedMt1MET')
+diTauCandidateHistManagerBgEstWplusJetsEnriched.visMassHypothesisSource = cms.InputTag('')
+
+jetHistManagerBgEstWplusJetsEnriched = copy.deepcopy(jetHistManager)
+jetHistManagerBgEstWplusJetsEnriched.pluginName = cms.string('jetHistManagerBgEstWplusJetsEnriched')
+jetHistManagerBgEstWplusJetsEnriched.jetSource = cms.InputTag('jetsBgEstWplusJetsEnrichedAntiOverlapWithLeptonsVeto')
+
+from TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauHistManager_cfi import *
+tauIdEffHistManagerBgEstWplusJetsEnriched = copy.deepcopy(tauIdEffZtoMuTauHistManager)
+tauIdEffHistManagerBgEstWplusJetsEnriched.pluginName = cms.string('tauIdEffHistManagerBgEstWplusJetsEnriched')
+tauIdEffHistManagerBgEstWplusJetsEnriched.muonSource = cms.InputTag('muonsBgEstWplusJetsEnrichedEcalIsoCumulative')
+tauIdEffHistManagerBgEstWplusJetsEnriched.tauSource = cms.InputTag('tausBgEstWplusJetsEnrichedMuonVetoCumulative')
+tauIdEffHistManagerBgEstWplusJetsEnriched.diTauSource = cms.InputTag('muTauPairsBgEstWplusJetsEnrichedMt1MET')
+tauIdEffHistManagerBgEstWplusJetsEnriched.diTauChargeSignExtractor.src = tauIdEffHistManagerBgEstWplusJetsEnriched.diTauSource
+
+dataBinnerBgEstWplusJetsEnriched = copy.deepcopy(dataBinner)
+dataBinnerBgEstWplusJetsEnriched.pluginName = cms.string('dataBinnerBgEstWplusJetsEnriched')
 
 analyzeEventsBgEstWplusJetsEnriched = cms.EDAnalyzer("GenericAnalyzer",
   
@@ -294,9 +309,12 @@ analyzeEventsBgEstWplusJetsEnriched = cms.EDAnalyzer("GenericAnalyzer",
     ),
   
     analyzers = cms.VPSet(
-        muonHistManagerWplusJetsEnriched,
-        tauHistManagerWplusJetsEnriched,
-        diTauCandidateHistManagerWplusJetsEnriched
+        muonHistManagerBgEstWplusJetsEnriched,
+        tauHistManagerBgEstWplusJetsEnriched,
+        diTauCandidateHistManagerBgEstWplusJetsEnriched,
+        jetHistManagerBgEstWplusJetsEnriched,
+        tauIdEffHistManagerBgEstWplusJetsEnriched,
+        dataBinnerBgEstWplusJetsEnriched
     ),
 
     eventDumps = cms.VPSet(),
@@ -399,9 +417,12 @@ analyzeEventsBgEstWplusJetsEnriched = cms.EDAnalyzer("GenericAnalyzer",
         ),
         cms.PSet(
             analyzers = cms.vstring(
-                'muonHistManagerWplusJetsEnriched',
-                'tauHistManagerWplusJetsEnriched',
-                'diTauCandidateHistManagerWplusJetsEnriched'
+                'muonHistManagerBgEstWplusJetsEnriched',
+                'tauHistManagerBgEstWplusJetsEnriched',
+                'diTauCandidateHistManagerBgEstWplusJetsEnriched',
+                'jetHistManagerBgEstWplusJetsEnriched',
+                'tauIdEffHistManagerBgEstWplusJetsEnriched',
+                'dataBinnerBgEstWplusJetsEnriched'
             )
         )
     )

@@ -46,7 +46,7 @@ from TauAnalysis.RecoTools.patPFTauSelectionForMuTau_cfi import *
 #       gets shifted towards higher values in case tau track and ECAL isolation criteria are not applied.
 #       For this reason, either need to apply tau track and ECAL isolation criteria in selection of QCD background enriched sample
 #       or correct for template shape distortion by reweighting
-#      (--> see TauAnalysis/BgEstimationTools/python/bgEstWplusJetsEnrichedSelection_cff.py also)
+#      (--> see TauAnalysis/BgEstimationTools/python/bgEstZtoMuTauWplusJetsEnrichedSelection_cff.py also)
 #   
 tausBgEstQCDenrichedTrkIso = copy.deepcopy(selectedLayer1TausTrkIso)
 #tausBgEstQCDenrichedTrkIso.cut = cms.string('tauID("trackIsolation") > 0.5 | chargedHadronIso < 8.')
@@ -163,6 +163,17 @@ diTauCandidateHistManagerBgEstQCDenriched.pluginName = cms.string('diTauCandidat
 diTauCandidateHistManagerBgEstQCDenriched.diTauCandidateSource = cms.InputTag('muTauPairsBgEstQCDenriched')
 diTauCandidateHistManagerBgEstQCDenriched.visMassHypothesisSource = cms.InputTag('')
 
+from TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauHistManager_cfi import *
+tauIdEffHistManagerBgEstQCDenriched = copy.deepcopy(tauIdEffZtoMuTauHistManager)
+tauIdEffHistManagerBgEstQCDenriched.pluginName = cms.string('tauIdEffHistManagerBgEstQCDenriched')
+tauIdEffHistManagerBgEstQCDenriched.muonSource = cms.InputTag('muonsBgEstQCDenrichedEcalIsoCumulative')
+tauIdEffHistManagerBgEstQCDenriched.tauSource = cms.InputTag('tausBgEstQCDenrichedMuonVetoCumulative')
+tauIdEffHistManagerBgEstQCDenriched.diTauSource = cms.InputTag('muTauPairsBgEstQCDenriched')
+tauIdEffHistManagerBgEstQCDenriched.diTauChargeSignExtractor.src = tauIdEffHistManagerBgEstQCDenriched.diTauSource
+
+dataBinnerBgEstQCDenriched = copy.deepcopy(dataBinner)
+dataBinnerBgEstQCDenriched.pluginName = cms.string('dataBinnerBgEstQCDenriched')
+
 analyzeEventsBgEstQCDenriched = cms.EDAnalyzer("GenericAnalyzer",
   
     name = cms.string('BgEstTemplateAnalyzer_QCDenriched'), 
@@ -221,7 +232,9 @@ analyzeEventsBgEstQCDenriched = cms.EDAnalyzer("GenericAnalyzer",
     analyzers = cms.VPSet(
         muonHistManagerBgEstQCDenriched,
         tauHistManagerBgEstQCDenriched,
-        diTauCandidateHistManagerBgEstQCDenriched
+        diTauCandidateHistManagerBgEstQCDenriched,
+        tauIdEffHistManagerBgEstQCDenriched,
+        dataBinnerBgEstQCDenriched
     ),
 
     eventDumps = cms.VPSet(),
@@ -318,7 +331,9 @@ analyzeEventsBgEstQCDenriched = cms.EDAnalyzer("GenericAnalyzer",
             analyzers = cms.vstring(
                 'muonHistManagerBgEstQCDenriched',
                 'tauHistManagerBgEstQCDenriched',
-                'diTauCandidateHistManagerBgEstQCDenriched'
+                'diTauCandidateHistManagerBgEstQCDenriched',
+                'tauIdEffHistManagerBgEstQCDenriched',
+                'dataBinnerBgEstQCDenriched'
             )
         )
     )
