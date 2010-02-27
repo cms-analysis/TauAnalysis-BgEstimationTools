@@ -10,6 +10,35 @@ from TauAnalysis.RecoTools.tools.eventSelFlagProdConfigurator import *
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------  
+# produce collection of pat::Muons
+#--------------------------------------------------------------------------------
+
+from TauAnalysis.RecoTools.patMuonSelection_cfi import *
+
+muonsForTauIdEffZtoMuTauCombRelIso = cms.EDFilter("PATMuonSelector",
+    cut = cms.string('(userIsolation("pat::TrackIso") + userIsolation("pat::EcalIso")) < (0.06*pt)'),
+    filter = cms.bool(False)
+)
+
+muonsForTauIdEffZtoMuTauPionVetoRelIsolation = copy.deepcopy(selectedLayer1MuonsPionVeto)
+
+muonsForTauIdEffZtoMuTauTrkRelIsolation = copy.deepcopy(selectedLayer1MuonsTrk)
+
+muonsForTauIdEffZtoMuTauTrkIPrelIsolation = copy.deepcopy(selectedLayer1MuonsTrkIP)
+
+muonSelConfiguratorTauIdEffZtoMuTau = objSelConfigurator(
+    [ muonsForTauIdEffZtoMuTauCombRelIso,
+      muonsForTauIdEffZtoMuTauPionVetoRelIsolation,
+      muonsForTauIdEffZtoMuTauTrkRelIsolation,
+      muonsForTauIdEffZtoMuTauTrkIPrelIsolation ],
+    src = "selectedLayer1MuonsPt15Cumulative",
+    pyModuleName = __name__,
+    doSelIndividual = False
+)
+
+selectMuonsForTauIdEffZtoMuTau = muonSelConfiguratorTauIdEffZtoMuTau.configure(pyNameSpace = locals())
+
+#--------------------------------------------------------------------------------  
 # produce collection of pat::Taus
 #--------------------------------------------------------------------------------
 
@@ -25,7 +54,7 @@ tauSelConfiguratorTauIdEffZtoMuTau = objSelConfigurator(
     doSelIndividual = False
 )
 
-selectTausTauIdEffZtoMuTau = tauSelConfiguratorTauIdEffZtoMuTau.configure(pyNameSpace = locals())
+selectTausForTauIdEffZtoMuTau = tauSelConfiguratorTauIdEffZtoMuTau.configure(pyNameSpace = locals())
 
 #--------------------------------------------------------------------------------  
 # produce collection of muon + tau-jet combinations
@@ -50,13 +79,37 @@ muTauPairsTauIdEffZtoMuTauBackToBack = cms.EDFilter("PATMuTauPairSelector",
     filter = cms.bool(False)
 )
 
-selectMuTauPairsTauIdEffZtoMuTau = cms.Sequence(muTauPairsTauIdEffZtoMuTau + muTauPairsTauIdEffZtoMuTauBackToBack)
+muTauPairsTauIdEffZtoMuTauRelMuonIsolation = copy.deepcopy(muTauPairsTauIdEffZtoMuTau)
+muTauPairsTauIdEffZtoMuTauRelMuonIsolation.srcLeg1 = cms.InputTag('muonsForTauIdEffZtoMuTauTrkIPrelIsolationCumulative')
+
+muTauPairsTauIdEffZtoMuTauBackToBackRelMuonIsolation = copy.deepcopy(muTauPairsTauIdEffZtoMuTauBackToBack)
+muTauPairsTauIdEffZtoMuTauBackToBackRelMuonIsolation.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauRelMuonIsolation')
+
+selectMuTauPairsTauIdEffZtoMuTau = cms.Sequence(
+    muTauPairsTauIdEffZtoMuTau + muTauPairsTauIdEffZtoMuTauBackToBack
+   + muTauPairsTauIdEffZtoMuTauRelMuonIsolation + muTauPairsTauIdEffZtoMuTauBackToBackRelMuonIsolation
+)
 
 #--------------------------------------------------------------------------------  
 # produce boolean event selection flags
 #--------------------------------------------------------------------------------
 
 from TauAnalysis.Configuration.selectZtoMuTau_cff import *
+
+cfgMuonCombRelIsoCutTauIdEffZtoMuTau = copy.deepcopy(cfgMuonTrkIsoCut)
+cfgMuonCombRelIsoCutTauIdEffZtoMuTau.pluginName = cms.string('muonCombRelIsoCutTauIdEffZtoMuTau')
+cfgMuonCombRelIsoCutTauIdEffZtoMuTau.src_cumulative = cms.InputTag('muonsForTauIdEffZtoMuTauCombRelIsoCumulative')
+cfgMuonCombRelIsoCutTauIdEffZtoMuTau.systematics = cms.vstring()
+
+cfgMuonAntiPionCutTauIdEffZtoMuTauRelIsolation = copy.deepcopy(cfgMuonAntiPionCut)
+cfgMuonAntiPionCutTauIdEffZtoMuTauRelIsolation.pluginName = cms.string('muonAntiPionCutTauIdEffZtoMuTauRelIsolation')
+cfgMuonAntiPionCutTauIdEffZtoMuTauRelIsolation.src_cumulative = cms.InputTag('muonsForTauIdEffZtoMuTauPionVetoRelIsolationCumulative')
+cfgMuonAntiPionCutTauIdEffZtoMuTauRelIsolation.systematics = cms.vstring()
+
+cfgMuonTrkIPcutTauIdEffZtoMuTauRelIsolation = copy.deepcopy(cfgMuonTrkIPcut)
+cfgMuonTrkIPcutTauIdEffZtoMuTauRelIsolation.pluginName = cms.string('muonTrkIPcutTauIdEffZtoMuTauRelIsolation')
+cfgMuonTrkIPcutTauIdEffZtoMuTauRelIsolation.src_cumulative = cms.InputTag('muonsForTauIdEffZtoMuTauTrkIPrelIsolationCumulative')
+cfgMuonTrkIPcutTauIdEffZtoMuTauRelIsolation.systematics = cms.vstring()
 
 cfgTauEtaCutTauIdEffZtoMuTau = copy.deepcopy(cfgTauEtaCut)
 cfgTauEtaCutTauIdEffZtoMuTau.pluginName = cms.string('tauEtaCutTauIdEffZtoMuTau')
@@ -87,6 +140,14 @@ cfgMuTauPairBackToBackTauIdEffZtoMuTau = cms.PSet(
     minNumber = cms.uint32(1)
 )
 
+cfgMuTauPairTauIdEffZtoMuTauRelMuonIsolation = copy.deepcopy(cfgMuTauPairTauIdEffZtoMuTau)
+cfgMuTauPairTauIdEffZtoMuTauRelMuonIsolation.pluginName = cms.string('muTauPairTauIdEffZtoMuTauRelMuonIsolation')
+cfgMuTauPairTauIdEffZtoMuTauRelMuonIsolation.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauRelMuonIsolation')
+
+cfgMuTauPairBackToBackTauIdEffZtoMuTauRelMuonIsolation = copy.deepcopy(cfgMuTauPairBackToBackTauIdEffZtoMuTau)
+cfgMuTauPairBackToBackTauIdEffZtoMuTauRelMuonIsolation.pluginName = cms.string('muTauPairBackToBackTauIdEffZtoMuTauRelMuonIsolation')
+cfgMuTauPairBackToBackTauIdEffZtoMuTauRelMuonIsolation.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauBackToBackRelMuonIsolation')
+
 uniqueTauCandidateCutTauIdEffZtoMuTau = cms.EDFilter("BoolEventSelFlagProducer",
     pluginName = cms.string("uniqueTauCandidateCutTauIdEffZtoMuTau"),
     pluginType = cms.string("PATCandViewMaxEventSelector"),
@@ -102,11 +163,16 @@ uniqueMuonCandidateCutTauIdEffZtoMuTau = cms.EDFilter("BoolEventSelFlagProducer"
 )
 
 evtSelConfiguratorTauIdEffZtoMuTau = eventSelFlagProdConfigurator(
-    [ cfgTauEtaCutTauIdEffZtoMuTau,
+    [ cfgMuonCombRelIsoCutTauIdEffZtoMuTau,
+      cfgMuonAntiPionCutTauIdEffZtoMuTauRelIsolation,
+      cfgMuonTrkIPcutTauIdEffZtoMuTauRelIsolation,
+      cfgTauEtaCutTauIdEffZtoMuTau,
       cfgTauPtCutTauIdEffZtoMuTau,
       cfgTauMuonVetoTauIdEffZtoMuTau,
       cfgMuTauPairTauIdEffZtoMuTau,
       cfgMuTauPairBackToBackTauIdEffZtoMuTau,
+      cfgMuTauPairTauIdEffZtoMuTauRelMuonIsolation,
+      cfgMuTauPairBackToBackTauIdEffZtoMuTauRelMuonIsolation,
       uniqueTauCandidateCutTauIdEffZtoMuTau,
       uniqueMuonCandidateCutTauIdEffZtoMuTau ],
     boolEventSelFlagProducer = "BoolEventSelFlagProducer",
@@ -136,6 +202,9 @@ diTauCandidateHistManagerTauIdEffZtoMuTau.visMassHypothesisSource = cms.InputTag
 
 from TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauHistManager_cfi import *
 
+dataBinnerTauIdEffZtoMuTau = copy.deepcopy(dataBinner)
+dataBinnerTauIdEffZtoMuTau.pluginName = cms.string('dataBinnerTauIdEffZtoMuTau')
+
 tauIdEffBinning = cms.PSet(
     name = cms.string("tauIdEffBinning"),
     config = cms.VPSet(
@@ -157,7 +226,7 @@ tauIdEffBinning = cms.PSet(
 
 analyzeEventsTauIdEffZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
   
-    name = cms.string('TauIdEffAnalyzerZtoMuTau'), 
+    name = cms.string('TauIdEffAnalyzerZtoMuTau_absMuonIsolation'), 
                             
     filters = cms.VPSet(
         genPhaseSpaceCut,
@@ -172,6 +241,21 @@ analyzeEventsTauIdEffZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
         evtSelMuonEcalIso,
         evtSelMuonAntiPion,
         evtSelMuonTrkIP,
+        cms.PSet(
+            pluginName = cms.string('muonCombRelIsoCutTauIdEffZtoMuTau'),
+            pluginType = cms.string('BoolEventSelector'),
+            src = cms.InputTag('muonCombRelIsoCutTauIdEffZtoMuTau', 'cumulative'),
+        ),
+        cms.PSet(
+            pluginName = cms.string('muonAntiPionCutTauIdEffZtoMuTauRelIsolation'),
+            pluginType = cms.string('BoolEventSelector'),
+            src = cms.InputTag('muonAntiPionCutTauIdEffZtoMuTauRelIsolation', 'cumulative'),
+        ),
+        cms.PSet(
+            pluginName = cms.string('muonTrkIPcutTauIdEffZtoMuTauRelIsolation'),
+            pluginType = cms.string('BoolEventSelector'),
+            src = cms.InputTag('muonTrkIPcutTauIdEffZtoMuTauRelIsolation', 'cumulative'),
+        ),
         cms.PSet(
             pluginName = cms.string('tauEtaCutTauIdEffZtoMuTau'),
             pluginType = cms.string('BoolEventSelector'),
@@ -193,14 +277,19 @@ analyzeEventsTauIdEffZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
             src = cms.InputTag('muTauPairTauIdEffZtoMuTau')
         ),
         cms.PSet(
-            pluginName = cms.string('muTauPairTauIdEffZtoMuTau'),
-            pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('muTauPairTauIdEffZtoMuTau')
-        ),
-        cms.PSet(
             pluginName = cms.string('muTauPairBackToBackTauIdEffZtoMuTau'),
             pluginType = cms.string('BoolEventSelector'),
             src = cms.InputTag('muTauPairBackToBackTauIdEffZtoMuTau')
+        ),
+        cms.PSet(
+            pluginName = cms.string('muTauPairTauIdEffZtoMuTauRelMuonIsolation'),
+            pluginType = cms.string('BoolEventSelector'),
+            src = cms.InputTag('muTauPairTauIdEffZtoMuTauRelMuonIsolation')
+        ),
+        cms.PSet(
+            pluginName = cms.string('muTauPairBackToBackTauIdEffZtoMuTauRelMuonIsolation'),
+            pluginType = cms.string('BoolEventSelector'),
+            src = cms.InputTag('muTauPairBackToBackTauIdEffZtoMuTauRelMuonIsolation')
         ),
         evtSelDiMuPairZmumuHypothesisVeto,
         cms.PSet(
@@ -222,17 +311,18 @@ analyzeEventsTauIdEffZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
         caloMEtHistManager,
         pfMEtHistManager,
         tauIdEffZtoMuTauHistManager,
+        dataBinnerTauIdEffZtoMuTau,
         cms.PSet(
-            pluginName = cms.string('tauIdEffDataBinner'),
+            pluginName = cms.string('tauIdEffDataBinner2regions'),
             pluginType = cms.string('DataBinner'),
             binning = tauIdEffBinning,
             binningService = cms.PSet(
                 pluginType = cms.string("DataBinningService")
             ),
-            dqmDirectory_store = cms.string('tauIdEffBinningResults')
+            dqmDirectory_store = cms.string('tauIdEffBinningResults2regions')
         ),
         cms.PSet(
-            pluginName = cms.string('tauIdEffBinGridHistManager'),
+            pluginName = cms.string('tauIdEffBinGridHistManager2regions'),
             pluginType = cms.string('BinGridHistManager'),
             binning = tauIdEffBinning,
             histManagers = cms.VPSet(
@@ -241,7 +331,7 @@ analyzeEventsTauIdEffZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
                 diTauCandidateHistManagerForMuTau,
                 tauIdEffZtoMuTauHistManager
             ),
-            dqmDirectory_store = cms.string('tauIdEffHistograms')
+            dqmDirectory_store = cms.string('tauIdEffHistograms2regions')
         )
     ),
 
@@ -263,8 +353,6 @@ analyzeEventsTauIdEffZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
             filter = cms.string('evtSelTrigger'),
             title = cms.string('mu15 || isoMu11 Trigger')
         ),
-
-        # primary event vertex selection
         cms.PSet(
             filter = cms.string('evtSelPrimaryEventVertex'),
             title = cms.string('Vertex')
@@ -346,21 +434,129 @@ analyzeEventsTauIdEffZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
                 'diTauCandidateHistManagerTauIdEffZtoMuTau',
                 'caloMEtHistManager',
                 'pfMEtHistManager',
+                'dataBinnerTauIdEffZtoMuTau',
                 'tauIdEffZtoMuTauHistManager',
-                'tauIdEffDataBinner',
-                'tauIdEffBinGridHistManager'
+                'tauIdEffDataBinner2regions',
+                'tauIdEffBinGridHistManager2regions'
             )
         )
     )
 )
+
+analyzeEventsTauIdEffZtoMuTauRelMuonIsolation = analyzeEventsTauIdEffZtoMuTau.clone(
+
+    name = cms.string('TauIdEffAnalyzerZtoMuTau_relMuonIsolation'), 
+    
+    analysisSequence = cms.VPSet(
+    
+        # generator level phase-space selection
+        # (NOTE: (1) to be used in case of Monte Carlo samples
+        #            overlapping in simulated phase-space only !!
+        #        (2) genPhaseSpaceCut needs to be **always** the first entry in the list of cuts
+        #           - otherwise the script submitToBatch.csh for submission of cmsRun jobs
+        #            to the CERN batch system will not work !!)
+        cms.PSet(
+            filter = cms.string('genPhaseSpaceCut'),
+            title = cms.string('gen. Phase-Space')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelTrigger'),
+            title = cms.string('mu15 || isoMu11 Trigger')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelPrimaryEventVertex'),
+            title = cms.string('Vertex')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelPrimaryEventVertexQuality'),
+            title = cms.string('p(chi2Vertex) > 0.01')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelPrimaryEventVertexPosition'),
+            title = cms.string('-25 < zVertex < +25 cm')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelGlobalMuon'),
+            title = cms.string('global Muon')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelMuonEta'),
+            title = cms.string('-2.1 < eta(Muon) < +2.1')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelMuonPt'),
+            title = cms.string('Pt(Muon) > 15 GeV')
+        ),
+        cms.PSet(
+            filter = cms.string('tauEtaCutTauIdEffZtoMuTau'),
+            title = cms.string('-2.1 < eta(Tau) < +2.1')
+        ),
+        cms.PSet(
+            filter = cms.string('tauPtCutTauIdEffZtoMuTau'),
+            title = cms.string('Pt(Tau) > 20 GeV')
+        ),
+        cms.PSet(
+            filter = cms.string('muonCombRelIsoCutTauIdEffZtoMuTau'),
+            title = cms.string('Muon Track + ECAL relative iso.')
+        ),
+        cms.PSet(
+            filter = cms.string('muonAntiPionCutTauIdEffZtoMuTauRelIsolation'),
+            title = cms.string('Muon pi-Veto')
+        ),
+        cms.PSet(
+            filter = cms.string('muonTrkIPcutTauIdEffZtoMuTauRelIsolation'),
+            title = cms.string('Muon Track IP')
+        ),
+        cms.PSet(
+            filter = cms.string('tauMuonVetoTauIdEffZtoMuTau'),
+            title = cms.string('Tau mu-Veto')
+        ),
+        cms.PSet(
+            filter = cms.string('muTauPairTauIdEffZtoMuTauRelMuonIsolation'),
+            title = cms.string('dR(Muon-Tau) > 0.7')
+        ),
+        cms.PSet(
+            filter = cms.string('muTauPairBackToBackTauIdEffZtoMuTauRelMuonIsolation'),
+            title = cms.string('dPhi(Muon,Tau) > 170 deg.'),
+            saveRunEventNumbers = cms.vstring('')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelDiMuPairZmumuHypothesisVeto'),
+            title = cms.string('not 80 < M (Muon-Muon) < 100 GeV')
+        ),        
+        cms.PSet(
+            filter = cms.string('uniqueMuonCandidateCutTauIdEffZtoMuTau'),
+            title = cms.string('num. global Muons < 2')
+        ),
+        cms.PSet(
+            filter = cms.string('uniqueTauCandidateCutTauIdEffZtoMuTau'),
+            title = cms.string('num. Tau-Jet Candidates < 2'),
+            saveRunEventNumbers = cms.vstring('')
+        ),
+        cms.PSet(
+            analyzers = cms.vstring(
+                'muonHistManagerTauIdEffZtoMuTau',
+                'tauHistManagerTauIdEffZtoMuTau',
+                'diTauCandidateHistManagerTauIdEffZtoMuTau',
+                'caloMEtHistManager',
+                'pfMEtHistManager',
+                'tauIdEffZtoMuTauHistManager',
+                'dataBinnerTauIdEffZtoMuTau',
+                'tauIdEffDataBinner2regions',
+                'tauIdEffBinGridHistManager2regions'
+            )
+        )
+    )
+)    
 
 #--------------------------------------------------------------------------------  
 # define (final) analysis sequence
 #--------------------------------------------------------------------------------
 
 bgEstTauIdEffZtoMuTauAnalysisSequence = cms.Sequence(
-    selectTausTauIdEffZtoMuTau
+    selectMuonsForTauIdEffZtoMuTau
+   + selectTausForTauIdEffZtoMuTau
    + selectMuTauPairsTauIdEffZtoMuTau
    + selectEventsTauIdEffZtoMuTau
-   + analyzeEventsTauIdEffZtoMuTau
+   + analyzeEventsTauIdEffZtoMuTau + analyzeEventsTauIdEffZtoMuTauRelMuonIsolation
 )
