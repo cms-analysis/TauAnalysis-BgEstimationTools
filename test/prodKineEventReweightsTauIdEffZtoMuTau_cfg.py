@@ -30,6 +30,33 @@ process.load("TauAnalysis.Configuration.plotZtoMuTau_cff")
 
 process.loadZtoMuTau.inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEffKineEventReweights/7TeV/")
 
+process.addTauIdEffKineReweightHistogramsZtoMuTau_qcdSum = cms.EDAnalyzer("DQMHistAdder",
+    qcdSum = cms.PSet(
+        dqmDirectories_input = cms.vstring(
+            'harvested/InclusivePPmuX/',
+            'harvested/PPmuXptGt20/'
+        ),
+        dqmDirectory_output = cms.string('harvested/qcdSum/')
+    )                          
+)
+
+process.addTauIdEffKineReweightHistogramsZtoMuTau_smSum = cms.EDAnalyzer("DQMHistAdder",
+    smSum = cms.PSet(
+        dqmDirectories_input = cms.vstring(
+            'harvested/Ztautau/',
+            'harvested/Zmumu/',
+            'harvested/WplusJets/',
+            'harvested/TTplusJets/',
+            'harvested/qcdSum/'
+        ),
+        dqmDirectory_output = cms.string('harvested/smSum/')
+    )
+)
+
+process.addTauIdEffKineReweightHistogramsZtoMuTau = cms.Sequence(
+    process.addTauIdEffKineReweightHistogramsZtoMuTau_qcdSum + process.addTauIdEffKineReweightHistogramsZtoMuTau_smSum
+)
+
 process.dumpTauIdEffKineReweightHistogramsZtoMuTau = cms.EDAnalyzer("DQMStoreDump")
 
 dqmDirectory_qcdSumLooseMuonIso = 'harvested/qcdSum/TauIdEffQCDenrichedLooseMuonIso/TauIdEffSpecificQuantities'
@@ -79,7 +106,8 @@ process.normalizeTauIdEffKineReweightHistogramsZtoMuTau = cms.EDAnalyzer("DQMHis
             meNameInput = cms.string(dqmDirectory_smSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta),
             meNameOutput = cms.string(dqmDirectory_smSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta_norm)
         )
-    )
+    ),
+    norm = cms.double(1.)                                                                     
 )
 
 dqmDirectory_effTightMuonTrkIso = 'tauIdEffKineEventReweights/QCDenrichedMuonTrkIso'
@@ -100,11 +128,11 @@ process.prodKineEventReweightsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMHistEffProdu
             meName_efficiency = cms.string(dqmDirectory_effTightMuonEcalIso + '_pure' + '/' + meName_muonPtVsAbsEta)
         ),
         cms.PSet(
-            meNames_numerator = cms.string(
+            meNames_numerator = cms.vstring(
                 dqmDirectory_qcdSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta_norm,
                 dqmDirectory_qcdSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta_norm
             ),
-            meNames_denominator = cms.string(
+            meNames_denominator = cms.vstring(
                 dqmDirectory_qcdSumLooseMuonIso + '/' + meName_muonPtVsAbsEta_norm,
                 dqmDirectory_qcdSumLooseMuonIso + '/' + meName_muonPtVsAbsEta_norm
             ),
@@ -126,11 +154,11 @@ process.prodKineEventReweightsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMHistEffProdu
             meName_efficiency = cms.string(dqmDirectory_effTightMuonEcalIso + '_data' + '/' + meName_muonPtVsAbsEta)
         ),
         cms.PSet(
-            meNames_numerator = cms.string(
+            meNames_numerator = cms.vstring(
                 dqmDirectory_smSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta_norm,
                 dqmDirectory_smSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta_norm
             ),
-            meNames_denominator = cms.string(
+            meNames_denominator = cms.vstring(
                 dqmDirectory_smSumLooseMuonIso + '/' + meName_muonPtVsAbsEta_norm,
                 dqmDirectory_smSumLooseMuonIso + '/' + meName_muonPtVsAbsEta_norm
             ),
@@ -146,10 +174,10 @@ process.prodKineEventReweightsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMHistEffProdu
 
 process.dumpKineEventReweightsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMDumpHistogram",
     meNames = cms.vstring(
-        cms.string(dqmDirectory_effTightMuonCombIsoFactorized + '_pure' + '/' + meName_muonPtVsAbsEta),
-        cms.string(dqmDirectory_effTightMuonCombIso + '_pure' + '/' + meName_muonPtVsAbsEta),
-        cms.string(dqmDirectory_effTightMuonCombIsoFactorized + '_data' + '/' + meName_muonPtVsAbsEta),
-        cms.string(dqmDirectory_effTightMuonCombIso + '_data' + '/' + meName_muonPtVsAbsEta)
+        dqmDirectory_effTightMuonCombIsoFactorized + '_pure' + '/' + meName_muonPtVsAbsEta,
+        dqmDirectory_effTightMuonCombIso + '_pure' + '/' + meName_muonPtVsAbsEta,
+        dqmDirectory_effTightMuonCombIsoFactorized + '_data' + '/' + meName_muonPtVsAbsEta,
+        dqmDirectory_effTightMuonCombIso + '_data' + '/' + meName_muonPtVsAbsEta
     )
 )
 
@@ -160,7 +188,7 @@ process.saveKineEventReweightsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSa
 
 process.p = cms.Path(
      process.loadZtoMuTau
-   + process.addZtoMuTau
+   + process.addTauIdEffKineReweightHistogramsZtoMuTau
    + process.dumpTauIdEffKineReweightHistogramsZtoMuTau
    + process.normalizeTauIdEffKineReweightHistogramsZtoMuTau
    + process.prodKineEventReweightsTauIdEffZtoMuTau
