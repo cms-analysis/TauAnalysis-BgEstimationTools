@@ -99,10 +99,10 @@ process.load("TauAnalysis.CandidateTools.diTauPairProductionAllKinds_cff")
 replaceMETforDiTaus(process, cms.InputTag('layer1METs'), cms.InputTag('layer1PFMETs'))
 #--------------------------------------------------------------------------------
 
-process.load('TauAnalysis.BgEstimationTools.bgEstWplusJetsEnrichedSelection_cff')
-process.load('TauAnalysis.BgEstimationTools.bgEstTTplusJetsEnrichedSelection_cff')
-process.load('TauAnalysis.BgEstimationTools.bgEstZmumuEnrichedSelection_cff')
-process.load('TauAnalysis.BgEstimationTools.bgEstQCDenrichedSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauWplusJetsEnrichedSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauTTplusJetsEnrichedSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauZmumuEnrichedSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauQCDenrichedSelection_cff')
 
 # set generator level phase-space selection
 # (to avoid overlap of different  Monte Carlo samples in simulated phase-space)

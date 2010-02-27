@@ -101,10 +101,10 @@ replaceMETforDiTaus(process, cms.InputTag('layer1METs'), cms.InputTag('layer1PFM
 #--------------------------------------------------------------------------------
 
 process.load('TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauSelection_cff')
-process.load('TauAnalysis.BgEstimationTools.bgEstWplusJetsEnrichedSelection_cff')
-process.load('TauAnalysis.BgEstimationTools.bgEstTTplusJetsEnrichedSelection_cff')
-process.load('TauAnalysis.BgEstimationTools.bgEstZmumuEnrichedSelection_cff')
-process.load('TauAnalysis.BgEstimationTools.bgEstQCDenrichedSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauWplusJetsEnrichedSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauTTplusJetsEnrichedSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauZmumuEnrichedSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauQCDenrichedSelection_cff')
 
 # set generator level phase-space selection
 # (to avoid overlap of different  Monte Carlo samples in simulated phase-space)
@@ -112,7 +112,8 @@ if hasattr(process, "isBatchMode"):
     process.analyzeEventsTauIdEffZtoMuTau.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstWplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstTTplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsBgEstZmumuEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
+    process.analyzeEventsBgEstZmumuJetMisIdEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
+    process.analyzeEventsBgEstZmumuMuonMisIdEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstQCDenriched.filters[0] = getattr(process, "genPhaseSpaceCut")
 
 # produce event weight variable for correcting "bias"
@@ -130,13 +131,13 @@ process.kineEventReweightTauIdEffQCD = cms.EDProducer("ObjValProducer",
         variables = cms.PSet(
             x = cms.PSet(
                 pluginType = cms.string("PATMuTauPairValExtractor"),
-                src = cms.InputTag('muTauPairsForBgEstQCDenrichedNoIsolation'),
+                src = cms.InputTag('muTauPairsBgEstQCDenriched'),
                 value = cms.string("abs(leg1.eta)"),
                 indices = cms.vuint32(0)
             ),
             y = cms.PSet(
                 pluginType = cms.string("PATMuTauPairValExtractor"),
-                src = cms.InputTag('muTauPairsForBgEstQCDenrichedNoIsolation'),
+                src = cms.InputTag('muTauPairsBgEstQCDenriched'),
                 value = cms.string("leg1.pt"),
                 indices = cms.vuint32(0)
             )
@@ -144,9 +145,12 @@ process.kineEventReweightTauIdEffQCD = cms.EDProducer("ObjValProducer",
     )
 )
 
-# add event weight variable to analysis sequence
-# for producing W + jets templates
-setattr(process.analyzeEventsBgEstQCDenriched, "eventWeightSource", cms.VInputTag("kineEventReweightTauIdEffQCD"))
+# add another analysis sequence for producing QCD templates
+# in which the events are reweighted in order to correct for "bias" of muon Pt and eta distributions
+# caused by cuts on (absolute) muon track and ECAL isolation
+process.analyzeEventsBgEstQCDenriched_reweighted = copy.deepcopy(process.analyzeEventsBgEstQCDenriched)
+process.analyzeEventsBgEstQCDenriched_reweighted.name = cms.string('BgEstTemplateAnalyzer_QCDenriched_reweighted')
+setattr(process.analyzeEventsBgEstQCDenriched_reweighted, "eventWeightSource", cms.VInputTag("kineEventReweightTauIdEffQCD"))
 
 process.p = cms.Path(
    process.producePatTupleZtoMuTauSpecific
@@ -155,7 +159,8 @@ process.p = cms.Path(
   + process.bgEstWplusJetsEnrichedAnalysisSequence
   + process.bgEstTTplusJetsEnrichedAnalysisSequence
   + process.bgEstZmumuEnrichedAnalysisSequence
-  + process.kineEventReweightTauIdEffQCD + process.bgEstQCDenrichedAnalysisSequence 
+  + process.bgEstQCDenrichedAnalysisSequence
+  + process.kineEventReweightTauIdEffQCD + process.analyzeEventsBgEstQCDenriched_reweighted
   + process.saveTauIdEffZtoMuTauPlots 
 )
 

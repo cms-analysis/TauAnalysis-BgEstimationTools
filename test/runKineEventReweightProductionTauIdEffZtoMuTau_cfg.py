@@ -75,8 +75,8 @@ from PhysicsTools.PatAlgos.tools.tauTools import *
 # instead of fixed dR = 0.07 signal cone reco::PFTaus
 # as input for pat::Tau production
 switchToPFTauShrinkingCone(process)
-setattr(process.allLayer1Taus.tauIDSources, "ewkTauId", cms.InputTag('ewkTauId'))
 #switchToPFTauFixedCone(process)
+setattr(process.allLayer1Taus.tauIDSources, "ewkTauId", cms.InputTag('ewkTauId'))
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ process.load("TauAnalysis.CandidateTools.diTauPairProductionAllKinds_cff")
 replaceMETforDiTaus(process, cms.InputTag('layer1METs'), cms.InputTag('layer1PFMETs'))
 #--------------------------------------------------------------------------------
 
-process.load('TauAnalysis.BgEstimationTools.bgEstQCDenrichedSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauQCDenrichedSelection_cff')
 
 from TauAnalysis.CandidateTools.tools.objSelConfigurator import *
 from TauAnalysis.RecoTools.tools.eventSelFlagProdConfigurator import *
