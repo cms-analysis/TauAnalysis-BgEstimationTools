@@ -32,7 +32,7 @@ process.source = cms.Source("EmptySource")
 process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(        
         inputFileNames = cms.vstring(
-            'rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeVii/plotsTauIdEffZtoMuTau_all.root'
+            'rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeV/plotsTauIdEffZtoMuTau_all.root'
         ),        
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
@@ -436,21 +436,21 @@ process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.templates.muonPtVsAbsEta.m
 process.fitTauIdEffZtoMuTau_tauIdFailed.processes.QCD.norm.initial = cms.double(2500.)
 process.fitTauIdEffZtoMuTau_tauIdFailed.data.distributions.muonPtVsAbsEta.meName = cms.string(dqmDirectory_Data_tauIdFailed + '/' + meName_muonPtVsAbsEta)
 process.fitTauIdEffZtoMuTau_tauIdFailed.fit.algorithm.pluginName = cms.string("fitTauIdEffZtoMuTauAlgorithm_tauIdFailed")
-process.fitTauIdEffZtoMuTau_tauIdFailed.output.controlPlots.fileName = cms.string("./plots/fitTauIdEffZtoMuTau_tauIdFailed_#PLOT#.eps")
-process.fitTauIdEffZtoMuTau_tauIdFailed.output.fitResults.dqmDirectory = cms.string("fitTauIdEffZtoMuTau_tauIdFailed/fitResults/")
+process.fitTauIdEffZtoMuTau_tauIdFailed.output.controlPlots.fileName = cms.string("./plots/fitTauIdEffZtoMuTau_tauIdFailed_#PLOT#.png")
+process.fitTauIdEffZtoMuTau_tauIdFailed.output.fitResults.dqmDirectory = cms.string("fitTauIdEffZtoMuTau_tauIdFailed/fitResults")
 
 process.fitTauIdEffZtoMuTau = cms.Sequence(
     process.fitTauIdEffZtoMuTau_tauIdPassed
    * process.fitTauIdEffZtoMuTau_tauIdFailed
 )
 
-meName_norm = 'Ztautau/norm/value'
+meName_norm = 'Ztautau/norm/value#a1#s1'
 
 process.dumpBinErrorsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMBinErrorCalculator",
     config = cms.VPSet(
         cms.PSet(
-            meName_passed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults2regions/binContent_region2'),
-            meName_failed = cms.string(dqmDirectory_Ztautau_all + 'tauIdEffBinningResults2regions/binContent_region1'),
+            meName_passed = cms.string(dqmDirectory_Ztautau_all + '/' + 'tauIdEffBinningResults2regions/binContent_region2#a1#s1'),
+            meName_failed = cms.string(dqmDirectory_Ztautau_all + '/' + 'tauIdEffBinningResults2regions/binContent_region1#a1#s1'),
             label = cms.string("Tau id., true")
         ),
         cms.PSet(
@@ -473,8 +473,8 @@ process.p = cms.Path(
    + process.dumpDQMStore
    + process.plotTemplateHistTauIdEffZtoMuTau
    + process.fitTauIdEffZtoMuTau
-   + process.saveFitResultsTauIdEffZtoMuTau 
-   + process.dumpBinErrorsTauIdEffZtoMuTau
+   + process.dumpBinErrorsTauIdEffZtoMuTau 
+   + process.saveFitResultsTauIdEffZtoMuTau
 )
 
 # print-out all python configuration parameter information
