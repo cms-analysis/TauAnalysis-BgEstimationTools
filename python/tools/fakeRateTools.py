@@ -373,7 +373,7 @@ def enableFakeRates_runZtoMuTau(process, method = None):
           addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
                                "frUnweighted", bgEstFakeRateAnalysisSequence)
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation_frUnweighted,
-                    tauIdEffValidationHistManager, "evtSelTauPt")
+                    tauIdEffValidationHistManager, "evtSelTauLeadTrkPt")
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
                     "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
@@ -381,7 +381,7 @@ def enableFakeRates_runZtoMuTau(process, method = None):
           addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
                                "frUnweighted", bgEstFakeRateAnalysisSequence)
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation_frUnweighted,
-                    tauIdEffValidationHistManager, "evtSelTauPt")
+                    tauIdEffValidationHistManager, "evtSelTauLeadTrkPt")
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
                     "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
@@ -390,7 +390,7 @@ def enableFakeRates_runZtoMuTau(process, method = None):
           addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents,
                                "frUnweighted", bgEstFakeRateAnalysisSequence)
         addAnalyzer(process.analyzeZtoMuTauEvents_frUnweighted,
-                    tauIdEffValidationHistManager, "evtSelTauPt")
+                    tauIdEffValidationHistManager, "evtSelTauLeadTrkPt")
         addAnalyzer(process.analyzeZtoMuTauEvents_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
                     "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
