@@ -11,7 +11,7 @@ tauIdEffValidationHistManager = cms.PSet(
     frTypes = cms.vstring(
         "WJetssim",
         "MuEnrichedQCDsim",
-        "DiJetHighPtSim",
+        "DiJetHighPtsim",
         "DiJetSecondPtsim"
     ),
 
@@ -19,7 +19,7 @@ tauIdEffValidationHistManager = cms.PSet(
         "ZTTsim"
     ),
 
-    frValidation = cms.VPSet(
+    validation = cms.VPSet(
         cms.PSet(
             cutEffName = cms.string("ByStandardChain"),
             cuts = cms.vstring(
