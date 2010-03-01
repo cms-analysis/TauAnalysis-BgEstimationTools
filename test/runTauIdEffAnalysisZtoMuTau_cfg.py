@@ -126,7 +126,7 @@ process.kineEventReweightTauIdEffQCD = cms.EDProducer("ObjValProducer",
             fileName = cms.string(
                 'rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/kineEventReweights/muonKineReweightsTauIdEffZtoMuTau.root'
             ),
-            meName = cms.string('DQMData/tauIdEffKineEventReweights/QCDenrichedMuonTrkIso_data/MuonPtVsAbsEta')
+            meName = cms.string('DQMData/tauIdEffKineEventReweights/QCDenrichedMuonCombIsoFactorized_data/MuonPtVsAbsEta')
         ),
         variables = cms.PSet(
             x = cms.PSet(
