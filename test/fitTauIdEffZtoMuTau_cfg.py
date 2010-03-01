@@ -47,25 +47,28 @@ region_tauIdPassed = 'region02'
 region_tauIdFailed = 'region01'
 
 dqmDirectory_Ztautau_all = 'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
-#dqmDirectory_Ztautau_all = 'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+##dqmDirectory_Ztautau_all = 'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_Ztautau_tauIdPassed = dqmDirectory_Ztautau_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed 
 dqmDirectory_Ztautau_tauIdFailed = dqmDirectory_Ztautau_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed 
+dqmDirectory_Ztautau_template = dqmDirectory_Ztautau_all
 
 dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
-#dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+##dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_WplusJets_tauIdPassed = dqmDirectory_WplusJets_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed
 dqmDirectory_WplusJets_tauIdFailed = dqmDirectory_WplusJets_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed
 dqmDirectory_WplusJets_template = 'harvested/smSum/BgEstTemplateAnalyzer_WplusJetsEnriched/afterDiMuonVetoBgEstWplusJetsEnriched'
+#dqmDirectory_WplusJets_template = dqmDirectory_WplusJets_all 
 
 dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
-#dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+##dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_QCD_tauIdPassed = dqmDirectory_QCD_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed
 dqmDirectory_QCD_tauIdFailed = dqmDirectory_QCD_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed 
-dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched_reweighted/afterDiMuonVetoBgEstQCDenriched'
-#dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched/afterDiMuonVetoBgEstQCDenriched'
+#dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched_reweighted/afterDiMuonVetoBgEstQCDenriched'
+##dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched/afterDiMuonVetoBgEstQCDenriched'
+dqmDirectory_QCD_template = dqmDirectory_QCD_all
 
 dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
-#dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+##dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_Data_tauIdPassed = dqmDirectory_Data_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed 
 dqmDirectory_Data_tauIdFailed = dqmDirectory_Data_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed
 
@@ -330,7 +333,7 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateHistFitter",
             norm = cms.PSet(
                 initial = cms.double(1000.)
             ),
-            drawOptions = drawOption_Ztautau                
+            drawOptions = drawOption_Ztautau_separate                
         ),
         WplusJets = cms.PSet(
             templates = cms.PSet(
@@ -343,7 +346,7 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateHistFitter",
             norm = cms.PSet(
                 initial = cms.double(100.)
             ),
-            drawOptions = drawOption_WplusJets
+            drawOptions = drawOption_WplusJets_separate
         ),
         QCD = cms.PSet(
             templates = cms.PSet(
@@ -356,7 +359,7 @@ process.fitTauIdEffZtoMuTau_tauIdPassed = cms.EDAnalyzer("TemplateHistFitter",
             norm = cms.PSet(
                 initial = cms.double(100.)
             ),
-            drawOptions = drawOption_QCD
+            drawOptions = drawOption_QCD_separate
         )
     ),
 
@@ -470,7 +473,7 @@ process.dumpDQMStore = cms.EDAnalyzer("DQMStoreDump")
 
 process.p = cms.Path(
     process.loadTauIdEffZtoMuTau
-   + process.dumpDQMStore
+  #+ process.dumpDQMStore
    + process.plotTemplateHistTauIdEffZtoMuTau
    + process.fitTauIdEffZtoMuTau
    + process.dumpBinErrorsTauIdEffZtoMuTau 
