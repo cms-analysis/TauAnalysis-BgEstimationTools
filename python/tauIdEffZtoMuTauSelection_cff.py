@@ -410,17 +410,48 @@ analyzeEventsTauIdEffZtoMuTau = cms.EDAnalyzer("GenericAnalyzer",
             title = cms.string('dR(Muon-Tau) > 0.7')
         ),
         cms.PSet(
+            analyzers = cms.vstring(
+                'muonHistManagerTauIdEffZtoMuTau',
+                'tauHistManagerTauIdEffZtoMuTau',
+                'diTauCandidateHistManagerTauIdEffZtoMuTau'
+            ),
+            replace = cms.vstring(
+                'diTauCandidateHistManagerTauIdEffZtoMuTau.diTauCandidateSource = muTauPairsTauIdEffZtoMuTau'
+            )
+        ),
+        cms.PSet(
             filter = cms.string('muTauPairBackToBackTauIdEffZtoMuTau'),
             title = cms.string('dPhi(Muon,Tau) > 170 deg.'),
             saveRunEventNumbers = cms.vstring('')
         ),
         cms.PSet(
+            analyzers = cms.vstring(
+                'muonHistManagerTauIdEffZtoMuTau',
+                'tauHistManagerTauIdEffZtoMuTau',
+                'diTauCandidateHistManagerTauIdEffZtoMuTau'
+            )
+        ),
+        cms.PSet(
             filter = cms.string('evtSelDiMuPairZmumuHypothesisVeto'),
             title = cms.string('not 80 < M (Muon-Muon) < 100 GeV')
-        ),        
+        ),
+        cms.PSet(
+            analyzers = cms.vstring(
+                'muonHistManagerTauIdEffZtoMuTau',
+                'tauHistManagerTauIdEffZtoMuTau',
+                'diTauCandidateHistManagerTauIdEffZtoMuTau'
+            )
+        ),
         cms.PSet(
             filter = cms.string('uniqueMuonCandidateCutTauIdEffZtoMuTau'),
             title = cms.string('num. global Muons < 2')
+        ),
+        cms.PSet(
+            analyzers = cms.vstring(
+                'muonHistManagerTauIdEffZtoMuTau',
+                'tauHistManagerTauIdEffZtoMuTau',
+                'diTauCandidateHistManagerTauIdEffZtoMuTau'
+            )
         ),
         cms.PSet(
             filter = cms.string('uniqueTauCandidateCutTauIdEffZtoMuTau'),
