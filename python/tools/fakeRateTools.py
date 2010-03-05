@@ -249,8 +249,13 @@ def enableFakeRates_runZtoMuTau(process, method = None):
         if method != "simple" and method != "CDF":
             raise ValueError("Invalid method Parameter !!")
 
-    # preselect tau-jet candidates entering fake-rate computation
-    process.tausForFakeRateWeights = cms.EDFilter("PFTauSelector",
+    # compute fake-rate weights
+    #
+    # NOTE: jet weights are computed for all (shrinking signal cone) reco::PFTaus,
+    #       but only those tau-jet candidates passing preselection on PAT level
+    #       must enter event weight computation !!
+    #
+    process.tausForFakeRateJetWeights = cms.EDFilter("PFTauSelector",
         src = cms.InputTag('shrinkingConePFTauProducer'),
         discriminators = cms.VPSet(
             cms.PSet(
@@ -269,26 +274,11 @@ def enableFakeRates_runZtoMuTau(process, method = None):
         ),
         filter = cms.bool(False)
     )
-    process.globalMuonsForFakeRateWeights = cms.EDFilter("MuonSelector",
-        src = cms.InputTag("muons"),
-        cut = cms.string('isGlobalMuon()'),
-        filter = cms.bool(False)
-    )                          
-    process.tausForFakeRateWeightsAntiOverlapWithMuonsVeto = cms.EDFilter("PFTauAntiOverlapSelector",
-        src = cms.InputTag("tausForFakeRateWeights"),                                                               
-        srcNotToBeFiltered = cms.VInputTag("globalMuonsForFakeRateWeights"),
-        dRmin = cms.double(0.3),
-        filter = cms.bool(False)                                           
-    )                                       
-                                                         
-    process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('tausForFakeRateWeightsAntiOverlapWithMuonsVeto')
-    process.bgEstFakeRateEventWeights.preselTauJetSource = process.bgEstFakeRateJetWeights.preselTauJetSource
-    process.produceFakeRates = cms.Sequence(
-        process.tausForFakeRateWeights
-       * process.globalMuonsForFakeRateWeights * process.tausForFakeRateWeightsAntiOverlapWithMuonsVeto
-       * process.bgEstFakeRateJetWeights * process.bgEstFakeRateEventWeights
-    )
-    process.producePrePat._seq = process.producePrePat._seq * process.produceFakeRates
+    process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('tausForFakeRateJetWeights')
+    process.produceFakeRateJetWeights = cms.Sequence(process.tausForFakeRateJetWeights * process.bgEstFakeRateJetWeights)
+    process.producePrePat._seq = process.producePrePat._seq * process.produceFakeRateJetWeights
+    process.bgEstFakeRateEventWeights.preselTauJetSource = cms.InputTag('selectedLayer1TausForMuTauLeadTrkPtCumulative')
+    process.producePostPat._seq = process.producePostPat._seq * process.bgEstFakeRateEventWeights
     
     # disable cuts on tau id. discriminators
     #
