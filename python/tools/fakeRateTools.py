@@ -264,7 +264,8 @@ def enableFakeRates_runZtoMuTau(process, method = None):
             cms.PSet(
                 discriminator = cms.InputTag("shrinkingConePFTauDiscriminationAgainstMuon"),
                 selectionCut = cms.double(0.5)
-            )
+            ),
+            cut = cms.string("pt > 15. & abs(eta) < 2.5")
         ),
         filter = cms.bool(False)
     )
