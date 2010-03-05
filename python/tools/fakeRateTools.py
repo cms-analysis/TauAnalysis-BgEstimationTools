@@ -268,10 +268,23 @@ def enableFakeRates_runZtoMuTau(process, method = None):
         ),
         filter = cms.bool(False)
     )
-    process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('tausForFakeRateWeights')
+    process.globalMuonsForFakeRateWeights = cms.EDFilter("MuonSelector",
+        src = cms.InputTag("muons"),
+        cut = cms.string('isGlobalMuon()'),
+        filter = cms.bool(False)
+    )                          
+    process.tausForFakeRateWeightsAntiOverlapWithMuonsVeto = cms.EDFilter("PFTauAntiOverlapSelector",
+        src = cms.InputTag("tausForFakeRateWeights"),                                                               
+        srcNotToBeFiltered = cms.VInputTag("globalMuonsForFakeRateWeights"),
+        dRmin = cms.double(0.3),
+        filter = cms.bool(False)                                           
+    )                                       
+                                                         
+    process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('tausForFakeRateWeightsAntiOverlapWithMuonsVeto')
     process.bgEstFakeRateEventWeights.preselTauJetSource = process.bgEstFakeRateJetWeights.preselTauJetSource
     process.produceFakeRates = cms.Sequence(
         process.tausForFakeRateWeights
+       * process.globalMuonsForFakeRateWeights * process.tausForFakeRateWeightsAntiOverlapWithMuonsVeto
        * process.bgEstFakeRateJetWeights * process.bgEstFakeRateEventWeights
     )
     process.producePrePat._seq = process.producePrePat._seq * process.produceFakeRates
@@ -336,6 +349,10 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     else:
         disableEventDump(process.analyzeZtoMuTauEvents)
 
+    # enable checking of fake-rates and tau id. efficiencies
+    # with event weights in tau-jet histogram manager
+    setattr(process.tauHistManager, "checkWeightConsistency", cms.bool(True))
+
     # duplicate analysis sequence:
     #  1.) tau id. discriminators not applied
     #  2.) events weighted by fake-rate
@@ -373,7 +390,8 @@ def enableFakeRates_runZtoMuTau(process, method = None):
           addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
                                "frUnweighted", bgEstFakeRateAnalysisSequence)
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation_frUnweighted,
-                    tauIdEffValidationHistManager, "evtSelTauLeadTrkPt")
+                    tauIdEffValidationHistManager, "evtSelTauLeadTrkPt",
+                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauLeadTrkPtCumulative")
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
                     "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
@@ -381,7 +399,8 @@ def enableFakeRates_runZtoMuTau(process, method = None):
           addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
                                "frUnweighted", bgEstFakeRateAnalysisSequence)
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation_frUnweighted,
-                    tauIdEffValidationHistManager, "evtSelTauLeadTrkPt")
+                    tauIdEffValidationHistManager, "evtSelTauLeadTrkPt",
+                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauLeadTrkPtCumulative")
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
                     "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
@@ -390,7 +409,8 @@ def enableFakeRates_runZtoMuTau(process, method = None):
           addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents,
                                "frUnweighted", bgEstFakeRateAnalysisSequence)
         addAnalyzer(process.analyzeZtoMuTauEvents_frUnweighted,
-                    tauIdEffValidationHistManager, "evtSelTauLeadTrkPt")
+                    tauIdEffValidationHistManager, "evtSelTauLeadTrkPt",
+                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauLeadTrkPtCumulative")
         addAnalyzer(process.analyzeZtoMuTauEvents_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
                     "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
