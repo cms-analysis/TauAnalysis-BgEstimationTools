@@ -255,28 +255,8 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     #       but only those tau-jet candidates passing preselection on PAT level
     #       must enter event weight computation !!
     #
-    process.tausForFakeRateJetWeights = cms.EDFilter("PFTauSelector",
-        src = cms.InputTag('shrinkingConePFTauProducer'),
-        discriminators = cms.VPSet(
-            cms.PSet(
-                discriminator = cms.InputTag("shrinkingConePFTauDiscriminationByLeadingTrackFinding"),
-                selectionCut = cms.double(0.5)
-            ),
-            cms.PSet(
-                discriminator = cms.InputTag("shrinkingConePFTauDiscriminationByLeadingTrackPtCut"),
-                selectionCut = cms.double(0.5)
-            ),
-            cms.PSet(
-                discriminator = cms.InputTag("shrinkingConePFTauDiscriminationAgainstMuon"),
-                selectionCut = cms.double(0.5)
-            ),
-            cut = cms.string("pt > 15. & abs(eta) < 2.5")
-        ),
-        filter = cms.bool(False)
-    )
     process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('tausForFakeRateJetWeights')
-    process.produceFakeRateJetWeights = cms.Sequence(process.tausForFakeRateJetWeights * process.bgEstFakeRateJetWeights)
-    process.producePrePat._seq = process.producePrePat._seq * process.produceFakeRateJetWeights
+    process.producePrePat._seq = process.producePrePat._seq * process.bgEstFakeRateJetWeights
     process.bgEstFakeRateEventWeights.preselTauJetSource = cms.InputTag('selectedLayer1TausForMuTauLeadTrkPtCumulative')
     process.producePostPat._seq = process.producePostPat._seq * process.bgEstFakeRateEventWeights
     
