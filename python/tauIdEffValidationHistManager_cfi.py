@@ -4,7 +4,8 @@ tauIdEffValidationHistManager = cms.PSet(
     pluginName = cms.string('tauIdEffValidationHistManager'),
     pluginType = cms.string('TauIdEffValidationHistManager'),
 
-    tauSource = cms.InputTag('selectedLayer1TausLeadTrkPtCumulative'),
+    ##tauSource = cms.InputTag('selectedLayer1TausLeadTrkPtCumulative'),
+    tauSource = cms.InputTag('selectedLayer1TausForMuTauLeadTrkPtCumulative'),
 
     dqmDirectory_store = cms.string('TauIdEffValidation'),
 
