@@ -257,9 +257,16 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     #
     process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('shrinkingConePFTauProducer')
     process.producePrePat._seq = process.producePrePat._seq * process.bgEstFakeRateJetWeights
-    process.bgEstFakeRateEventWeights.preselTauJetSource = cms.InputTag('selectedLayer1TausForMuTauLeadTrkPtCumulative')
-    process.producePatTupleZtoMuTauSpecific._seq = process.producePatTupleZtoMuTauSpecific._seq * process.bgEstFakeRateEventWeights
-    
+    process.tausForFakeRateEventWeights = cms.EDFilter("PATTauSelector",
+        src = cms.InputTag('selectedLayer1TausForMuTauLeadTrkPtCumulative'),               
+        #cut = cms.string('tauID("againstMuon") > 0.5'),
+        cut = cms.string('tauID("againstElectron") > 0.5 & tauID("againstMuon") > 0.5'),                                               
+        filter = cms.bool(False)
+    )
+    process.bgEstFakeRateEventWeights.preselTauJetSource = cms.InputTag('tausForFakeRateEventWeights')
+    process.produceFakeRateEventWeights = cms.Sequence(process.tausForFakeRateEventWeights + process.bgEstFakeRateEventWeights)
+    process.producePatTupleZtoMuTauSpecific._seq = process.producePatTupleZtoMuTauSpecific._seq * process.produceFakeRateEventWeights
+        
     # disable cuts on tau id. discriminators
     #
     # NOTE: tau lead. track finding and lead. track Pt discriminators
