@@ -457,24 +457,38 @@ def enableFakeRates_makeZtoMuTauPlots(process, enableFactorization = True):
 
         seq_addZtoMuTau = cms.Sequence(getattr(process, modName_addZtoMuTau_qcdSum))
 
-        modName_addZtoMuTau_smSum = "undefined"
-        if hasattr(process, "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate"):            
-            mod_addZtoMuTau_smSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_smSum_tauFakeRate)
-            modInputDir_addZtoMuTau_smSum = cms.vstring(
-                "".join(['tauFakeRate/harvested/Ztautau/zMuTauAnalyzer', '_', frType]),
+        modName_addZtoMuTau_smBgSum = "undefined"
+        if hasattr(process, "addBgEstFakeRateZtoMuTau_smBgSum_tauFakeRate"):
+            mod_addZtoMuTau_smBgSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_smBgSum_tauFakeRate)
+            modInputDir_addZtoMuTau_smBgSum = cms.vstring(
                 "".join(['tauFakeRate/harvested/Zmumu/zMuTauAnalyzer', '_', frType]),
                 "".join(['tauFakeRate/harvested/WplusJets/zMuTauAnalyzer', '_', frType]),
                 "".join(['tauFakeRate/harvested/TTplusJets/zMuTauAnalyzer', '_', frType]),
                 "".join(['tauFakeRate/harvested/qcdSum/zMuTauAnalyzer', '_', frType])
+            )
+            setattr(mod_addZtoMuTau_smBgSum.smBgSum, "dqmDirectories_input", modInputDir_addZtoMuTau_smBgSum)
+            modOutputDir_addZtoMuTau_smBgSum = cms.string("".join(['tauFakeRate/harvested/smBgSum/zMuTauAnalyzer', '_', frType]))
+            setattr(mod_addZtoMuTau_smBgSum.smBgSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_smBgSum)
+            modName_addZtoMuTau_smBgSum = "".join(["addBgEstFakeRateZtoMuTau_smBgSum_tauFakeRate", "_", frType])
+            setattr(process, modName_addZtoMuTau_smBgSum, mod_addZtoMuTau_smBgSum)
+
+            seq_addZtoMuTau._seq = seq_addZtoMuTau._seq * getattr(process, modName_addZtoMuTau_smBgSum)
+             
+        modName_addZtoMuTau_smSum = "undefined"
+        if hasattr(process, "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate"):
+            mod_addZtoMuTau_smSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_smSum_tauFakeRate)
+            modInputDir_addZtoMuTau_smSum = cms.vstring(
+                "".join(['tauFakeRate/harvested/Ztautau/zMuTauAnalyzer', '_', frType]),
+                "".join(['tauFakeRate/harvested/smBgSum/zMuTauAnalyzer', '_', frType])
             )
             setattr(mod_addZtoMuTau_smSum.smSum, "dqmDirectories_input", modInputDir_addZtoMuTau_smSum)
             modOutputDir_addZtoMuTau_smSum = cms.string("".join(['tauFakeRate/harvested/smSum/zMuTauAnalyzer', '_', frType]))
             setattr(mod_addZtoMuTau_smSum.smSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_smSum)
             modName_addZtoMuTau_smSum = "".join(["addBgEstFakeRateZtoMuTau_smSum_tauFakeRate", "_", frType])
             setattr(process, modName_addZtoMuTau_smSum, mod_addZtoMuTau_smSum)
-            
-            seq_addZtoMuTau._seq = seq_addZtoMuTau._seq * getattr(process, modName_addZtoMuTau_smSum)
 
+            seq_addZtoMuTau._seq = seq_addZtoMuTau._seq * getattr(process, modName_addZtoMuTau_smSum)
+            
         seqName_addZtoMuTau = "".join(["addBgEstFakeRateZtoMuTau_tauFakeRate", "_", frType])
         setattr(process, seqName_addZtoMuTau, seq_addZtoMuTau)
 
@@ -485,6 +499,7 @@ def enableFakeRates_makeZtoMuTauPlots(process, enableFactorization = True):
               dqmDirectoryIn_PPmuXptGt20 = "".join(['tauFakeRate/harvested/PPmuXptGt20/zMuTauAnalyzer', '_', frType]),
               dqmDirectoryOut_PPmuXptGt20 = "".join(['tauFakeRate/harvested/PPmuXptGt20_factorized/zMuTauAnalyzer', '_', frType]),
               modName_addZtoMuTau_qcdSum = modName_addZtoMuTau_qcdSum,
+              modName_addZtoMuTau_smBgSum = modName_addZtoMuTau_smBgSum,         
               modName_addZtoMuTau_smSum = modName_addZtoMuTau_smSum,
               seqName_addZtoMuTau = seqName_addZtoMuTau,
               pyObjectLabel = frType)
