@@ -398,32 +398,36 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     #  2.) events weighted by tau id. efficiency
     # (for the purpose of checking the tau id. efficiency values
     #  which are used by the "CDF" method)
-    tauIdEfficiency = cms.PSet(
-        tauJetDiscriminators = cms.VPSet(
-            cms.PSet(
-                tauJetIdEffSource = cms.InputTag("shrinkingConeZTTEffSimAssociator", "effByStandardChainZTTsim"),
-                qcdJetFakeRateSource = cms.InputTag("shrinkingConeZTTEffSimAssociator", "effByStandardChainZTTsim"),
-                tauJetDiscrSource = cms.InputTag("ewkTauId")
+    if method == "simple":
+        
+        tauIdEfficiency = cms.PSet(
+            tauJetDiscriminators = cms.VPSet(
+                cms.PSet(
+                    tauJetIdEffSource = cms.InputTag("shrinkingConeZTTEffSimAssociator", "effByStandardChainZTTsim"),
+                    qcdJetFakeRateSource = cms.InputTag("shrinkingConeZTTEffSimAssociator", "effByStandardChainZTTsim"),
+                    tauJetDiscrSource = cms.InputTag("ewkTauId")
+                )
             )
         )
-    )
-    setattr(process.bgEstFakeRateJetWeights.frTypes, "tauIdEfficiency", tauIdEfficiency)
-    setattr( process.bgEstFakeRateEventWeights.frTypes, "tauIdEfficiency", tauIdEfficiency)
-    frLabel = "".join(["bgEstFakeRateJetWeight", "_", "tauIdEfficiency"])
-    frInputTag = cms.InputTag('bgEstFakeRateJetWeights', "tauIdEfficiency")
-    setattr(process.allLayer1Taus.efficiencies, frLabel, frInputTag)
-    if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
-         hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
-        bgEstFakeRateAnalysisSequence = \
-          addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
-                                       "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
-        bgEstFakeRateAnalysisSequence = \
-          addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
-                                       "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
-    else:
-        bgEstFakeRateAnalysisSequence = \
-          addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents,
-                                       "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+        
+        setattr(process.bgEstFakeRateJetWeights.frTypes, "tauIdEfficiency", tauIdEfficiency)
+        setattr( process.bgEstFakeRateEventWeights.frTypes, "tauIdEfficiency", tauIdEfficiency)
+        frLabel = "".join(["bgEstFakeRateJetWeight", "_", "tauIdEfficiency"])
+        frInputTag = cms.InputTag('bgEstFakeRateJetWeights', "tauIdEfficiency")
+        setattr(process.allLayer1Taus.efficiencies, frLabel, frInputTag)
+        
+        if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
+             hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
+            bgEstFakeRateAnalysisSequence = \
+              addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation,
+                                           "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+            bgEstFakeRateAnalysisSequence = \
+              addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
+                                           "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+        else:
+            bgEstFakeRateAnalysisSequence = \
+              addFakeRateGenAnalyzerModule(process, process.analyzeZtoMuTauEvents,
+                                           "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
 
     setattr(process, "bgEstFakeRateAnalysisSequence", cms.Sequence(bgEstFakeRateAnalysisSequence))
 
