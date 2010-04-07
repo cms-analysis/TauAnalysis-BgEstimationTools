@@ -87,6 +87,18 @@ drawJobConfigurator_TauIdEffZtoMuTau.add(
             title = "PdgId of gen. Particle matching Tau (all Events passing Selection)",
             xAxis = 'PdgId',
             name = "pdgIdGenParticleMatchingTau"
+        ),
+        drawJobConfigEntry(
+            meName = 'DiTauCandidateQuantities/VisMass',
+            title = "M_{vis}(Muon + Tau) (final Event sample)",
+            xAxis = 'Mass',
+            name = "mVisible"
+        ),
+        drawJobConfigEntry(
+            meName = 'DiTauCandidateQuantities/CollinearApproxMass',
+            title = "M(Muon + Tau), collinear Approx. (final Event sample)",
+            xAxis = 'Mass',
+            name = "mCollApprox"
         )
     ]
 )
@@ -173,6 +185,18 @@ for iRegion in [ 1, 2]:
                 title = "PdgId of gen. Particle matching Tau (" + title_region + ")",
                 xAxis = 'PdgId',
                 name = name_region + "_pdgIdGenParticleMatchingTau"
+            ),
+            drawJobConfigEntry(
+                meName = 'DiTauCandidateQuantities/VisMass',
+                title = "M_{vis}(Muon + Tau) (final Event sample)",
+                xAxis = 'Mass',
+                name = name_region + "_mVisible"
+            ),
+            drawJobConfigEntry(
+                meName = 'DiTauCandidateQuantities/CollinearApproxMass',
+                title = "M(Muon + Tau), collinear Approx. (final Event sample)",
+                xAxis = 'Mass',
+                name = name_region + "_mCollApprox"
             )
         ]
     )
@@ -250,7 +274,8 @@ def addDrawJob(drawJobs, meName, xAxis, label):
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonPt', "Pt", "muonPt")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonAbsEta', "Eta", "muonAbsEta")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonExtTrkIsoPt', "Pt", "muonExtTrackIso")
-addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'DiTauCandidateQuantities/VisMass', "Mass", "mVis")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'DiTauCandidateQuantities/VisMass', "Mass", "mVisible")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'DiTauCandidateQuantities/CollinearApproxMass', "Mass", "mCollApprox")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauQuantities/TauPt', "Pt", "tauPt")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauQuantities/TauEta', "Eta", "tauEta")
 
