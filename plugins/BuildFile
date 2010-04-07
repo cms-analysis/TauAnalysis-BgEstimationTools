@@ -13,6 +13,7 @@
   <use name=DataFormats/TauReco>
   <use name=AnalysisDataFormats/TauAnalysis>
   <use name=TauAnalysis/BgEstimationTools>
+  <use name=TauAnalysis/CandidateTools>
   <use name=TauAnalysis/Core>
   <use name=TauAnalysis/DQMTools>
   <use name=TauAnalysis/FittingTools>
