@@ -14,7 +14,7 @@ process.maxEvents = cms.untracked.PSet(
 process.source = cms.Source("EmptySource")
 
 # define directory from which .root files containing the histograms get loaded
-process.loadTauIdEffZtoMuTau.inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeV/")
+process.loadTauIdEffZtoMuTau.inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeVii/")
 
 process.dumpDQMStore = cms.EDAnalyzer("DQMStoreDump")
 

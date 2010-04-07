@@ -56,16 +56,16 @@ dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_absMu
 ##dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_WplusJets_tauIdPassed = dqmDirectory_WplusJets_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed
 dqmDirectory_WplusJets_tauIdFailed = dqmDirectory_WplusJets_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed
-dqmDirectory_WplusJets_template = 'harvested/smSum/BgEstTemplateAnalyzer_WplusJetsEnriched/afterDiMuonVetoBgEstWplusJetsEnriched'
-#dqmDirectory_WplusJets_template = dqmDirectory_WplusJets_all 
+#dqmDirectory_WplusJets_template = 'harvested/smSum/BgEstTemplateAnalyzer_WplusJetsEnriched/afterDiMuonVetoBgEstWplusJetsEnriched'
+dqmDirectory_WplusJets_template = dqmDirectory_WplusJets_all 
 
 dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
 ##dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_QCD_tauIdPassed = dqmDirectory_QCD_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed
 dqmDirectory_QCD_tauIdFailed = dqmDirectory_QCD_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed 
-#dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched_reweighted/afterDiMuonVetoBgEstQCDenriched'
+dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched_reweighted/afterDiMuonVetoBgEstQCDenriched'
 ##dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched/afterDiMuonVetoBgEstQCDenriched'
-dqmDirectory_QCD_template = dqmDirectory_QCD_all
+#dqmDirectory_QCD_template = dqmDirectory_QCD_all
 
 dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
 ##dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
