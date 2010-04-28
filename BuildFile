@@ -5,6 +5,7 @@
 <use name=DataFormats/TauReco>
 <use name=DQMServices/Core>
 <use name=PhysicsTools/Utilities>
+<use name=CommonTools/Utils>
 <use name=TauAnalysis/DQMTools>
 <use name=root>
 <use name=roofit>
