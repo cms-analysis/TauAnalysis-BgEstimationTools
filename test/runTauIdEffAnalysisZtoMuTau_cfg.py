@@ -109,7 +109,8 @@ process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauQCDenrichedSelection_cf
 # set generator level phase-space selection
 # (to avoid overlap of different  Monte Carlo samples in simulated phase-space)
 if hasattr(process, "isBatchMode"):
-    process.analyzeEventsTauIdEffZtoMuTau.filters[0] = getattr(process, "genPhaseSpaceCut")
+    process.analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation.filters[0] = getattr(process, "genPhaseSpaceCut")
+    process.analyzeEventsTauIdEffZtoMuTauRelMuonIsolation.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstWplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstTTplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstZmumuJetMisIdEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
