@@ -33,11 +33,11 @@ process.dumpTauIdEffZtoMuTauBinningResults2regions = cms.EDAnalyzer("DQMDumpBinn
     binningService = cms.PSet(
         pluginType = cms.string("DataBinningService"),
         dqmDirectories = cms.PSet(
-            Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
-            Zmumu = cms.string('harvested/Zmumu/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
-            WplusJets = cms.string('harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
-            QCD = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
-            TTplusJets = cms.string('harvested/TTplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
+            Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
+            Zmumu = cms.string('harvested/Zmumu/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
+            WplusJets = cms.string('harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
+            QCD = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
+            TTplusJets = cms.string('harvested/TTplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResults2regions/'),
         )
     )
 )
@@ -53,7 +53,7 @@ process.reloadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
 process.p = cms.Path(
     process.loadTauIdEffZtoMuTau
    + process.addTauIdEffZtoMuTau
-   #process.reloadTauIdEffZtoMuTau
+    #process.reloadTauIdEffZtoMuTau
    + process.dumpDQMStore 
    + process.saveTauIdEffZtoMuTau
    + process.dumpTauIdEffZtoMuTau + process.dumpTauIdEffZtoMuTauBinningResults2regions
