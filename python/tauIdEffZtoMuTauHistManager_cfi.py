@@ -5,9 +5,9 @@ tauIdEffZtoMuTauHistManager = cms.PSet(
     pluginType = cms.string('TauIdEffZtoMuTauHistManager'),
 
     muonSource = cms.InputTag('selectedLayer1MuonsTrkIPcumulative'),  
-    tauSource = cms.InputTag('selectedLayer1TausForMuTauMuonVetoCumulative'),
-    diTauSource = cms.InputTag('selectedMuTauPairsPzetaDiffCumulative'),
-    centralJetSource = cms.InputTag('selectedLayer1JetsEt20Cumulative'),
+    tauSource = cms.InputTag('tausForTauIdEffZtoMuTauMuonVetoCumulative'),
+    diTauSource = cms.InputTag('muTauPairsTauIdEffZtoMuTauValidCollinearApproxAbsMuonIsolation'),
+    centralJetSource = cms.InputTag('selectedLayer1JetsAntiOverlapWithLeptonsVetoCumulative'),
 
     dqmDirectory_store = cms.string('TauIdEffSpecificQuantities'),
 
@@ -15,6 +15,6 @@ tauIdEffZtoMuTauHistManager = cms.PSet(
 
     diTauChargeSignExtractor = cms.PSet(
         pluginType = cms.string("PATMuTauPairChargeSignExtractor"),
-        src = cms.InputTag('selectedMuTauPairsPzetaDiffCumulative')
+        src = cms.InputTag('muTauPairsTauIdEffZtoMuTauValidCollinearApproxAbsMuonIsolation')
     )
 )
