@@ -24,7 +24,7 @@ loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     #InclusivePPmuX = copy.deepcopy(processZtoMuTau_InclusivePPmuX.config_dqmFileLoader),
     PPmuXptGt20 = copy.deepcopy(processZtoMuTau_PPmuXptGt20Sum.config_dqmFileLoader),
     TTplusJets = copy.deepcopy(processZtoMuTau_TTplusJetsSum.config_dqmFileLoader),
-    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeV/")
+    inputFilePath = cms.string("rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/plots/ZtoMuTau_tauIdEff/7TeVii/")
 )
 
 addTauIdEffZtoMuTau_qcdSum = cms.EDAnalyzer("DQMHistAdder",
