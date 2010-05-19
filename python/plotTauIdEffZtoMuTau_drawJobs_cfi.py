@@ -42,7 +42,7 @@ drawJobConfigurator_TauIdEffZtoMuTau = drawJobConfigurator(
 #--------------------------------------------------------------------------------
 
 drawJobConfigurator_TauIdEffZtoMuTau.add(
-    afterCut = "uniqueTauCandidateCutTauIdEffZtoMuTau",
+    afterCut = "uniqueMuonCandidateCutTauIdEffZtoMuTau",
     plots = [
         drawJobConfigEntry(
             meName = 'MuonQuantities/Muon#PAR#',
@@ -88,17 +88,41 @@ drawJobConfigurator_TauIdEffZtoMuTau.add(
             xAxis = 'PdgId',
             name = "pdgIdGenParticleMatchingTau"
         ),
+        ##drawJobConfigEntry(
+        ##    meName = 'DiTauCandidateQuantities/VisMass',
+        ##    title = "M_{vis}(Muon + Tau) (final Event sample)",
+        ##    xAxis = 'Mass',
+        ##    name = "mVisible"
+        ##),
+        ##drawJobConfigEntry(
+        ##    meName = 'DiTauCandidateQuantities/CollinearApproxMass',
+        ##    title = "M(Muon + Tau), collinear Approx. (final Event sample)",
+        ##    xAxis = 'Mass',
+        ##    name = "mCollApprox"
+        ##)
         drawJobConfigEntry(
-            meName = 'DiTauCandidateQuantities/VisMass',
+            meName = 'TauIdEffSpecificQuantities/DiTauVisMassFromTauJetP4',
             title = "M_{vis}(Muon + Tau) (final Event sample)",
             xAxis = 'Mass',
-            name = "mVisible"
+            name = "mVisiblePFTau"
         ),
         drawJobConfigEntry(
-            meName = 'DiTauCandidateQuantities/CollinearApproxMass',
+            meName = 'TauIdEffSpecificQuantities/DiTauVisMassFromJetP4',
+            title = "M_{vis}(Muon + Jet) (final Event sample)",
+            xAxis = 'Mass',
+            name = "mVisiblePFJet"
+        ),
+        drawJobConfigEntry(
+            meName = 'TauIdEffSpecificQuantities/DiTauCollinearApproxMassFromTauJetP4',
             title = "M(Muon + Tau), collinear Approx. (final Event sample)",
             xAxis = 'Mass',
-            name = "mCollApprox"
+            name = "mCollApproxPFTau"
+        ),
+        drawJobConfigEntry(
+            meName = 'TauIdEffSpecificQuantities/DiTauCollinearApproxMassFromJetP4',
+            title = "M(Muon + Jet), collinear Approx. (final Event sample)",
+            xAxis = 'Mass',
+            name = "mCollApproxPFJet"
         )
     ]
 )
@@ -122,7 +146,7 @@ for iRegion in [ 1, 2]:
     name_region = "region%(i)02d" % {"i" : iRegion}
             
     drawJobConfigurator_TauIdEffZtoMuTau.add(
-        afterCut = "uniqueTauCandidateCutTauIdEffZtoMuTau",
+        afterCut = "uniqueMuonCandidateCutTauIdEffZtoMuTau",
         plots = [        
             ##drawJobConfigEntry(
             ##    meName = dqmSubDirectory_region + 'MuonQuantities/Muon#PAR#',
@@ -186,17 +210,41 @@ for iRegion in [ 1, 2]:
                 xAxis = 'PdgId',
                 name = name_region + "_pdgIdGenParticleMatchingTau"
             ),
+            ##drawJobConfigEntry(
+            ##    meName = 'DiTauCandidateQuantities/VisMass',
+            ##    title = "M_{vis}(Muon + Tau) (final Event sample)",
+            ##    xAxis = 'Mass',
+            ##    name = name_region + "_mVisible"
+            ##),
+            ##drawJobConfigEntry(
+            ##    meName = 'DiTauCandidateQuantities/CollinearApproxMass',
+            ##    title = "M(Muon + Tau), collinear Approx. (final Event sample)",
+            ##    xAxis = 'Mass',
+            ##    name = name_region + "_mCollApprox"
+            ##)
             drawJobConfigEntry(
-                meName = 'DiTauCandidateQuantities/VisMass',
+                meName = dqmSubDirectory_region + 'TauIdEffSpecificQuantities/DiTauVisMassFromTauJetP4',
                 title = "M_{vis}(Muon + Tau) (final Event sample)",
                 xAxis = 'Mass',
-                name = name_region + "_mVisible"
+                name = name_region + "_mVisiblePFTau"
             ),
             drawJobConfigEntry(
-                meName = 'DiTauCandidateQuantities/CollinearApproxMass',
+                meName = dqmSubDirectory_region + 'TauIdEffSpecificQuantities/DiTauVisMassFromJetP4',
+                title = "M_{vis}(Muon + Jet) (final Event sample)",
+                xAxis = 'Mass',
+                name = name_region + "_mVisiblePFJet"
+            ),
+            drawJobConfigEntry(
+                meName = dqmSubDirectory_region + 'TauIdEffSpecificQuantities/DiTauCollinearApproxMassFromTauJetP4',
                 title = "M(Muon + Tau), collinear Approx. (final Event sample)",
                 xAxis = 'Mass',
-                name = name_region + "_mCollApprox"
+                name = name_region + "_mCollApproxPFTau"
+            ),
+            drawJobConfigEntry(
+                meName = dqmSubDirectory_region + 'TauIdEffSpecificQuantities/DiTauCollinearApproxMassFromJetP4',
+                title = "M(Muon + Jet), collinear Approx. (final Event sample)",
+                xAxis = 'Mass',
+                name = name_region + "_mCollApproxPFJet"
             )
         ]
     )
@@ -253,7 +301,7 @@ def addDrawJob(drawJobs, meName, xAxis, label):
             index = { 1: 0,
                       2: 1 }[iRegion]
         
-            dqmDirectory = 'harvested/' + process + '/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau/'    
+            dqmDirectory = 'harvested/' + process + '/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau/'    
             dqmSubDirectory_region = 'tauIdEffHistograms2regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
             meName_full = dqmDirectory + dqmSubDirectory_region + meName
             drawJob_process.plots[index].dqmMonitorElements = cms.vstring(meName_full)
@@ -274,8 +322,12 @@ def addDrawJob(drawJobs, meName, xAxis, label):
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonPt', "Pt", "muonPt")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonAbsEta', "Eta", "muonAbsEta")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/MuonExtTrkIsoPt', "Pt", "muonExtTrackIso")
-addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'DiTauCandidateQuantities/VisMass', "Mass", "mVisible")
-addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'DiTauCandidateQuantities/CollinearApproxMass', "Mass", "mCollApprox")
+##addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'DiTauCandidateQuantities/VisMass', "Mass", "mVisible")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/DiTauVisMassFromTauJetP4', "Mass", "mVisiblePFTau")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/DiTauVisMassFromJetP4', "Mass", "mVisiblePFJet")
+##addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'DiTauCandidateQuantities/CollinearApproxMass', "Mass", "mCollApprox")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/DiTauCollinearApproxMassFromTauJetP4', "Mass", "mCollApproxPFTau")
+addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauIdEffSpecificQuantities/DiTauCollinearApproxMassFromJetP4', "Mass", "mCollApproxPFJet")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauQuantities/TauPt', "Pt", "tauPt")
 addDrawJob(drawJobs_TauIdEffZtoMuTau_shapes, 'TauQuantities/TauEta', "Eta", "tauEta")
 
