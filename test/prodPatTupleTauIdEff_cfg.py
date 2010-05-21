@@ -73,7 +73,7 @@ from PhysicsTools.PatAlgos.tools.tauTools import *
 # instead of fixed dR = 0.07 signal cone reco::PFTaus
 # as input for pat::Tau production
 switchToPFTauShrinkingCone(process)
-setattr(process.allLayer1Taus.tauIDSources, "ewkTauId", cms.InputTag('ewkTauId'))
+setattr(process.patTaus.tauIDSources, "ewkTauId", cms.InputTag('ewkTauId'))
 #switchToPFTauFixedCone(process)
 #--------------------------------------------------------------------------------
 
