@@ -20,18 +20,18 @@ muonsForTauIdEffZtoMuTauCombRelIso = cms.EDFilter("PATMuonSelector",
     filter = cms.bool(False)
 )
 
-muonsForTauIdEffZtoMuTauPionVetoRelIsolation = copy.deepcopy(selectedLayer1MuonsPionVeto)
+muonsForTauIdEffZtoMuTauPionVetoRelIsolation = copy.deepcopy(selectedPatMuonsPionVeto)
 
-muonsForTauIdEffZtoMuTauTrkRelIsolation = copy.deepcopy(selectedLayer1MuonsTrk)
+muonsForTauIdEffZtoMuTauTrkRelIsolation = copy.deepcopy(selectedPatMuonsTrk)
 
-muonsForTauIdEffZtoMuTauTrkIPrelIsolation = copy.deepcopy(selectedLayer1MuonsTrkIP)
+muonsForTauIdEffZtoMuTauTrkIPrelIsolation = copy.deepcopy(selectedPatMuonsTrkIP)
 
 muonSelConfiguratorTauIdEffZtoMuTau = objSelConfigurator(
     [ muonsForTauIdEffZtoMuTauCombRelIso,
       muonsForTauIdEffZtoMuTauPionVetoRelIsolation,
       muonsForTauIdEffZtoMuTauTrkRelIsolation,
       muonsForTauIdEffZtoMuTauTrkIPrelIsolation ],
-    src = "selectedLayer1MuonsPt15Cumulative",
+    src = "selectedPatMuonsPt15Cumulative",
     pyModuleName = __name__,
     doSelIndividual = False
 )
@@ -45,11 +45,11 @@ selectMuonsForTauIdEffZtoMuTau = muonSelConfiguratorTauIdEffZtoMuTau.configure(p
 from TauAnalysis.RecoTools.patPFTauSelection_cfi import *
 from TauAnalysis.RecoTools.patPFTauSelectionForMuTau_cfi import *
 
-tausForTauIdEffZtoMuTauMuonVeto = copy.deepcopy(selectedLayer1TausMuonVeto)
+tausForTauIdEffZtoMuTauMuonVeto = copy.deepcopy(selectedPatTausMuonVeto)
 
 tauSelConfiguratorTauIdEffZtoMuTau = objSelConfigurator(
     [ tausForTauIdEffZtoMuTauMuonVeto ],
-    src = "selectedLayer1TausForMuTauPt20Cumulative",
+    src = "selectedPatTausForMuTauPt20Cumulative",
     pyModuleName = __name__,
     doSelIndividual = False
 )
@@ -64,10 +64,10 @@ from TauAnalysis.CandidateTools.resolutions_cfi import *
 
 muTauPairsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDProducer("PATMuTauPairProducer",
     useLeadingTausOnly = cms.bool(False),
-    srcLeg1 = cms.InputTag('selectedLayer1MuonsTrkIPcumulative'),
+    srcLeg1 = cms.InputTag('selectedPatMuonsTrkIPcumulative'),
     srcLeg2 = cms.InputTag('tausForTauIdEffZtoMuTauMuonVetoCumulative'),
     dRmin12 = cms.double(0.7),
-    srcMET = cms.InputTag('layer1METs'),
+    srcMET = cms.InputTag('patMETs'),
     recoMode = cms.string(""),
     collinearApproxMassCompatibility = cms.PSet(
         mZ = cms.PSet(
@@ -165,12 +165,12 @@ cfgMuonTrkIPcutTauIdEffZtoMuTauRelIsolation.systematics = cms.vstring()
 
 cfgTauEtaCutTauIdEffZtoMuTau = copy.deepcopy(cfgTauEtaCut)
 cfgTauEtaCutTauIdEffZtoMuTau.pluginName = cms.string('tauEtaCutTauIdEffZtoMuTau')
-cfgTauEtaCutTauIdEffZtoMuTau.src_cumulative = cms.InputTag('selectedLayer1TausForMuTauEta21Cumulative')
+cfgTauEtaCutTauIdEffZtoMuTau.src_cumulative = cms.InputTag('selectedPatTausForMuTauEta21Cumulative')
 cfgTauEtaCutTauIdEffZtoMuTau.systematics = cms.vstring()
 
 cfgTauPtCutTauIdEffZtoMuTau = copy.deepcopy(cfgTauEtaCut)
 cfgTauPtCutTauIdEffZtoMuTau.pluginName = cms.string('tauPtCutTauIdEffZtoMuTau')
-cfgTauPtCutTauIdEffZtoMuTau.src_cumulative = cms.InputTag('selectedLayer1TausForMuTauPt20Cumulative')
+cfgTauPtCutTauIdEffZtoMuTau.src_cumulative = cms.InputTag('selectedPatTausForMuTauPt20Cumulative')
 cfgTauPtCutTauIdEffZtoMuTau.systematics = cms.vstring()
 
 cfgTauMuonVetoTauIdEffZtoMuTau = copy.deepcopy(cfgTauMuonVeto)
@@ -254,7 +254,7 @@ cfgMuTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauRelMuonIsolation.sr
 uniqueMuonCandidateCutTauIdEffZtoMuTau = cms.EDFilter("BoolEventSelFlagProducer",
     pluginName = cms.string("uniqueMuonCandidateCutTauIdEffZtoMuTau"),
     pluginType = cms.string("PATCandViewMaxEventSelector"),
-    src = cms.InputTag('selectedLayer1MuonsGlobalCumulative'),
+    src = cms.InputTag('selectedPatMuonsGlobalCumulative'),
     maxNumber = cms.uint32(1)
 )
 
@@ -293,7 +293,7 @@ from TauAnalysis.Configuration.analyzeZtoMuTau_cfi import *
 
 muonHistManagerTauIdEffZtoMuTau = copy.deepcopy(muonHistManager)
 muonHistManagerTauIdEffZtoMuTau.pluginName = cms.string('muonHistManagerTauIdEffZtoMuTau')
-muonHistManagerTauIdEffZtoMuTau.muonSource = cms.InputTag('selectedLayer1MuonsTrkIPcumulative')
+muonHistManagerTauIdEffZtoMuTau.muonSource = cms.InputTag('selectedPatMuonsTrkIPcumulative')
 
 tauHistManagerTauIdEffZtoMuTau = copy.deepcopy(tauHistManager)
 tauHistManagerTauIdEffZtoMuTau.pluginName = cms.string('tauHistManagerTauIdEffZtoMuTau')

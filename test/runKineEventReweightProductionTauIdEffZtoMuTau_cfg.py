@@ -125,22 +125,22 @@ if hasattr(process, "isBatchMode"):
 
 # define additional event selection criteria
 # to increase purity of QCD enriched background sample
-process.muonsTauIdEffQCDenrichedLooseTrkIso = process.selectedLayer1MuonsTrkIso.clone(
+process.muonsTauIdEffQCDenrichedLooseTrkIso = process.selectedPatMuonsTrkIso.clone(
     sumPtMax = cms.double(8.)
 )    
 process.muonsTauIdEffQCDenrichedLooseTrkIso.sumPtMax = cms.double(8.)
 
-process.muonsTauIdEffQCDenrichedLooseEcalIso = process.selectedLayer1MuonsEcalIso.clone(
+process.muonsTauIdEffQCDenrichedLooseEcalIso = process.selectedPatMuonsEcalIso.clone(
     cut = cms.string('userIsolation("pat::EcalIso") < 8.')
 )
 
-process.muonsTauIdEffQCDenrichedPionVeto = copy.deepcopy(process.selectedLayer1MuonsPionVeto)
+process.muonsTauIdEffQCDenrichedPionVeto = copy.deepcopy(process.selectedPatMuonsPionVeto)
 
 muonSelConfiguratorTauIdEffQCDenriched = objSelConfigurator(
     [ process.muonsTauIdEffQCDenrichedLooseTrkIso,
       process.muonsTauIdEffQCDenrichedLooseEcalIso,
       process.muonsTauIdEffQCDenrichedPionVeto ],
-    src = "selectedLayer1MuonsPt15Cumulative",
+    src = "selectedPatMuonsPt15Cumulative",
     pyModuleName = __name__,
     doSelIndividual = False
 )
@@ -167,15 +167,15 @@ process.selectMuonsTauIdEffQCDenrichedLooseIso = muonSelConfiguratorTauIdEffQCDe
 #         is clearly higher for a muon that passes the track isolation cut than for muon which fails the track isolation cut)
 #--------------------------------------------------------------------------------
 
-process.muonsTauIdEffQCDenrichedTightTrkIso = copy.deepcopy(process.selectedLayer1MuonsTrkIso)
+process.muonsTauIdEffQCDenrichedTightTrkIso = copy.deepcopy(process.selectedPatMuonsTrkIso)
 process.muonsTauIdEffQCDenrichedTightTrkIso.src = cms.InputTag('muonsTauIdEffQCDenrichedPionVetoCumulative')
 process.muonsTauIdEffQCDenrichedTightTrkIso.sumPtMax = cms.double(1.)
 
-process.muonsTauIdEffQCDenrichedTightEcalIso = copy.deepcopy(process.selectedLayer1MuonsEcalIso)
+process.muonsTauIdEffQCDenrichedTightEcalIso = copy.deepcopy(process.selectedPatMuonsEcalIso)
 process.muonsTauIdEffQCDenrichedTightEcalIso.src = cms.InputTag('muonsTauIdEffQCDenrichedPionVetoCumulative')
 process.muonsTauIdEffQCDenrichedTightEcalIso.cut = cms.string('userIsolation("pat::EcalIso") < 1.')
 
-process.muonsTauIdEffQCDenrichedTightCombIso = copy.deepcopy(process.selectedLayer1MuonsEcalIso)
+process.muonsTauIdEffQCDenrichedTightCombIso = copy.deepcopy(process.selectedPatMuonsEcalIso)
 process.muonsTauIdEffQCDenrichedTightCombIso.src = cms.InputTag('muonsTauIdEffQCDenrichedTightTrkIso')
 process.muonsTauIdEffQCDenrichedTightCombIso.cut = cms.string('userIsolation("pat::EcalIso") < 1.')
 
@@ -190,7 +190,7 @@ process.muTauPairsTauIdEffQCDenriched = cms.EDProducer("PATMuTauPairProducer",
     srcLeg1 = cms.InputTag('muonsTauIdEffQCDenrichedPionVetoCumulative'),
     srcLeg2 = cms.InputTag('tausBgEstQCDenrichedMuonVetoCumulative'),
     dRmin12 = cms.double(0.7),
-    srcMET = cms.InputTag('layer1METs'),
+    srcMET = cms.InputTag('patMETs'),
     recoMode = cms.string(""),
     scaleFuncImprovedCollinearApprox = cms.string('1'),                                                   
     verbosity = cms.untracked.int32(0)
@@ -214,7 +214,7 @@ process.selectMuTauPairsTauIdEffQCDenriched = cms.Sequence(
 )
 
 process.metTauIdEffQCDenrichedPt20 = cms.EDFilter("PATMETSelector",
-    src = cms.InputTag("layer1METs"),                                 
+    src = cms.InputTag("patMETs"),                                 
     cut = cms.string('pt > 20.'),
     filter = cms.bool(False)
 )
@@ -289,7 +289,7 @@ process.plotEventsTauIdEffQCDenrichedLooseMuonIso = cms.EDAnalyzer("TauIdEffZtoM
     muonSource = cms.InputTag('muonsTauIdEffQCDenrichedPionVetoCumulative'),
     tauSource = cms.InputTag('tausBgEstQCDenrichedMuonVetoCumulative'),
     diTauSource = cms.InputTag('muTauPairsTauIdEffQCDenrichedNonZeroCharge'),
-    centralJetSource = cms.InputTag('selectedLayer1JetsEt20Cumulative'),       
+    centralJetSource = cms.InputTag('selectedPatJetsEt20Cumulative'),       
     dqmDirectory_store = cms.string('TauIdEffQCDenrichedLooseMuonIso/TauIdEffSpecificQuantities'),
     tauIdDiscriminator = cms.string("ewkTauId"),
     diTauChargeSignExtractor = cms.PSet(

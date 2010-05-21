@@ -4,10 +4,10 @@ tauIdEffZtoMuTauHistManager = cms.PSet(
     pluginName = cms.string('tauIdEffZtoMuTauHistManager'),
     pluginType = cms.string('TauIdEffZtoMuTauHistManager'),
 
-    muonSource = cms.InputTag('selectedLayer1MuonsTrkIPcumulative'),  
+    muonSource = cms.InputTag('selectedPatMuonsTrkIPcumulative'),  
     tauSource = cms.InputTag('tausForTauIdEffZtoMuTauMuonVetoCumulative'),
     diTauSource = cms.InputTag('muTauPairsTauIdEffZtoMuTauValidCollinearApproxAbsMuonIsolation'),
-    centralJetSource = cms.InputTag('selectedLayer1JetsAntiOverlapWithLeptonsVetoCumulative'),
+    centralJetSource = cms.InputTag('selectedPatJetsAntiOverlapWithLeptonsVetoCumulative'),
 
     dqmDirectory_store = cms.string('TauIdEffSpecificQuantities'),
 
