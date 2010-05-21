@@ -258,7 +258,7 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('shrinkingConePFTauProducer')
     process.producePrePat._seq = process.producePrePat._seq * process.bgEstFakeRateJetWeights
     process.tausForFakeRateEventWeights = cms.EDFilter("PATTauSelector",
-        src = cms.InputTag('selectedLayer1TausForMuTauLeadTrkPtCumulative'),               
+        src = cms.InputTag('selectedPatTausForMuTauLeadTrkPtCumulative'),               
         #cut = cms.string('tauID("againstMuon") > 0.5'),
         cut = cms.string('tauID("againstElectron") > 0.5 & tauID("againstMuon") > 0.5'),                                               
         filter = cms.bool(False)
@@ -276,13 +276,13 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     #       passing the lead. track finding and lead. track Pt discriminators
     #       to pass the track && ECAL isolation, 1||3 tracks in signal cone and charge = +/- 1 requirements as well
     #
-    #changeCut(process, "selectedLayer1TausForMuTauLeadTrk", "tauID('leadingTrackFinding') > -1.")
-    #changeCut(process, "selectedLayer1TausForMuTauLeadTrkPt", "tauID('leadingTrackPtCut') > -1.")
-    changeCut(process, "selectedLayer1TausForMuTauTrkIso", "tauID('trackIsolation') > -1.")
-    changeCut(process, "selectedLayer1TausForMuTauEcalIso", "tauID('ecalIsolation') > -1.")
-    changeCut(process, "selectedLayer1TausForMuTauProng", "signalTracks.size() > -1")
-    changeCut(process, "selectedLayer1TausForMuTauCharge", "abs(charge) > -1")
-    #changeCut(process, "selectedLayer1TausForMuTauMuonVeto", "tauID('againstMuon') > -1.")
+    #changeCut(process, "selectedPatTausForMuTauLeadTrk", "tauID('leadingTrackFinding') > -1.")
+    #changeCut(process, "selectedPatTausForMuTauLeadTrkPt", "tauID('leadingTrackPtCut') > -1.")
+    changeCut(process, "selectedPatTausForMuTauTrkIso", "tauID('trackIsolation') > -1.")
+    changeCut(process, "selectedPatTausForMuTauEcalIso", "tauID('ecalIsolation') > -1.")
+    changeCut(process, "selectedPatTausForMuTauProng", "signalTracks.size() > -1")
+    changeCut(process, "selectedPatTausForMuTauCharge", "abs(charge) > -1")
+    #changeCut(process, "selectedPatTausForMuTauMuonVeto", "tauID('againstMuon') > -1.")
     # require muon and loosely selected tau-jet candidate to have opposite charges
     #
     # NOTE:
@@ -369,29 +369,29 @@ def enableFakeRates_runZtoMuTau(process, method = None):
                                "frUnweighted", bgEstFakeRateAnalysisSequence)
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelTauLeadTrkPt",
-                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauLeadTrkPtCumulative")
+                    "tauIdEffValidationHistManager.tauSource = selectedPatTausForMuTauLeadTrkPtCumulative")
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
-                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
+                    "tauIdEffValidationHistManager.tauSource = selectedPatTausForMuTauMuonVetoCumulative")
         bgEstFakeRateAnalysisSequence = \
           addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation,
                                "frUnweighted", bgEstFakeRateAnalysisSequence)
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelTauLeadTrkPt",
-                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauLeadTrkPtCumulative")
+                    "tauIdEffValidationHistManager.tauSource = selectedPatTausForMuTauLeadTrkPtCumulative")
         addAnalyzer(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
-                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
+                    "tauIdEffValidationHistManager.tauSource = selectedPatTausForMuTauMuonVetoCumulative")
     else:
         bgEstFakeRateAnalysisSequence = \
           addGenAnalyzerModule(process, process.analyzeZtoMuTauEvents,
                                "frUnweighted", bgEstFakeRateAnalysisSequence)
         addAnalyzer(process.analyzeZtoMuTauEvents_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelTauLeadTrkPt",
-                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauLeadTrkPtCumulative")
+                    "tauIdEffValidationHistManager.tauSource = selectedPatTausForMuTauLeadTrkPtCumulative")
         addAnalyzer(process.analyzeZtoMuTauEvents_frUnweighted,
                     tauIdEffValidationHistManager, "evtSelDiMuPairZmumuHypothesisVeto",
-                    "tauIdEffValidationHistManager.tauSource = selectedLayer1TausForMuTauMuonVetoCumulative")
+                    "tauIdEffValidationHistManager.tauSource = selectedPatTausForMuTauMuonVetoCumulative")
 
     # if method is "simple", add one more analysis sequence:
     #  1.) with tau id. discriminators not applied
