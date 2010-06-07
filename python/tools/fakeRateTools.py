@@ -305,7 +305,7 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     for frType in frTypes: 
         frLabel = "".join(["bgEstFakeRateJetWeight", "_", frType])
         frInputTag = cms.InputTag('bgEstFakeRateJetWeights', frType)
-        setattr(process.allLayer1Taus.efficiencies, frLabel, frInputTag)
+        setattr(process.patTaus.efficiencies, frLabel, frInputTag)
 
     # fill histograms only for events passing all event selection critera;
     # disable storing run and event numbers for events passing selection
@@ -414,7 +414,7 @@ def enableFakeRates_runZtoMuTau(process, method = None):
         setattr( process.bgEstFakeRateEventWeights.frTypes, "tauIdEfficiency", tauIdEfficiency)
         frLabel = "".join(["bgEstFakeRateJetWeight", "_", "tauIdEfficiency"])
         frInputTag = cms.InputTag('bgEstFakeRateJetWeights', "tauIdEfficiency")
-        setattr(process.allLayer1Taus.efficiencies, frLabel, frInputTag)
+        setattr(process.patTaus.efficiencies, frLabel, frInputTag)
         
         if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and 
              hasattr(process, "analyzeZtoMuTauEvents_factorizedWithMuonIsolation") ):
