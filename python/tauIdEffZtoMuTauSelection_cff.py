@@ -57,6 +57,18 @@ tauSelConfiguratorTauIdEffZtoMuTau = objSelConfigurator(
 selectTausForTauIdEffZtoMuTau = tauSelConfiguratorTauIdEffZtoMuTau.configure(pyNameSpace = locals())
 
 #--------------------------------------------------------------------------------  
+# produce collection of pat::MEt objects
+#--------------------------------------------------------------------------------
+
+pfMEtForTauIdEffZtoMuTauPt20 = cms.EDFilter("PATMETSelector",
+    src = cms.InputTag("patMETs"),                                 
+    cut = cms.string('pt > 20.'),
+    filter = cms.bool(False)
+)
+
+selectMEtForTauIdEffZtoMuTau = cms.Sequence(pfMEtForTauIdEffZtoMuTauPt20)
+
+#--------------------------------------------------------------------------------  
 # produce collection of muon + tau-jet combinations
 #--------------------------------------------------------------------------------
 
@@ -96,20 +108,14 @@ muTauPairsTauIdEffZtoMuTauPzetaDiffAbsMuonIsolation = cms.EDFilter("PATMuTauPair
 
 muTauPairsTauIdEffZtoMuTauNonBackToBackAbsMuonIsolation = cms.EDFilter("PATMuTauPairSelector",
     src = cms.InputTag('muTauPairsTauIdEffZtoMuTauPzetaDiffAbsMuonIsolation'),                                                 
-    ##cut = cms.string('dPhi12 < 2.793'),
-    cut = cms.string('dPhi12 < 3.15'),                                  
+    cut = cms.string('dPhi12 < 2.793'),
+    ##cut = cms.string('dPhi12 < 3.15'),                                  
     filter = cms.bool(False)
 )
 
 muTauPairsTauIdEffZtoMuTauValidCollinearApproxAbsMuonIsolation = cms.EDFilter("PATMuTauPairSelector",
     src = cms.InputTag('muTauPairsTauIdEffZtoMuTauNonBackToBackAbsMuonIsolation'),                                       
     cut = cms.string('collinearApproxIsValid()'),
-    filter = cms.bool(False)
-)
-
-muTauPairsTauIdEffZtoMuTauCollinearApproxZmassCompatibilityAbsMuonIsolation = cms.EDFilter("PATMuTauPairSelector",
-    src = cms.InputTag('muTauPairsTauIdEffZtoMuTauValidCollinearApproxAbsMuonIsolation'),                                       
-    cut = cms.string('collinearApproxCompatibility("mZ").minuitFitChi2 < 2.'),
     filter = cms.bool(False)
 )
 
@@ -128,18 +134,13 @@ muTauPairsTauIdEffZtoMuTauNonBackToBackRelMuonIsolation.src = cms.InputTag('muTa
 muTauPairsTauIdEffZtoMuTauValidCollinearApproxRelMuonIsolation = copy.deepcopy(muTauPairsTauIdEffZtoMuTauValidCollinearApproxAbsMuonIsolation)
 muTauPairsTauIdEffZtoMuTauValidCollinearApproxRelMuonIsolation.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauNonBackToBackRelMuonIsolation')
 
-muTauPairsTauIdEffZtoMuTauCollinearApproxZmassCompatibilityRelMuonIsolation = copy.deepcopy(muTauPairsTauIdEffZtoMuTauCollinearApproxZmassCompatibilityAbsMuonIsolation)
-muTauPairsTauIdEffZtoMuTauCollinearApproxZmassCompatibilityRelMuonIsolation.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauValidCollinearApproxRelMuonIsolation')
-
 selectMuTauPairsTauIdEffZtoMuTau = cms.Sequence(
     muTauPairsTauIdEffZtoMuTauAbsMuonIsolation
    + muTauPairsTauIdEffZtoMuTauMt1METabsMuonIsolation + muTauPairsTauIdEffZtoMuTauPzetaDiffAbsMuonIsolation
    + muTauPairsTauIdEffZtoMuTauNonBackToBackAbsMuonIsolation + muTauPairsTauIdEffZtoMuTauValidCollinearApproxAbsMuonIsolation
-   + muTauPairsTauIdEffZtoMuTauCollinearApproxZmassCompatibilityAbsMuonIsolation
    + muTauPairsTauIdEffZtoMuTauRelMuonIsolation
    + muTauPairsTauIdEffZtoMuTauMt1METrelMuonIsolation + muTauPairsTauIdEffZtoMuTauPzetaDiffRelMuonIsolation 
    + muTauPairsTauIdEffZtoMuTauNonBackToBackRelMuonIsolation + muTauPairsTauIdEffZtoMuTauValidCollinearApproxRelMuonIsolation
-   + muTauPairsTauIdEffZtoMuTauCollinearApproxZmassCompatibilityRelMuonIsolation
 )
 
 #--------------------------------------------------------------------------------  
@@ -178,6 +179,14 @@ cfgTauMuonVetoTauIdEffZtoMuTau.pluginName = cms.string('tauMuonVetoTauIdEffZtoMu
 cfgTauMuonVetoTauIdEffZtoMuTau.src_cumulative = cms.InputTag('tausForTauIdEffZtoMuTauMuonVetoCumulative')
 cfgTauMuonVetoTauIdEffZtoMuTau.systematics = cms.vstring()
 
+cfgPFMEtPt20TauIdEffZtoMuTau = cms.PSet(
+    pluginName = cms.string('pfMEtPt20CutTauIdEffZtoMuTau'),
+    pluginType = cms.string('PATCandViewMinEventSelector'),
+    src = cms.InputTag('pfMEtForTauIdEffZtoMuTauPt20'),
+    systematics = cms.vstring(),
+    minNumber = cms.uint32(1)
+)
+
 cfgMuTauPairTauIdEffZtoMuTauAbsMuonIsolation = cms.PSet(
     pluginName = cms.string('muTauPairTauIdEffZtoMuTauAbsMuonIsolation'),
     pluginType = cms.string('PATCandViewMinEventSelector'),
@@ -213,13 +222,6 @@ cfgMuTauPairValidCollinearApproxTauIdEffZtoMuTauAbsMuonIsolation = cms.PSet(
     minNumber = cms.uint32(1)
 )
 
-cfgMuTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauAbsMuonIsolation = cms.PSet(
-    pluginName = cms.string('muTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauAbsMuonIsolation'),
-    pluginType = cms.string('PATCandViewMinEventSelector'),
-    src = cms.InputTag('muTauPairsTauIdEffZtoMuTauCollinearApproxZmassCompatibilityAbsMuonIsolation'),
-    minNumber = cms.uint32(1)
-)
-
 cfgMuTauPairTauIdEffZtoMuTauRelMuonIsolation = copy.deepcopy(cfgMuTauPairTauIdEffZtoMuTauAbsMuonIsolation)
 cfgMuTauPairTauIdEffZtoMuTauRelMuonIsolation.pluginName = cms.string('muTauPairTauIdEffZtoMuTauRelMuonIsolation')
 cfgMuTauPairTauIdEffZtoMuTauRelMuonIsolation.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauRelMuonIsolation')
@@ -239,10 +241,6 @@ cfgMuTauPairNonBackToBackTauIdEffZtoMuTauRelMuonIsolation.src = cms.InputTag('mu
 cfgMuTauPairValidCollinearApproxTauIdEffZtoMuTauRelMuonIsolation = copy.deepcopy(cfgMuTauPairValidCollinearApproxTauIdEffZtoMuTauAbsMuonIsolation)
 cfgMuTauPairValidCollinearApproxTauIdEffZtoMuTauRelMuonIsolation.pluginName = cms.string('muTauPairValidCollinearApproxTauIdEffZtoMuTauRelMuonIsolation')
 cfgMuTauPairValidCollinearApproxTauIdEffZtoMuTauRelMuonIsolation.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauValidCollinearApproxRelMuonIsolation')
-
-cfgMuTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauRelMuonIsolation = copy.deepcopy(cfgMuTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauAbsMuonIsolation)
-cfgMuTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauRelMuonIsolation.pluginName = cms.string('muTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauRelMuonIsolation')
-cfgMuTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauRelMuonIsolation.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauCollinearApproxZmassCompatibilityRelMuonIsolation')
 
 ##uniqueTauCandidateCutTauIdEffZtoMuTau = cms.EDFilter("BoolEventSelFlagProducer",
 ##    pluginName = cms.string("uniqueTauCandidateCutTauIdEffZtoMuTau"),
@@ -265,18 +263,17 @@ evtSelConfiguratorTauIdEffZtoMuTau = eventSelFlagProdConfigurator(
       cfgTauEtaCutTauIdEffZtoMuTau,
       cfgTauPtCutTauIdEffZtoMuTau,
       cfgTauMuonVetoTauIdEffZtoMuTau,
+      cfgPFMEtPt20TauIdEffZtoMuTau,
       cfgMuTauPairTauIdEffZtoMuTauAbsMuonIsolation,
       cfgMuTauPairMt1METtauIdEffZtoMuTauAbsMuonIsolation,
       cfgMuTauPairPzetaDiffTauIdEffZtoMuTauAbsMuonIsolation,
       cfgMuTauPairNonBackToBackTauIdEffZtoMuTauAbsMuonIsolation,
       cfgMuTauPairValidCollinearApproxTauIdEffZtoMuTauAbsMuonIsolation,
-      cfgMuTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauAbsMuonIsolation,
       cfgMuTauPairTauIdEffZtoMuTauRelMuonIsolation,
       cfgMuTauPairMt1METtauIdEffZtoMuTauRelMuonIsolation,
       cfgMuTauPairPzetaDiffTauIdEffZtoMuTauRelMuonIsolation,
       cfgMuTauPairNonBackToBackTauIdEffZtoMuTauRelMuonIsolation,
       cfgMuTauPairValidCollinearApproxTauIdEffZtoMuTauRelMuonIsolation,
-      cfgMuTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauRelMuonIsolation,
       ##uniqueTauCandidateCutTauIdEffZtoMuTau,
       uniqueMuonCandidateCutTauIdEffZtoMuTau ],
     boolEventSelFlagProducer = "BoolEventSelFlagProducer",
@@ -349,33 +346,38 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
         cms.PSet(
             pluginName = cms.string('muonCombRelIsoCutTauIdEffZtoMuTau'),
             pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('muonCombRelIsoCutTauIdEffZtoMuTau', 'cumulative'),
+            src = cms.InputTag('muonCombRelIsoCutTauIdEffZtoMuTau', 'cumulative')
         ),
         cms.PSet(
             pluginName = cms.string('muonAntiPionCutTauIdEffZtoMuTauRelIsolation'),
             pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('muonAntiPionCutTauIdEffZtoMuTauRelIsolation', 'cumulative'),
+            src = cms.InputTag('muonAntiPionCutTauIdEffZtoMuTauRelIsolation', 'cumulative')
         ),
         cms.PSet(
             pluginName = cms.string('muonTrkIPcutTauIdEffZtoMuTauRelIsolation'),
             pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('muonTrkIPcutTauIdEffZtoMuTauRelIsolation', 'cumulative'),
+            src = cms.InputTag('muonTrkIPcutTauIdEffZtoMuTauRelIsolation', 'cumulative')
         ),
         cms.PSet(
             pluginName = cms.string('tauEtaCutTauIdEffZtoMuTau'),
             pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('tauEtaCutTauIdEffZtoMuTau', 'cumulative'),
+            src = cms.InputTag('tauEtaCutTauIdEffZtoMuTau', 'cumulative')
         ),
         cms.PSet(
             pluginName = cms.string('tauPtCutTauIdEffZtoMuTau'),
             pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('tauPtCutTauIdEffZtoMuTau', 'cumulative'),
+            src = cms.InputTag('tauPtCutTauIdEffZtoMuTau', 'cumulative')
         ),
         cms.PSet(
             pluginName = cms.string('tauMuonVetoTauIdEffZtoMuTau'),
             pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('tauMuonVetoTauIdEffZtoMuTau', 'cumulative'),
+            src = cms.InputTag('tauMuonVetoTauIdEffZtoMuTau', 'cumulative')
         ),
+        cms.PSet(
+            pluginName = cms.string('pfMEtPt20CutTauIdEffZtoMuTau'),
+            pluginType = cms.string('BoolEventSelector'),
+            src = cms.InputTag('pfMEtPt20CutTauIdEffZtoMuTau')
+        ),                                                         
         cms.PSet(
             pluginName = cms.string('muTauPairTauIdEffZtoMuTauAbsMuonIsolation'),
             pluginType = cms.string('BoolEventSelector'),
@@ -402,11 +404,6 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
             src = cms.InputTag('muTauPairValidCollinearApproxTauIdEffZtoMuTauAbsMuonIsolation')
         ),
         cms.PSet(
-            pluginName = cms.string('muTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauAbsMuonIsolation'),
-            pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('muTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauAbsMuonIsolation')
-        ),
-        cms.PSet(
             pluginName = cms.string('muTauPairTauIdEffZtoMuTauRelMuonIsolation'),
             pluginType = cms.string('BoolEventSelector'),
             src = cms.InputTag('muTauPairTauIdEffZtoMuTauRelMuonIsolation')
@@ -430,11 +427,6 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
             pluginName = cms.string('muTauPairValidCollinearApproxTauIdEffZtoMuTauRelMuonIsolation'),
             pluginType = cms.string('BoolEventSelector'),
             src = cms.InputTag('muTauPairValidCollinearApproxTauIdEffZtoMuTauRelMuonIsolation')
-        ),
-        cms.PSet(
-            pluginName = cms.string('muTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauRelMuonIsolation'),
-            pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('muTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauRelMuonIsolation')
         ),
         evtSelDiMuPairZmumuHypothesisVeto,
         ##cms.PSet(
@@ -551,6 +543,10 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
             title = cms.string('Tau mu-Veto')
         ),
         cms.PSet(
+            filter = cms.string('pfMEtPt20CutTauIdEffZtoMuTau'),
+            title = cms.string('PFMEt Pt > 20 GeV')
+        ),                                                            
+        cms.PSet(
             filter = cms.string('muTauPairTauIdEffZtoMuTauAbsMuonIsolation'),
             title = cms.string('dR(Muon-Tau) > 0.7')
         ),
@@ -580,10 +576,6 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
         cms.PSet(
             filter = cms.string('muTauPairValidCollinearApproxTauIdEffZtoMuTauAbsMuonIsolation'),
             title = cms.string('0 < x_1 < 1 && 0 < x_2 < 1')
-        ),
-        cms.PSet(
-            filter = cms.string('muTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauAbsMuonIsolation'),
-            title = cms.string('#Chi^{2}( M(Muon-Tau) == M_{Z} ) < 2.')
         ),
         cms.PSet(
             filter = cms.string('evtSelDiMuPairZmumuHypothesisVeto'),
@@ -665,7 +657,7 @@ analyzeEventsTauIdEffZtoMuTauRelMuonIsolation = analyzeEventsTauIdEffZtoMuTauAbs
         cms.PSet(
             filter = cms.string('tauPtCutTauIdEffZtoMuTau'),
             title = cms.string('Pt(Tau) > 20 GeV')
-        ),
+        ),        
         cms.PSet(
             filter = cms.string('muonCombRelIsoCutTauIdEffZtoMuTau'),
             title = cms.string('Muon Track + ECAL relative iso.')
@@ -682,6 +674,10 @@ analyzeEventsTauIdEffZtoMuTauRelMuonIsolation = analyzeEventsTauIdEffZtoMuTauAbs
             filter = cms.string('tauMuonVetoTauIdEffZtoMuTau'),
             title = cms.string('Tau mu-Veto')
         ),
+        cms.PSet(
+            filter = cms.string('pfMEtPt20CutTauIdEffZtoMuTau'),
+            title = cms.string('PFMEt Pt > 20 GeV')
+        ), 
         cms.PSet(
             filter = cms.string('muTauPairTauIdEffZtoMuTauRelMuonIsolation'),
             title = cms.string('dR(Muon-Tau) > 0.7')
@@ -701,10 +697,6 @@ analyzeEventsTauIdEffZtoMuTauRelMuonIsolation = analyzeEventsTauIdEffZtoMuTauAbs
         cms.PSet(
             filter = cms.string('muTauPairValidCollinearApproxTauIdEffZtoMuTauRelMuonIsolation'),
             title = cms.string('0 < x_1 < 1 && 0 < x_2 < 1')
-        ),
-        cms.PSet(
-            filter = cms.string('muTauPairCollinearApproxZmassCompatibilityTauIdEffZtoMuTauRelMuonIsolation'),
-            title = cms.string('#Chi^{2}( M(Muon-Tau) == M_{Z} ) < 2.')
         ),
         cms.PSet(
             filter = cms.string('evtSelDiMuPairZmumuHypothesisVeto'),
@@ -741,6 +733,7 @@ analyzeEventsTauIdEffZtoMuTauRelMuonIsolation = analyzeEventsTauIdEffZtoMuTauAbs
 bgEstTauIdEffZtoMuTauAnalysisSequence = cms.Sequence(
     selectMuonsForTauIdEffZtoMuTau
    + selectTausForTauIdEffZtoMuTau
+   + selectMEtForTauIdEffZtoMuTau
    + selectMuTauPairsTauIdEffZtoMuTau
    + selectEventsTauIdEffZtoMuTau
    + analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation + analyzeEventsTauIdEffZtoMuTauRelMuonIsolation
