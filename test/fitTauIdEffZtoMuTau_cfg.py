@@ -46,29 +46,29 @@ process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
 region_tauIdPassed = 'region02'
 region_tauIdFailed = 'region01'
 
-dqmDirectory_Ztautau_all = 'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
-##dqmDirectory_Ztautau_all = 'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+dqmDirectory_Ztautau_all = 'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau'
+##dqmDirectory_Ztautau_all = 'harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_Ztautau_tauIdPassed = dqmDirectory_Ztautau_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed 
 dqmDirectory_Ztautau_tauIdFailed = dqmDirectory_Ztautau_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed 
 dqmDirectory_Ztautau_template = dqmDirectory_Ztautau_all
 
-dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
-##dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau'
+##dqmDirectory_WplusJets_all = 'harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_WplusJets_tauIdPassed = dqmDirectory_WplusJets_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed
 dqmDirectory_WplusJets_tauIdFailed = dqmDirectory_WplusJets_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed
 #dqmDirectory_WplusJets_template = 'harvested/smSum/BgEstTemplateAnalyzer_WplusJetsEnriched/afterDiMuonVetoBgEstWplusJetsEnriched'
 dqmDirectory_WplusJets_template = dqmDirectory_WplusJets_all 
 
-dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
-##dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau'
+##dqmDirectory_QCD_all = 'harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_QCD_tauIdPassed = dqmDirectory_QCD_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed
 dqmDirectory_QCD_tauIdFailed = dqmDirectory_QCD_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed 
 dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched_reweighted/afterDiMuonVetoBgEstQCDenriched'
 ##dqmDirectory_QCD_template = 'harvested/smSum/BgEstTemplateAnalyzer_QCDenriched/afterDiMuonVetoBgEstQCDenriched'
 #dqmDirectory_QCD_template = dqmDirectory_QCD_all
 
-dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
-##dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueTauCandidateCutTauIdEffZtoMuTau'
+dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau'
+##dqmDirectory_Data_all = 'harvested/smSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau'
 dqmDirectory_Data_tauIdPassed = dqmDirectory_Data_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdPassed 
 dqmDirectory_Data_tauIdFailed = dqmDirectory_Data_all + '/' + 'tauIdEffHistograms2regions' + '/' + region_tauIdFailed
 
