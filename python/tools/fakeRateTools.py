@@ -292,7 +292,7 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     #  (2) this requirement implies that there is at least one track within the tau-jet
     #     (leading to a small underestimation of backgrounds)
     #
-    changeCut(process, "selectedMuTauPairsZeroCharge", "leg2.leadTrack.isNonnull & (leg1.charge + leg2.leadTrack.charge) = 0")
+    changeCut(process, "selectedMuTauPairsZeroCharge", "leg2.leadPFChargedHadrCand.isNonnull & (leg1.charge + leg2.leadPFChargedHadrCand.charge) = 0")
 
     # set method parameter in fakeRateWeight producer modules
     process.bgEstFakeRateJetWeights.method = method
