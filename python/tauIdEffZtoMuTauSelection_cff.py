@@ -49,7 +49,7 @@ tausForTauIdEffZtoMuTauMuonVeto = copy.deepcopy(selectedPatTausMuonVeto)
 
 tauSelConfiguratorTauIdEffZtoMuTau = objSelConfigurator(
     [ tausForTauIdEffZtoMuTauMuonVeto ],
-    src = "selectedPatTausForMuTauPt20Cumulative",
+    src = "selectedPatTausForMuTauLeadTrkPtCumulative",
     pyModuleName = __name__,
     doSelIndividual = False
 )
@@ -174,6 +174,16 @@ cfgTauPtCutTauIdEffZtoMuTau.pluginName = cms.string('tauPtCutTauIdEffZtoMuTau')
 cfgTauPtCutTauIdEffZtoMuTau.src_cumulative = cms.InputTag('selectedPatTausForMuTauPt20Cumulative')
 cfgTauPtCutTauIdEffZtoMuTau.systematics = cms.vstring()
 
+cfgTauLeadTrkCutTauIdEffZtoMuTau = copy.deepcopy(cfgTauLeadTrkCut)
+cfgTauLeadTrkCutTauIdEffZtoMuTau.pluginName = cms.string('tauLeadTrkCutTauIdEffZtoMuTau')
+cfgTauLeadTrkCutTauIdEffZtoMuTau.src_cumulative = cms.InputTag('selectedPatTausForMuTauLeadTrkCumulative')
+cfgTauLeadTrkCutTauIdEffZtoMuTau.systematics = cms.vstring()
+
+cfgTauLeadTrkPtCutTauIdEffZtoMuTau = copy.deepcopy(cfgTauLeadTrkPtCut)
+cfgTauLeadTrkPtCutTauIdEffZtoMuTau.pluginName = cms.string('tauLeadTrkPtCutTauIdEffZtoMuTau')
+cfgTauLeadTrkPtCutTauIdEffZtoMuTau.src_cumulative = cms.InputTag('selectedPatTausForMuTauLeadTrkPtCumulative')
+cfgTauLeadTrkPtCutTauIdEffZtoMuTau.systematics = cms.vstring()
+
 cfgTauMuonVetoTauIdEffZtoMuTau = copy.deepcopy(cfgTauMuonVeto)
 cfgTauMuonVetoTauIdEffZtoMuTau.pluginName = cms.string('tauMuonVetoTauIdEffZtoMuTau')
 cfgTauMuonVetoTauIdEffZtoMuTau.src_cumulative = cms.InputTag('tausForTauIdEffZtoMuTauMuonVetoCumulative')
@@ -262,6 +272,8 @@ evtSelConfiguratorTauIdEffZtoMuTau = eventSelFlagProdConfigurator(
       cfgMuonTrkIPcutTauIdEffZtoMuTauRelIsolation,
       cfgTauEtaCutTauIdEffZtoMuTau,
       cfgTauPtCutTauIdEffZtoMuTau,
+      cfgTauLeadTrkCutTauIdEffZtoMuTau,
+      cfgTauLeadTrkPtCutTauIdEffZtoMuTau,
       cfgTauMuonVetoTauIdEffZtoMuTau,
       cfgPFMEtPt20TauIdEffZtoMuTau,
       cfgMuTauPairTauIdEffZtoMuTauAbsMuonIsolation,
@@ -303,6 +315,7 @@ diTauCandidateHistManagerTauIdEffZtoMuTau.visMassHypothesisSource = cms.InputTag
 
 from TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauHistManager_cfi import *
 
+from TauAnalysis.BgEstimationTools.bgEstBinGridZtoMuTau_cfi import *
 
 dataBinnerTauIdEffZtoMuTau = copy.deepcopy(dataBinner)
 dataBinnerTauIdEffZtoMuTau.pluginName = cms.string('dataBinnerTauIdEffZtoMuTau')
@@ -369,6 +382,16 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
             src = cms.InputTag('tauPtCutTauIdEffZtoMuTau', 'cumulative')
         ),
         cms.PSet(
+            pluginName = cms.string('tauLeadTrkCutTauIdEffZtoMuTau'),
+            pluginType = cms.string('BoolEventSelector'),
+            src = cms.InputTag('tauLeadTrkCutTauIdEffZtoMuTau', 'cumulative')
+        ),
+        cms.PSet(
+            pluginName = cms.string('tauLeadTrkPtCutTauIdEffZtoMuTau'),
+            pluginType = cms.string('BoolEventSelector'),
+            src = cms.InputTag('tauLeadTrkPtCutTauIdEffZtoMuTau', 'cumulative')
+        ),
+        cms.PSet(
             pluginName = cms.string('tauMuonVetoTauIdEffZtoMuTau'),
             pluginType = cms.string('BoolEventSelector'),
             src = cms.InputTag('tauMuonVetoTauIdEffZtoMuTau', 'cumulative')
@@ -377,7 +400,7 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
             pluginName = cms.string('pfMEtPt20CutTauIdEffZtoMuTau'),
             pluginType = cms.string('BoolEventSelector'),
             src = cms.InputTag('pfMEtPt20CutTauIdEffZtoMuTau')
-        ),                                                         
+        ),                                                   
         cms.PSet(
             pluginName = cms.string('muTauPairTauIdEffZtoMuTauAbsMuonIsolation'),
             pluginType = cms.string('BoolEventSelector'),
@@ -386,7 +409,7 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
         cms.PSet(
             pluginName = cms.string('muTauPairMt1METtauIdEffZtoMuTauAbsMuonIsolation'),
             pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('muTauPairNonBackToBackTauIdEffZtoMuTauAbsMuonIsolation')
+            src = cms.InputTag('muTauPairMt1METtauIdEffZtoMuTauAbsMuonIsolation')
         ),
         cms.PSet(
             pluginName = cms.string('muTauPairPzetaDiffTauIdEffZtoMuTauAbsMuonIsolation'),
@@ -411,7 +434,7 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
         cms.PSet(
             pluginName = cms.string('muTauPairMt1METtauIdEffZtoMuTauRelMuonIsolation'),
             pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('muTauPairNonBackToBackTauIdEffZtoMuTauRelMuonIsolation')
+            src = cms.InputTag('muTauPairMt1METtauIdEffZtoMuTauRelMuonIsolation')
         ),
         cms.PSet(
             pluginName = cms.string('muTauPairPzetaDiffTauIdEffZtoMuTauRelMuonIsolation'),
@@ -469,7 +492,43 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
                 tauIdEffZtoMuTauHistManager
             ),
             dqmDirectory_store = cms.string('tauIdEffHistograms2regions')
-        )
+        ),
+        cms.PSet(
+            pluginName = cms.string('tauIdEffDataBinnerGenMatrix3d'),
+            pluginType = cms.string('DataBinner'),
+            binning = tauIdEffBinningZtoMuTau_genMatrix3d,
+            binningService = cms.PSet(
+                pluginType = cms.string("DataBinningService")
+            ),
+            dqmDirectory_store = cms.string('tauIdEffBinningResultsGenMatrix3d')
+        ),
+        cms.PSet(
+            pluginName = cms.string('tauIdEffBinGridHistManagerGenMatrix3d'),
+            pluginType = cms.string('BinGridHistManager'),
+            binning = tauIdEffBinningZtoMuTau_genMatrix3d,
+            histManagers = cms.VPSet(
+                tauHistManager
+            ),
+            dqmDirectory_store = cms.string('tauIdEffHistogramsGenMatrix3d')
+        ),
+        cms.PSet(
+            pluginName = cms.string('tauIdEffDataBinnerGenMatrix4d'),
+            pluginType = cms.string('DataBinner'),
+            binning = tauIdEffBinningZtoMuTau_genMatrix4d,
+            binningService = cms.PSet(
+                pluginType = cms.string("DataBinningService")
+            ),
+            dqmDirectory_store = cms.string('tauIdEffBinningResultsGenMatrix4d')
+        ),
+        cms.PSet(
+            pluginName = cms.string('tauIdEffBinGridHistManagerGenMatrix4d'),
+            pluginType = cms.string('BinGridHistManager'),
+            binning = tauIdEffBinningZtoMuTau_genMatrix4d,
+            histManagers = cms.VPSet(
+                tauHistManager
+            ),
+            dqmDirectory_store = cms.string('tauIdEffHistogramsGenMatrix4d')
+        ),
     ),
 
     eventDumps = cms.VPSet(),
@@ -539,6 +598,14 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
             title = cms.string('Muon Track IP')
         ),
         cms.PSet(
+            filter = cms.string('tauLeadTrkCutTauIdEffZtoMuTau'),
+            title = cms.string('Tau lead. Track find.')
+        ),
+        cms.PSet(
+            filter = cms.string('tauLeadTrkPtCutTauIdEffZtoMuTau'),
+            title = cms.string('Tau lead. Track Pt')
+        ),
+        cms.PSet(
             filter = cms.string('tauMuonVetoTauIdEffZtoMuTau'),
             title = cms.string('Tau mu-Veto')
         ),
@@ -549,16 +616,6 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
         cms.PSet(
             filter = cms.string('muTauPairTauIdEffZtoMuTauAbsMuonIsolation'),
             title = cms.string('dR(Muon-Tau) > 0.7')
-        ),
-        cms.PSet(
-            analyzers = cms.vstring(
-                'muonHistManagerTauIdEffZtoMuTau',
-                'tauHistManagerTauIdEffZtoMuTau',
-                'diTauCandidateHistManagerTauIdEffZtoMuTau'
-            ),
-            replace = cms.vstring(
-                'diTauCandidateHistManagerTauIdEffZtoMuTau.diTauCandidateSource = muTauPairsTauIdEffZtoMuTauAbsMuonIsolation'
-            )
         ),
         cms.PSet(
             filter = cms.string('muTauPairMt1METtauIdEffZtoMuTauAbsMuonIsolation'),
@@ -601,6 +658,11 @@ analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation = cms.EDAnalyzer("GenericAnalyzer"
                 'tauIdEffZtoMuTauHistManager',
                 'tauIdEffDataBinner2regions',
                 'tauIdEffBinGridHistManager2regions'
+            ),
+            replace = cms.vstring(
+                'muonHistManagerTauIdEffZtoMuTau.muonSource = selectedPatMuonsTrkIPcumulative',
+                'diTauCandidateHistManagerTauIdEffZtoMuTau.diTauCandidateSource = muTauPairsTauIdEffZtoMuTauValidCollinearApproxAbsMuonIsolation',
+                'pfMEtHistManager.metSource = pfMEtForTauIdEffZtoMuTauPt20'
             )
         )
     )
@@ -671,6 +733,14 @@ analyzeEventsTauIdEffZtoMuTauRelMuonIsolation = analyzeEventsTauIdEffZtoMuTauAbs
             title = cms.string('Muon Track IP')
         ),
         cms.PSet(
+            filter = cms.string('tauLeadTrkCutTauIdEffZtoMuTau'),
+            title = cms.string('Tau lead. Track find.')
+        ),
+        cms.PSet(
+            filter = cms.string('tauLeadTrkPtCutTauIdEffZtoMuTau'),
+            title = cms.string('Tau lead. Track Pt')
+        ),
+        cms.PSet(
             filter = cms.string('tauMuonVetoTauIdEffZtoMuTau'),
             title = cms.string('Tau mu-Veto')
         ),
@@ -721,6 +791,124 @@ analyzeEventsTauIdEffZtoMuTauRelMuonIsolation = analyzeEventsTauIdEffZtoMuTauAbs
                 'dataBinnerTauIdEffZtoMuTau',
                 'tauIdEffDataBinner2regions',
                 'tauIdEffBinGridHistManager2regions'
+            ),
+            replace = cms.vstring(
+                'muonHistManagerTauIdEffZtoMuTau.muonSource = muonsForTauIdEffZtoMuTauTrkIPrelIsolationCumulative',
+                'diTauCandidateHistManagerTauIdEffZtoMuTau.diTauCandidateSource = muTauPairsTauIdEffZtoMuTauValidCollinearApproxRelMuonIsolation',
+                'pfMEtHistManager.metSource = pfMEtForTauIdEffZtoMuTauPt20'
+            )
+        )
+    )
+)
+
+analyzeEventsTauIdEffZtoMuTauGenMatrixRelMuonIsolation = analyzeEventsTauIdEffZtoMuTauRelMuonIsolation.clone(
+
+    name = cms.string('TauIdEffAnalyzerZtoMuTau_genMatrixRelMuonIsolation'), 
+    
+    analysisSequence = cms.VPSet(
+    
+        # generator level phase-space selection
+        # (NOTE: (1) to be used in case of Monte Carlo samples
+        #            overlapping in simulated phase-space only !!
+        #        (2) genPhaseSpaceCut needs to be **always** the first entry in the list of cuts
+        #           - otherwise the script submitToBatch.csh for submission of cmsRun jobs
+        #            to the CERN batch system will not work !!)
+        cms.PSet(
+            filter = cms.string('genPhaseSpaceCut'),
+            title = cms.string('gen. Phase-Space')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelTrigger'),
+            title = cms.string('mu15 || isoMu11 Trigger')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelPrimaryEventVertex'),
+            title = cms.string('Vertex')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelPrimaryEventVertexQuality'),
+            title = cms.string('p(chi2Vertex) > 0.01')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelPrimaryEventVertexPosition'),
+            title = cms.string('-25 < zVertex < +25 cm')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelGlobalMuon'),
+            title = cms.string('global Muon')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelMuonEta'),
+            title = cms.string('-2.1 < eta(Muon) < +2.1')
+        ),
+        cms.PSet(
+            filter = cms.string('evtSelMuonPt'),
+            title = cms.string('Pt(Muon) > 15 GeV')
+        ),
+        cms.PSet(
+            filter = cms.string('tauEtaCutTauIdEffZtoMuTau'),
+            title = cms.string('-2.1 < eta(Tau) < +2.1')
+        ),
+        cms.PSet(
+            filter = cms.string('tauPtCutTauIdEffZtoMuTau'),
+            title = cms.string('Pt(Tau) > 20 GeV')
+        ),        
+        cms.PSet(
+            filter = cms.string('muonCombRelIsoCutTauIdEffZtoMuTau'),
+            title = cms.string('Muon Track + ECAL relative iso.')
+        ),
+        cms.PSet(
+            filter = cms.string('muonAntiPionCutTauIdEffZtoMuTauRelIsolation'),
+            title = cms.string('Muon pi-Veto')
+        ),
+        cms.PSet(
+            filter = cms.string('muonTrkIPcutTauIdEffZtoMuTauRelIsolation'),
+            title = cms.string('Muon Track IP')
+        ),
+        cms.PSet(
+            filter = cms.string('tauLeadTrkCutTauIdEffZtoMuTau'),
+            title = cms.string('Tau lead. Track find.')
+        ),
+        cms.PSet(
+            filter = cms.string('tauLeadTrkPtCutTauIdEffZtoMuTau'),
+            title = cms.string('Tau lead. Track Pt')
+        ),
+        cms.PSet(
+            filter = cms.string('tauMuonVetoTauIdEffZtoMuTau'),
+            title = cms.string('Tau mu-Veto')
+        ),
+        cms.PSet(
+            filter = cms.string('muTauPairTauIdEffZtoMuTauRelMuonIsolation'),
+            title = cms.string('dR(Muon-Tau) > 0.7')
+        ),
+        cms.PSet(
+            filter = cms.string('uniqueMuonCandidateCutTauIdEffZtoMuTau'),
+            title = cms.string('num. global Muons < 2')
+        ),        
+        ##cms.PSet(
+        ##    filter = cms.string('uniqueTauCandidateCutTauIdEffZtoMuTau'),
+        ##    title = cms.string('num. Tau-Jet Candidates < 2')
+        ##),
+        cms.PSet(
+            analyzers = cms.vstring(
+                'muonHistManagerTauIdEffZtoMuTau',
+                'tauHistManagerTauIdEffZtoMuTau',
+                'diTauCandidateHistManagerTauIdEffZtoMuTau',
+                'caloMEtHistManager',
+                'pfMEtHistManager',
+                'tauIdEffZtoMuTauHistManager',
+                'dataBinnerTauIdEffZtoMuTau',
+                'tauIdEffDataBinner2regions',
+                'tauIdEffBinGridHistManager2regions',
+                'tauIdEffDataBinnerGenMatrix3d',
+                'tauIdEffBinGridHistManagerGenMatrix3d',
+                'tauIdEffDataBinnerGenMatrix4d',
+                'tauIdEffBinGridHistManagerGenMatrix4d'
+            ),
+            replace = cms.vstring(
+                'muonHistManagerTauIdEffZtoMuTau.muonSource = muonsForTauIdEffZtoMuTauTrkIPrelIsolationCumulative',
+                'diTauCandidateHistManagerTauIdEffZtoMuTau.diTauCandidateSource = muTauPairsTauIdEffZtoMuTauRelMuonIsolation',
+                'pfMEtHistManager.metSource = patMETs'
             )
         )
     )
@@ -737,4 +925,5 @@ bgEstTauIdEffZtoMuTauAnalysisSequence = cms.Sequence(
    + selectMuTauPairsTauIdEffZtoMuTau
    + selectEventsTauIdEffZtoMuTau
    + analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation + analyzeEventsTauIdEffZtoMuTauRelMuonIsolation
+   + analyzeEventsTauIdEffZtoMuTauGenMatrixRelMuonIsolation
 )
