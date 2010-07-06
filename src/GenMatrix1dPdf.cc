@@ -7,7 +7,7 @@ const double epsilon = 1.e-3;
 GenMatrix1dPdf::GenMatrix1dPdf(const char* name, const char* title, RooAbsReal& x, 
 			       Int_t numBins, Double_t* binBoundaries, TCollection& binProbabilities)
   : RooAbsPdf(name, title),
-    x_("x", "Proxy", this, x)
+    x_(std::string(x.GetName()).append("_proxy").data(), "Proxy", this, x)
 {
   //std::cout << "<GenMatrix1dPdf::GenMatrix1dPdf>:" << std::endl;
   //std::cout << " name = " << name << std::endl;
@@ -23,7 +23,7 @@ GenMatrix1dPdf::GenMatrix1dPdf(const char* name, const char* title, RooAbsReal& 
 
   binBoundaries_ = new Double_t[numBins + 1];
   for ( Int_t iBin = 0; iBin <= numBins; ++iBin ) {
-    std::cout << " binBoundary[" << iBin << "] = " << binBoundaries[iBin] << std::endl;
+    //std::cout << " binBoundary[" << iBin << "] = " << binBoundaries[iBin] << std::endl;
     binBoundaries_[iBin] = binBoundaries[iBin];
   }
 
@@ -33,13 +33,21 @@ GenMatrix1dPdf::GenMatrix1dPdf(const char* name, const char* title, RooAbsReal& 
   TIter it(&binProbabilities); 
   while ( RooAbsReal* binProbability = dynamic_cast<RooAbsReal*>(it.Next()) ) {
     RooRealProxy* binProbability_proxy = new RooRealProxy(binProbability->GetName(), "Proxy", this, *binProbability);
+    //std::cout << " binProbability[" << binProbabilities_.GetEntries() << "] = " << (Double_t)(*binProbability_proxy) << std::endl;
+
+    if ( (Double_t)(*binProbability_proxy) < 0 ) {
+      edm::LogError ("GenMatrix1dPdf") 
+	<< " Invalid binProbability[" << binProbabilities_.GetEntries() << ": value must not be negative !!";
+      assert(0);
+    }
+
     binProbabilities_.Add(binProbability_proxy);
   }
 }
 
 GenMatrix1dPdf::GenMatrix1dPdf(const GenMatrix1dPdf& bluePrint, const char* newName)
   : RooAbsPdf(bluePrint, newName),
-    x_("x", this, bluePrint.x_)
+    x_(std::string(bluePrint.x_.GetName()).append("_proxy").append("_cloned").data(), this, bluePrint.x_)
 {
   Int_t numBins = bluePrint.binProbabilities_.GetEntries();
   binBoundaries_ = new Double_t[numBins + 1];
@@ -65,12 +73,18 @@ GenMatrix1dPdf::~GenMatrix1dPdf()
 
 Double_t GenMatrix1dPdf::evaluate() const
 {
+  //std::cout << "<GenMatrix1dPdf::evaluate>:" << std::endl;
+  //std::cout << " name = " << GetName() << std::endl;
+  //std::cout << " variable = " << x_.GetName() << std::endl;
+  //std::cout << " x = " << (Double_t)x_ << std::endl;
+
   Int_t numBins = binProbabilities_.GetEntries();
   for ( Int_t iBin = 0; iBin < numBins; ++iBin ) {
-    if ( x_ >= binBoundaries_[iBin] && x_ < binBoundaries_[iBin + 1] ) {
+    if ( (Double_t)x_ >= binBoundaries_[iBin] && (Double_t)x_ < binBoundaries_[iBin + 1] ) {
       RooRealProxy* binProbability_proxy = dynamic_cast<RooRealProxy*>(binProbabilities_.At(iBin));
-
-      return *binProbability_proxy;
+      //std::cout << "--> iBin = " << iBin << ": p = " << (Double_t)(*binProbability_proxy) << std::endl;
+      
+      return (Double_t)(*binProbability_proxy);
     }
   }
 
