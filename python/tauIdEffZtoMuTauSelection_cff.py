@@ -16,7 +16,13 @@ from TauAnalysis.RecoTools.tools.eventSelFlagProdConfigurator import *
 from TauAnalysis.RecoTools.patMuonSelection_cfi import *
 
 muonsForTauIdEffZtoMuTauCombRelIso = cms.EDFilter("PATMuonSelector",
-    cut = cms.string('(userIsolation("pat::TrackIso") + userIsolation("pat::EcalIso")) < (0.06*pt)'),
+    ##cut = cms.string('(userIsolation("pat::TrackIso") + userIsolation("pat::EcalIso")) < (0.06*pt)'),
+    #
+    # CV: apply loose cut on (relative) muon isolation only,
+    #     in order to have still some discrimination between Ztautau/WplusJets and QCD left
+    #     for "generalized matrix method"                                                   
+    #                                              
+    cut = cms.string('(userIsolation("pat::TrackIso") + userIsolation("pat::EcalIso")) < (0.15*pt)'),
     filter = cms.bool(False)
 )
 
