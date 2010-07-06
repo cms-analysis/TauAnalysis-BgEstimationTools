@@ -15,6 +15,8 @@ from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
 
 process = cms.Process('fitGenMatrixTauIdEffZtoMuTau')
 
+process.DQMStore = cms.Service("DQMStore")
+
 process.maxEvents = cms.untracked.PSet(            
     input = cms.untracked.int32(0)         
 )
@@ -29,6 +31,37 @@ process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
         scaleFactor = cms.double(1.),
         dqmDirectory_store = cms.string('')
     )
+)
+
+process.dumpDQMStore = cms.EDAnalyzer("DQMStoreDump")
+
+dqmDirectory_genMatrix3d = 'TauIdEffAnalyzerZtoMuTau_genMatrixRelMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResultsGenMatrix3d/'
+dqmDirectory_genMatrix4d = 'TauIdEffAnalyzerZtoMuTau_genMatrixRelMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau/tauIdEffBinningResultsGenMatrix4d/'
+
+process.dumpTauIdEffZtoMuTauBinningResults = cms.EDAnalyzer("DQMDumpBinningResults",
+    binningService = cms.PSet(
+        dqmDirectories = cms.PSet(
+            Ztautau = cms.string('harvested/Ztautau' + '/' + dqmDirectory_genMatrix4d),
+            Zmumu = cms.string('harvested/Zmumu' + '/' + dqmDirectory_genMatrix4d),
+            WplusJets = cms.string('harvested/WplusJets' + '/' + dqmDirectory_genMatrix4d),
+            QCD = cms.string('harvested/qcdSum' + '/' + dqmDirectory_genMatrix4d),
+            TTplusJets = cms.string('harvested/TTplusJets' + '/' + dqmDirectory_genMatrix4d)
+        ),
+        pluginType = cms.string("DataBinningService")
+    )
+)
+
+process.dumpTauIdEffZtoMuTauGenMatrixProbabilities = cms.EDAnalyzer("DQMDumpGenMatrixProbabilities",
+    binningService = cms.PSet(                                           
+        dqmDirectories = cms.PSet(
+            Ztautau = cms.string('harvested/Ztautau' + '/' + dqmDirectory_genMatrix4d),
+            Zmumu = cms.string('harvested/Zmumu' + '/' + dqmDirectory_genMatrix4d),
+            WplusJets = cms.string('harvested/WplusJets' + '/' + dqmDirectory_genMatrix4d),
+            QCD = cms.string('harvested/qcdSum' + '/' + dqmDirectory_genMatrix4d),
+            TTplusJets = cms.string('harvested/TTplusJets' + '/' + dqmDirectory_genMatrix4d)
+        ),
+        pluginType = cms.string("DataBinningService")
+    )    
 )
 
 process.fitTauIdEffZtoMuTau = cms.EDAnalyzer("GenMatrixFit",
@@ -94,7 +127,7 @@ process.fitTauIdEffZtoMuTau = cms.EDAnalyzer("GenMatrixFit",
         binningService = cms.PSet(
             pluginType = cms.string("DataBinningService")
         ),
-        dqmDirectory = cms.string(''),
+        dqmDirectory = cms.string('harvested/smSum' + '/' + dqmDirectory_genMatrix4d)
     ),
 
     fit = cms.PSet(
@@ -126,6 +159,9 @@ process.saveFitResultsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
 
 process.p = cms.Path(
     process.loadTauIdEffZtoMuTau
+   + process.dumpDQMStore
+   + process.dumpTauIdEffZtoMuTauBinningResults
+   + process.dumpTauIdEffZtoMuTauGenMatrixProbabilities
    + process.fitTauIdEffZtoMuTau
    + process.saveFitResultsTauIdEffZtoMuTau
 )
