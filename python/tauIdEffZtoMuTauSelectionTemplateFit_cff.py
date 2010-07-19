@@ -191,24 +191,15 @@ tauIdEffZtoMuTauHistManagerTemplateFit.diTauChargeSignExtractor.src = 'muTauPair
 from TauAnalysis.BgEstimationTools.bgEstBinGridZtoMuTau_cfi import *
 
 dataBinnerTauIdEffZtoMuTauTemplateFit = copy.deepcopy(dataBinner)
-dataBinnerTauIdEffZtoMuTauTemplateFit.pluginName = cms.string('dataBinnerTauIdEffZtoMuTauTemplateFit')
+dataBinnerTauIdEffZtoMuTauTemplateFit.pluginName = 'dataBinnerTauIdEffZtoMuTauTemplateFit'
 
-tauIdEffBinning = cms.PSet(
-    name = cms.string("tauIdEffBinning"),
+binningTauIdEffZtoMuTauTemplateFit_ewkTauId = copy.deepcopy(binning_ewkTauId)
+binningTauIdEffZtoMuTauTemplateFit_ewkTauId.extractor.src = 'tausForTauIdEffZtoMuTauTemplateFitMuonVetoCumulative'
+
+tauIdEffBinningZtoMuTau_template1d = cms.PSet(
+    name = cms.string("tauIdEffBinningZtoMuTau_template1d"),
     config = cms.VPSet(
-        cms.PSet(
-            extractor = cms.PSet(
-                pluginType = cms.string("PATTauValExtractor"),
-                src = cms.InputTag('tausForTauIdEffZtoMuTauTemplateFitMuonVetoCumulative'),
-                value = cms.string("tauID('ewkTauId')")
-            ),
-            branchName = cms.string('ewkTauId'),
-            binning = cms.PSet(
-                boundaries = cms.vdouble(0.5),
-                min = cms.double(-0.01),
-                max = cms.double(1.01)
-            )
-        )
+        binningTauIdEffZtoMuTauTemplateFit_ewkTauId
     )
 )
 
@@ -246,7 +237,7 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
         cms.PSet(
             pluginName = cms.string('tauEtaCutTauIdEffZtoMuTauTemplateFit'),
             pluginType = cms.string('PATCandViewMinEventSelector'),
-            src = cms.InputTag('muonsForTauIdEffZtoMuTauTemplateFitTrkIPCumulative'),
+            src = cms.InputTag('muonsForTauIdEffZtoMuTauTemplateFitTrkIPcumulative'),
             minNumber = cms.uint32(1)
         ),
         evtSelTauAntiOverlapWithMuonsVeto,
@@ -306,7 +297,7 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
             pluginName = cms.string('uniqueMuonCandidateCutTauIdEffZtoMuTauTemplateFit'),
             pluginType = cms.string('PATCandViewMaxEventSelector'),
             src = cms.InputTag('muonsTightForZmumuHypothesesTauIdEffZtoMuTauTemplateFit'),
-            maxNumber = cms.uint32(0)
+            maxNumber = cms.uint32(1)
         )
     ),
   
@@ -316,12 +307,12 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
         diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit,
         caloMEtHistManager,
         pfMEtHistManager,
-        tauIdEffZtoMuTauHistManager,
+        tauIdEffZtoMuTauHistManagerTemplateFit,
         dataBinnerTauIdEffZtoMuTauTemplateFit,
         cms.PSet(
             pluginName = cms.string('tauIdEffDataBinner2regions'),
             pluginType = cms.string('DataBinner'),
-            binning = tauIdEffBinning,
+            binning = tauIdEffBinningZtoMuTau_template1d,
             binningService = cms.PSet(
                 pluginType = cms.string("DataBinningService")
             ),
@@ -330,12 +321,12 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
         cms.PSet(
             pluginName = cms.string('tauIdEffBinGridHistManager2regions'),
             pluginType = cms.string('BinGridHistManager'),
-            binning = tauIdEffBinning,
+            binning = tauIdEffBinningZtoMuTau_template1d,
             histManagers = cms.VPSet(
                 muonHistManagerTauIdEffZtoMuTauTemplateFit,
                 tauHistManagerTauIdEffZtoMuTauTemplateFit,
                 diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit,
-                tauIdEffZtoMuTauHistManager
+                tauIdEffZtoMuTauHistManagerTemplateFit
             ),
             dqmDirectory_store = cms.string('tauIdEffHistograms2regions')
         )
@@ -458,13 +449,13 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
                 'diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit',
                 'caloMEtHistManager',
                 'pfMEtHistManager',
-                'tauIdEffZtoMuTauHistManager',
+                'tauIdEffZtoMuTauHistManagerTemplateFit',
                 'dataBinnerTauIdEffZtoMuTauTemplateFit',
                 'tauIdEffDataBinner2regions',
                 'tauIdEffBinGridHistManager2regions'
             ),
             replace = cms.vstring(
-                'muonHistManagerTauIdEffZtoMuTauTemplateFit.muonSource = muonsForTauIdEffZtoMuTauTemplateFitTrkIPCumulative',
+                'muonHistManagerTauIdEffZtoMuTauTemplateFit.muonSource = muonsForTauIdEffZtoMuTauTemplateFitTrkIPcumulative',
                 'diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit.diTauCandidateSource = muTauPairsTauIdEffZtoMuTauTemplateFitBackToBackCumulative',
                 'pfMEtHistManager.metSource = pfMEtForTauIdEffZtoMuTauTemplateFitPt20'
             )

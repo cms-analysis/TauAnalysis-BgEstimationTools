@@ -153,16 +153,16 @@ dataBinnerTauIdEffZtoMuTauGenMatrixFit = copy.deepcopy(dataBinner)
 dataBinnerTauIdEffZtoMuTauGenMatrixFit.pluginName = 'dataBinnerTauIdEffZtoMuTauGenMatrixFit'
 
 binningTauIdEffZtoMuTauGenMatrixFit_ewkTauId = copy.deepcopy(binning_ewkTauId)
-binningTauIdEffZtoMuTauGenMatrixFit_ewkTauId.src = cms.InputTag('tausForTauIdEffZtoMuTauGenMatrixFitMuonVetoCumulative')
+binningTauIdEffZtoMuTauGenMatrixFit_ewkTauId.extractor.src = 'tausForTauIdEffZtoMuTauGenMatrixFitMuonVetoCumulative'
 
 binningTauIdEffZtoMuTauGenMatrixFit_relMuonIso = copy.deepcopy(binning_relMuonIso)
-binningTauIdEffZtoMuTauGenMatrixFit_relMuonIso.src = cms.InputTag('muonsForTauIdEffZtoMuTauGenMatrixFitTrkIPcumulative')
+binningTauIdEffZtoMuTauGenMatrixFit_relMuonIso.extractor.src = 'muonsForTauIdEffZtoMuTauGenMatrixFitTrkIPcumulative'
 
 binningTauIdEffZtoMuTauGenMatrixFit_diTauMt1MET = copy.deepcopy(binning_diTauMt1MET)
-binningTauIdEffZtoMuTauGenMatrixFit_diTauMt1MET.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauGenMatrixFit')
+binningTauIdEffZtoMuTauGenMatrixFit_diTauMt1MET.extractor.src = 'muTauPairsTauIdEffZtoMuTauGenMatrixFit'
 
 binningTauIdEffZtoMuTauGenMatrixFit_diTauAbsCharge = copy.deepcopy(binning_diTauAbsCharge)
-binningTauIdEffZtoMuTauGenMatrixFit_diTauAbsCharge.src = cms.InputTag('muTauPairsTauIdEffZtoMuTauGenMatrixFit')
+binningTauIdEffZtoMuTauGenMatrixFit_diTauAbsCharge.extractor.src = 'muTauPairsTauIdEffZtoMuTauGenMatrixFit'
 
 tauIdEffBinningZtoMuTau_genMatrix1d = cms.PSet(
     name = cms.string("tauIdEffBinningZtoMuTau_genMatrix1d"),
@@ -224,7 +224,7 @@ analyzeEventsTauIdEffZtoMuTauGenMatrixFit = cms.EDAnalyzer("GenericAnalyzer",
         cms.PSet(
             pluginName = cms.string('tauEtaCutTauIdEffZtoMuTauGenMatrixFit'),
             pluginType = cms.string('PATCandViewMinEventSelector'),
-            src = cms.InputTag('muonsForTauIdEffZtoMuTauGenMatrixFitTrkIPCumulative'),
+            src = cms.InputTag('muonsForTauIdEffZtoMuTauGenMatrixFitTrkIPcumulative'),
             minNumber = cms.uint32(1)
         ),
         evtSelTauAntiOverlapWithMuonsVeto,
@@ -260,7 +260,7 @@ analyzeEventsTauIdEffZtoMuTauGenMatrixFit = cms.EDAnalyzer("GenericAnalyzer",
             pluginName = cms.string('uniqueMuonCandidateCutTauIdEffZtoMuTauGenMatrixFit'),
             pluginType = cms.string('PATCandViewMaxEventSelector'),
             src = cms.InputTag('muonsTightForZmumuHypothesesTauIdEffZtoMuTauGenMatrixFit'),
-            maxNumber = cms.uint32(0)
+            maxNumber = cms.uint32(1)
         )
     ),
   
