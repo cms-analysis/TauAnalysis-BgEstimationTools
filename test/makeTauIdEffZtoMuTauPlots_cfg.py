@@ -18,7 +18,29 @@ process.loadTauIdEffZtoMuTau.inputFilePath = cms.string("rfio:/castor/cern.ch/us
 
 process.dumpDQMStore = cms.EDAnalyzer("DQMStoreDump")
 
-process.dumpTauIdEffZtoMuTau = cms.EDAnalyzer("DQMDumpFilterStatisticsTables",
+process.dumpTauIdEffZtoMuTau_absMuonIsolation = cms.EDAnalyzer("DQMDumpFilterStatisticsTables",
+    dqmDirectories = cms.PSet(
+        Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/FilterStatistics'),
+        Zmumu = cms.string('harvested/Zmumu/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/FilterStatistics/'),
+        WplusJets = cms.string('harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/FilterStatistics/'),
+        QCD = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/FilterStatistics/'),
+        TTplusJets = cms.string('harvested/TTplusJets/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/FilterStatistics')
+    ),
+    columnsSummaryTable = cms.vstring("Passed", "cumul. Efficiency", "margin. Efficiency", "indiv. Efficiency")
+)
+
+process.dumpTauIdEffZtoMuTau_relMuonIsolation = cms.EDAnalyzer("DQMDumpFilterStatisticsTables",
+    dqmDirectories = cms.PSet(
+        Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/FilterStatistics'),
+        Zmumu = cms.string('harvested/Zmumu/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/FilterStatistics/'),
+        WplusJets = cms.string('harvested/WplusJets/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/FilterStatistics/'),
+        QCD = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/FilterStatistics/'),
+        TTplusJets = cms.string('harvested/TTplusJets/TauIdEffAnalyzerZtoMuTau_relMuonIsolation/FilterStatistics')
+    ),
+    columnsSummaryTable = cms.vstring("Passed", "cumul. Efficiency", "margin. Efficiency", "indiv. Efficiency")
+)
+
+process.dumpTauIdEffZtoMuTau_genMatrixRelMuonIsolation = cms.EDAnalyzer("DQMDumpFilterStatisticsTables",
     dqmDirectories = cms.PSet(
         Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTau_genMatrixRelMuonIsolation/FilterStatistics'),
         Zmumu = cms.string('harvested/Zmumu/TauIdEffAnalyzerZtoMuTau_genMatrixRelMuonIsolation/FilterStatistics/'),
@@ -27,6 +49,12 @@ process.dumpTauIdEffZtoMuTau = cms.EDAnalyzer("DQMDumpFilterStatisticsTables",
         TTplusJets = cms.string('harvested/TTplusJets/TauIdEffAnalyzerZtoMuTau_genMatrixRelMuonIsolation/FilterStatistics')
     ),
     columnsSummaryTable = cms.vstring("Passed", "cumul. Efficiency", "margin. Efficiency", "indiv. Efficiency")
+)
+
+process.dumpTauIdEffZtoMuTau = cms.Sequence(
+    process.dumpTauIdEffZtoMuTau_absMuonIsolation
+   * process.dumpTauIdEffZtoMuTau_relMuonIsolation
+   * process.dumpTauIdEffZtoMuTau_genMatrixRelMuonIsolation
 )
 
 process.dumpTauIdEffZtoMuTauBinningResults2regions = cms.EDAnalyzer("DQMDumpBinningResults",
