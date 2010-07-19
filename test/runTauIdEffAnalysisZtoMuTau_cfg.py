@@ -36,16 +36,16 @@ process.saveTauIdEffZtoMuTauPlots = cms.EDAnalyzer("DQMSimpleFileSaver",
 )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1) 
-    #input = cms.untracked.int32(1000)    
+    #input = cms.untracked.int32(-1) 
+    input = cms.untracked.int32(100)    
 )
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/relval/CMSSW_3_6_1/RelValZTT/GEN-SIM-RECO/START36_V7-v1/0021/F405BC9A-525D-DF11-AB96-002618943811.root',
-        '/store/relval/CMSSW_3_6_1/RelValZTT/GEN-SIM-RECO/START36_V7-v1/0020/EE3E8F74-365D-DF11-AE3D-002618FDA211.root'
-        #'rfio:/castor/cern.ch/user/l/lusito/SkimOctober09/ZtautauSkimMT314_3/muTauSkim_1.root',
-        #'rfio:/castor/cern.ch/user/l/lusito/SkimOctober09/ZtautauSkimMT314_3/muTauSkim_2.root'
+        #'/store/relval/CMSSW_3_6_1/RelValZTT/GEN-SIM-RECO/START36_V7-v1/0021/F405BC9A-525D-DF11-AB96-002618943811.root',
+        #'/store/relval/CMSSW_3_6_1/RelValZTT/GEN-SIM-RECO/START36_V7-v1/0020/EE3E8F74-365D-DF11-AE3D-002618FDA211.root'
+        'rfio:/castor/cern.ch/user/l/lusito/SkimOctober09/ZtautauSkimMT314_3/muTauSkim_1.root',
+        'rfio:/castor/cern.ch/user/l/lusito/SkimOctober09/ZtautauSkimMT314_3/muTauSkim_2.root'
     )
     #skipBadFiles = cms.untracked.bool(True) 
 )
@@ -100,7 +100,9 @@ process.load("TauAnalysis.CandidateTools.diTauPairProductionAllKinds_cff")
 replaceMETforDiTaus(process, cms.InputTag('patMETs'), cms.InputTag('patPFMETs'))
 #--------------------------------------------------------------------------------
 
-process.load('TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauSelection_cff')
+process.load('TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauSelectionTemplateFit_cff')
+process.load('TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauSelectionGenMatrixFit_cff')
+process.load('TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauSelectionCombinedFit_cff')
 process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauWplusJetsEnrichedSelection_cff')
 process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauTTplusJetsEnrichedSelection_cff')
 process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauZmumuEnrichedSelection_cff')
@@ -109,8 +111,11 @@ process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauQCDenrichedSelection_cf
 # set generator level phase-space selection
 # (to avoid overlap of different  Monte Carlo samples in simulated phase-space)
 if hasattr(process, "isBatchMode"):
-    process.analyzeEventsTauIdEffZtoMuTauAbsMuonIsolation.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsTauIdEffZtoMuTauRelMuonIsolation.filters[0] = getattr(process, "genPhaseSpaceCut")
+    process.analyzeEventsTauIdEffZtoMuTauTemplateFit.filters[0] = getattr(process, "genPhaseSpaceCut")
+    process.analyzeEventsTauIdEffZtoMuTauGenMatrixFit.filters[0] = getattr(process, "genPhaseSpaceCut")
+    process.analyzeEventsTauIdEffZtoMuTauCombinedFit.filters[0] = getattr(process, "genPhaseSpaceCut")
+    process.analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets.filters[0] = getattr(process, "genPhaseSpaceCut")
+    process.analyzeEventsTauIdEffZtoMuTauCombinedFitQCD.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstWplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstTTplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
     process.analyzeEventsBgEstZmumuJetMisIdEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
@@ -156,7 +161,9 @@ setattr(process.analyzeEventsBgEstQCDenriched_reweighted, "eventWeightSource", c
 process.p = cms.Path(
    process.producePatTupleZtoMuTauSpecific
   + process.selectZtoMuTauEvents
-  + process.bgEstTauIdEffZtoMuTauAnalysisSequence
+  + process.bgEstTauIdEffZtoMuTauTemplateFitAnalysisSequence
+  + process.bgEstTauIdEffZtoMuTauGenMatrixFitAnalysisSequence
+  + process.bgEstTauIdEffZtoMuTauCombinedFitAnalysisSequence
   + process.bgEstWplusJetsEnrichedAnalysisSequence
   + process.bgEstTTplusJetsEnrichedAnalysisSequence
   + process.bgEstZmumuEnrichedAnalysisSequence
@@ -185,4 +192,5 @@ if not hasattr(process, "isBatchMode"):
 #--------------------------------------------------------------------------------
 
 # print-out all python configuration parameter information
+#del process.patJetMETCorrections
 #print process.dumpPython()
