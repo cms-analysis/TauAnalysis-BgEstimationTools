@@ -410,10 +410,10 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
             filter = cms.string('tauMuonVetoTauIdEffZtoMuTauTemplateFit'),
             title = cms.string('Tau mu-Veto')
         ),
-        cms.PSet(
-            filter = cms.string('pfMEtPt20CutTauIdEffZtoMuTauTemplateFit'),
-            title = cms.string('PFMEt Pt > 20 GeV')
-        ), 
+        ##cms.PSet(
+        ##    filter = cms.string('pfMEtPt20CutTauIdEffZtoMuTauTemplateFit'),
+        ##    title = cms.string('PFMEt Pt > 20 GeV')
+        ##), 
         cms.PSet(
             filter = cms.string('muTauPairTauIdEffZtoMuTauTemplateFit'),
             title = cms.string('dR(Muon-Tau) > 0.7')
