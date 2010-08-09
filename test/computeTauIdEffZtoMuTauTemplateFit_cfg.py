@@ -14,7 +14,7 @@ from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
 from TauAnalysis.BgEstimationTools.tools.drawTemplateHistConfigurator import drawTemplateHistConfigurator
 from TauAnalysis.BgEstimationTools.templateHistDefinitions_cfi import drawJobTemplateHist
 
-processName = 'fitTauIdEffZtoMuTau'
+processName = 'computeTauIdEffZtoMuTauTemplateFit'
 process = cms.Process(processName)
 
 process.DQMStore = cms.Service("DQMStore")
