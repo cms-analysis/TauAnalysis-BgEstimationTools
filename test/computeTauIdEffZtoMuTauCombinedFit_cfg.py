@@ -13,6 +13,8 @@ import copy
 from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
 from TauAnalysis.BgEstimationTools.tools.drawTemplateHistConfigurator import drawTemplateHistConfigurator
 from TauAnalysis.BgEstimationTools.templateHistDefinitions_cfi import drawJobTemplateHist
+from TauAnalysis.BgEstimationTools.plotTauIdEffZtoMuTau_cff import plotTauIdEffZtoMuTau, plots_TauIdEffZtoMuTau
+from TauAnalysis.DQMTools.tools.drawJobConfigurator import *
 
 processName = 'computeTauIdEffZtoMuTauCombinedFit'
 process = cms.Process(processName)
@@ -43,6 +45,9 @@ process.loadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
 # define directories in which histograms are stored in DQMStore
 #--------------------------------------------------------------------------------
 
+dqmSubDirectory_control_tauIdPassed = 'tauIdEffHistograms2regions/region02'
+dqmSubDirectory_control_tauIdFailed = 'tauIdEffHistograms2regions/region01'
+
 dqmDirectory_WplusJets_sideband = \
   'harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
 dqmDirectory_WplusJets_sidebandOS_tauIdPassed = dqmDirectory_WplusJets_sideband + '/' + 'tauIdEffHistogramsComb3dWplusJets/region02'
@@ -51,27 +56,92 @@ dqmDirectory_WplusJets_sidebandSS_tauIdPassed = dqmDirectory_WplusJets_sideband 
 dqmDirectory_WplusJets_sidebandSS_tauIdFailed = dqmDirectory_WplusJets_sideband + '/' + 'tauIdEffHistogramsComb3dWplusJets/region05'
 dqmDirectory_WplusJets_template = \
   'harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-dqmDirectory_WplusJets_template_tauIdPassed = dqmDirectory_WplusJets_template + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
-dqmDirectory_WplusJets_template_tauIdFailed = dqmDirectory_WplusJets_template + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
+dqmDirectory_WplusJets_template_tauIdPassed = dqmDirectory_WplusJets_template + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
+dqmDirectory_WplusJets_template_tauIdFailed = dqmDirectory_WplusJets_template + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
+dqmDirectory_WplusJets_control = \
+  'harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_WplusJets_control_tauIdPassed = dqmDirectory_WplusJets_control + '/' + 'tauIdEffHistograms2regions/region02'
+dqmDirectory_WplusJets_control_tauIdFailed = dqmDirectory_WplusJets_control + '/' + 'tauIdEffHistograms2regions/region01'
+dqmDirectory_WplusJets_controlNormalized = \
+  'harvested/WplusJets_normalized/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_WplusJets_controlNormalized_tauIdPassed = \
+  dqmDirectory_WplusJets_controlNormalized + '/' + dqmSubDirectory_control_tauIdPassed
+dqmDirectory_WplusJets_controlNormalized_tauIdFailed = \
+  dqmDirectory_WplusJets_controlNormalized + '/' + dqmSubDirectory_control_tauIdFailed
+dqmDirectory_WplusJets_controlScaled = \
+  'harvested/WplusJets_scaled/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_WplusJets_controlScaled_tauIdPassed = \
+  dqmDirectory_WplusJets_controlScaled + '/' + dqmSubDirectory_control_tauIdPassed
+dqmDirectory_WplusJets_controlScaled_tauIdFailed = \
+  dqmDirectory_WplusJets_controlScaled + '/' + dqmSubDirectory_control_tauIdFailed
 
 dqmDirectory_QCD_sideband = \
   'harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
 dqmDirectory_QCD_sidebandOS_tauIdPassed = dqmDirectory_QCD_sideband + '/' + 'tauIdEffHistogramsComb3dQCD/region06'
 dqmDirectory_QCD_sidebandOS_tauIdFailed = dqmDirectory_QCD_sideband + '/' + 'tauIdEffHistogramsComb3dQCD/region05'
 dqmDirectory_QCD_sidebandSS_tauIdPassed = dqmDirectory_QCD_sideband + '/' + 'tauIdEffHistogramsComb3dQCD/region12'
-dqmDirectory_QCD_sidebandSS_tauIdFailed = dqmDirectory_QCD_sideband + '/' + 'tauIdEffBinningResultsComb3dQCD/region11'
+dqmDirectory_QCD_sidebandSS_tauIdFailed = dqmDirectory_QCD_sideband + '/' + 'tauIdEffHistogramsComb3dQCD/region11'
 dqmDirectory_QCD_template_pure = \
   'harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-dqmDirectory_QCD_template_pure_tauIdPassed = dqmDirectory_QCD_template + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
-dqmDirectory_QCD_template_pure_tauIdFailed = dqmDirectory_QCD_template + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
+dqmDirectory_QCD_template_pure_tauIdPassed = dqmDirectory_QCD_template_pure + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
+dqmDirectory_QCD_template_pure_tauIdFailed = dqmDirectory_QCD_template_pure + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
 dqmDirectory_QCD_template_data = \
   'harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-dqmDirectory_QCD_template_data_tauIdPassed = dqmDirectory_QCD_template + '/' + 'tauIdEffHistogramsComb3dQCD/region12'
-dqmDirectory_QCD_template_data_tauIdFailed = dqmDirectory_QCD_template + '/' + 'tauIdEffHistogramsComb3dQCD/region12'
+dqmDirectory_QCD_template_data_tauIdPassed = dqmDirectory_QCD_template_data + '/' + 'tauIdEffHistogramsComb3dQCD/region11'
+dqmDirectory_QCD_template_data_tauIdFailed = dqmDirectory_QCD_template_data + '/' + 'tauIdEffHistogramsComb3dQCD/region11'
+dqmDirectory_QCD_control = \
+  'harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_QCD_control_tauIdPassed = dqmDirectory_QCD_control + '/' + 'tauIdEffHistograms2regions/region02'
+dqmDirectory_QCD_control_tauIdFailed = dqmDirectory_QCD_control + '/' + 'tauIdEffHistograms2regions/region01'
+dqmDirectory_QCD_controlNormalized = \
+  'harvested/qcdSum_normalized/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_QCD_controlNormalized_tauIdPassed = \
+  dqmDirectory_QCD_controlNormalized + '/' + dqmSubDirectory_control_tauIdPassed
+dqmDirectory_QCD_controlNormalized_tauIdFailed = \
+  dqmDirectory_QCD_controlNormalized + '/' + dqmSubDirectory_control_tauIdFailed
+dqmDirectory_QCD_controlScaled = \
+  'harvested/qcdSum_scaled/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_QCD_controlScaled_tauIdPassed = \
+  dqmDirectory_QCD_controlScaled + '/' + dqmSubDirectory_control_tauIdPassed
+dqmDirectory_QCD_controlScaled_tauIdFailed = \
+  dqmDirectory_QCD_controlScaled + '/' + dqmSubDirectory_control_tauIdFailed
 
-dqmDirectory_Data = 'harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-dqmDirectory_Data_tauIdPassed = dqmDirectory_Data_all + '/' + 'tauIdEffBinningResults2regions/region02'
-dqmDirectory_Data_tauIdFailed = dqmDirectory_Data_all + '/' + 'tauIdEffBinningResults2regions/region01'
+dqmDirectory_Ztautau = \
+  'harvested/Ztautau/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_Ztautau_controlNormalized = \
+  'harvested/Ztautau_normalized/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_Ztautau_controlNormalized_tauIdPassed = \
+  dqmDirectory_Ztautau_controlNormalized + '/' + dqmSubDirectory_control_tauIdPassed
+dqmDirectory_Ztautau_controlNormalized_tauIdFailed = \
+  dqmDirectory_Ztautau_controlNormalized + '/' + dqmSubDirectory_control_tauIdFailed
+dqmDirectory_Ztautau_controlScaled = \
+  'harvested/Ztautau_scaled/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_Ztautau_controlScaled_tauIdPassed = \
+  dqmDirectory_Ztautau_controlScaled + '/' + dqmSubDirectory_control_tauIdPassed
+dqmDirectory_Ztautau_controlScaled_tauIdFailed = \
+  dqmDirectory_Ztautau_controlScaled + '/' + dqmSubDirectory_control_tauIdFailed
+
+dqmDirectory_Zmumu = \
+  'harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_Zmumu_control = \
+  'harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_Zmumu_control_tauIdPassed = dqmDirectory_Zmumu_control + '/' + 'tauIdEffHistograms2regions/region02'
+dqmDirectory_Zmumu_control_tauIdFailed = dqmDirectory_Zmumu_control + '/' + 'tauIdEffHistograms2regions/region01'
+
+dqmDirectory_TTplusJets = \
+  'harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_TTplusJets_control = \
+  'harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_TTplusJets_control_tauIdPassed = dqmDirectory_TTplusJets_control + '/' + 'tauIdEffHistograms2regions/region02'
+dqmDirectory_TTplusJets_control_tauIdFailed = dqmDirectory_TTplusJets_control + '/' + 'tauIdEffHistograms2regions/region01'
+
+dqmDirectory_smSum_control = \
+  'harvested/smSum_extrapolated/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_smSum_control_tauIdPassed = dqmDirectory_smSum_control + '/' + 'tauIdEffHistograms2regions/region02'
+dqmDirectory_smSum_control_tauIdFailed = dqmDirectory_smSum_control + '/' + 'tauIdEffHistograms2regions/region01'
+
+dqmDirectory_Data = \
+  'harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
 
 #--------------------------------------------------------------------------------
 # define names of histograms used in fit
@@ -110,14 +180,14 @@ drawTemplateHistConfiguratorTauIdEffZtoMuTau_Mt.add(
     meNames = [        
         dqmDirectory_QCD_template_data_tauIdFailed + '/' + meName_Mt,
         dqmDirectory_QCD_template_pure_tauIdFailed + '/' + meName_Mt,
-        'harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit' \
+        'harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit' \
           + '/' + 'tauIdEffHistograms2regions/region02' + '/' + meName_Mt
     ],
     name = "QCD_Mt",
     title = "M_{T} in QCD Background"
 )
 
-plotTauIdEffZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
+process.plotTauIdEffZtoMuTauCombinedFit_Mt = cms.EDAnalyzer("DQMHistPlotter",
     processes = cms.PSet(
         templateData = cms.PSet(
             dqmDirectory = cms.string(''),
@@ -168,7 +238,7 @@ plotTauIdEffZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
         fitted = copy.deepcopy(drawOption_red_eff)
     ),
 
-    drawJobs = cms.PSet(),
+    drawJobs = drawTemplateHistConfiguratorTauIdEffZtoMuTau_Mt.configure(),
 
     canvasSizeX = cms.int32(800),
     canvasSizeY = cms.int32(640),                         
@@ -177,9 +247,6 @@ plotTauIdEffZtoMuTau = cms.EDAnalyzer("DQMHistPlotter",
     #outputFileName = cms.string('plotsTauIdEffZtoMuTauCombinedFit.ps')
     indOutputFileName = cms.string('plotTauIdEffZtoMuTauCombinedFit_#PLOT#.png')
 )
-
-process.plotTauIdEffZtoMuTauCombinedFit_Mt = copy.deepcopy(plotTauIdEffZtoMuTau)
-process.plotTauIdEffZtoMuTauCombinedFit_Mt.drawJobs = drawTemplateHistConfiguratorTauIdEffZtoMuTau_Mt.configure()
 
 process.plotTauIdEffZtoMuTauCombinedFit = cms.Sequence(
     process.plotTauIdEffZtoMuTauCombinedFit_Mt
@@ -206,38 +273,48 @@ process.addKnownBackgrounds = cms.EDAnalyzer("DQMHistAdder",
 # from QCD and W + jets sideband regions
 #--------------------------------------------------------------------------------
 
-process.compKnownBgCorrections = cms.EDAnalyzer("DQMHistSubtractor",
+process.compKnownBgCorrections_tauIdPassed = cms.EDAnalyzer("DQMHistSubtractor",
     config = cms.VPSet(
         cms.PSet(
             meNameMinuend = cms.string(
               'harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
+             + '/' + 'tauIdEffHistogramsComb3dQCD/region08' + '/' + meName_Mt
             ),
             meNameSubtrahend = cms.string(
               'harvested/knownBgSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
+             + '/' + 'tauIdEffHistogramsComb3dQCD/region08' + '/' + meName_Mt
             ),
             meNameDifference = cms.string(
               'harvested/knownBgCorr/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
-            )
-        ),
-        cms.PSet(
-            meNameMinuend = cms.string(
-              'harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
-            ),
-            meNameSubtrahend = cms.string(
-              'harvested/knownBgSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
-            ),
-            meNameDifference = cms.string(
-              'harvested/knownBgCorr/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
+             + '/' + 'tauIdEffHistogramsComb3dQCD/region08' + '/' + meName_Mt
             )
         )
     )
 )
+
+process.compKnownBgCorrections_tauIdFailed = cms.EDAnalyzer("DQMHistSubtractor",
+    config = cms.VPSet(    
+        cms.PSet(
+            meNameMinuend = cms.string(
+              'harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+             + '/' + 'tauIdEffHistogramsComb3dQCD/region07' + '/' + meName_Mt
+            ),
+            meNameSubtrahend = cms.string(
+              'harvested/knownBgSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+             + '/' + 'tauIdEffHistogramsComb3dQCD/region07' + '/' + meName_Mt
+            ),
+            meNameDifference = cms.string(
+              'harvested/knownBgCorr/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+             + '/' + 'tauIdEffHistogramsComb3dQCD/region07' + '/' + meName_Mt
+            )
+        )
+    )
+)
+
+process.compKnownBgCorrections = cms.Sequence(
+    process.compKnownBgCorrections_tauIdPassed
+   * process.compKnownBgCorrections_tauIdFailed
+)    
 
 #--------------------------------------------------------------------------------
 # fit number of events observed in tau id. discriminator passed/failed regions
@@ -276,7 +353,7 @@ process.fitTauIdEffZtoMuTauSideband_tauIdPassed = cms.EDAnalyzer("TemplateHistFi
         distributions = cms.PSet(
             Mt = cms.PSet(
                 meName = cms.string(
-                  'harvested/knownBgCorr/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+                  'harvested/knownBgCorr/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit' \
                  + '/' + 'tauIdEffHistogramsComb3dQCD/region08' + '/' + meName_Mt
                 )
             )                                                     
@@ -285,7 +362,7 @@ process.fitTauIdEffZtoMuTauSideband_tauIdPassed = cms.EDAnalyzer("TemplateHistFi
 
     fit = cms.PSet(
         algorithm = cms.PSet(
-            pluginName = cms.string("fitTauIdEffZtoMuTauAlgorithm_tauIdPassed"),
+            pluginName = cms.string("fitTauIdEffZtoMuTauSideband_tauIdPassed"),
             pluginType = cms.string("TemplateFitAdapter_TFractionFitter")
             #pluginType = cms.string("TemplateFitAdapter_RooFit")
         ),
@@ -294,7 +371,7 @@ process.fitTauIdEffZtoMuTauSideband_tauIdPassed = cms.EDAnalyzer("TemplateHistFi
                 name = cms.string("Mt"),
                 title = cms.string("M_{T}"),
                 min = cms.double(0.),
-                max = cms.double(1000.)
+                max = cms.double(200.)
             )
         ),
         verbosity = cms.PSet(
@@ -335,19 +412,21 @@ process.fitTauIdEffZtoMuTauSideband_tauIdFailed = copy.deepcopy(process.fitTauId
 process.fitTauIdEffZtoMuTauSideband_tauIdFailed.processes.WplusJets.templates.Mt.meName = \
   dqmDirectory_WplusJets_template_tauIdFailed + '/' + meName_Mt
 process.fitTauIdEffZtoMuTauSideband_tauIdFailed.processes.WplusJets.norm.initial = cms.double(2500.)
-process.fitTauIdEffZtoMuTauSideband_tauIdFailed.processes.QCD.templates.diTauMass.meName = \
+process.fitTauIdEffZtoMuTauSideband_tauIdFailed.processes.QCD.templates.Mt.meName = \
   dqmDirectory_QCD_template_pure_tauIdFailed + '/' + meName_Mt
 process.fitTauIdEffZtoMuTauSideband_tauIdFailed.processes.QCD.norm.initial = cms.double(1000.)
 process.fitTauIdEffZtoMuTauSideband_tauIdFailed.data.distributions.Mt.meName = \
-  'harvested/knownBgCorr/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
- + '/' + 'tauIdEffHistogramsComb3dQCD/region08' + '/' + meName_Mt                                                                 
+  'harvested/knownBgCorr/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit' \
+ + '/' + 'tauIdEffHistogramsComb3dQCD/region07' + '/' + meName_Mt                                                                 
 process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.controlPlots.fileName = \
   "./plots/fitTauIdEffZtoMuTauSideband_tauIdFailed_#PLOT#.png"
 process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory = \
   "fitTauIdEffZtoMuTauSideband_tauIdFailed/fitResults"
 
 process.fitTauIdEffZtoMuTauSideband = cms.Sequence(
-    process.fitTauIdEffZtoMuTauSideband_tauIdPassed
+    process.addKnownBackgrounds
+   * process.compKnownBgCorrections
+   * process.fitTauIdEffZtoMuTauSideband_tauIdPassed
    * process.fitTauIdEffZtoMuTauSideband_tauIdFailed
 )
 
@@ -360,14 +439,23 @@ meOptionsSeparator = "#"
 meOptionsNumWeighted = "".join([meOptionsSeparator, "a1", meOptionsSeparator, "s1"])
 meOptionsErrWeighted = "".join([meOptionsSeparator, "a2", meOptionsSeparator, "s1"])
 
+meName_WplusJets_norm = 'WplusJets/norm/value' + meOptionsNumWeighted
+meName_WplusJets_normErr = 'WplusJets/norm/error' + meOptionsErrWeighted
+
+meName_QCD_norm = 'QCD/norm/value' + meOptionsNumWeighted
+meName_QCD_normErr = 'QCD/norm/error' + meOptionsErrWeighted
+
+meName_Ztautau_norm = 'Ztautau/norm/value' + meOptionsNumWeighted
+meName_Ztautau_normErr = 'Ztautau/norm/error' + meOptionsErrWeighted
+
 process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed = cms.EDAnalyzer("DQMHistScaler",
     config = cms.VPSet(
         cms.PSet(
             meName_input = cms.string(
-              'fitTauIdEffZtoMuTauSideband_tauIdPassed/fitResults/norm_WplusJets'
+              'fitTauIdEffZtoMuTauSideband_tauIdPassed/fitResults' + '/' + meName_WplusJets_norm
             ),
             meName_inputErr = cms.string(
-              'fitTauIdEffZtoMuTauSideband_tauIdPassed/fitResults/normErr_WplusJets'
+              'fitTauIdEffZtoMuTauSideband_tauIdPassed/fitResults' + '/' + meName_WplusJets_normErr
             ),
             meNameNumerator = cms.string(
               dqmDirectory_WplusJets_sideband + '/' + 'tauIdEffBinningResultsComb3dWplusJets/binContent_region2' + meOptionsNumWeighted
@@ -387,10 +475,10 @@ process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed = cms.EDAnalyzer("DQMHis
         ),
         cms.PSet(
             meName_input = cms.string(
-              'fitTauIdEffZtoMuTauSideband_tauIdPassed/fitResults/norm_QCD'
+              'fitTauIdEffZtoMuTauSideband_tauIdPassed/fitResults' + '/' + meName_QCD_norm
             ),
             meName_inputErr = cms.string(
-              'fitTauIdEffZtoMuTauSideband_tauIdPassed/fitResults/normErr_QCD'
+              'fitTauIdEffZtoMuTauSideband_tauIdPassed/fitResults' + '/' + meName_QCD_normErr
             ),
             meNameNumerator = cms.string(
               dqmDirectory_QCD_sideband + '/' + 'tauIdEffBinningResultsComb3dQCD/binContent_region6' + meOptionsNumWeighted
@@ -415,10 +503,10 @@ process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed = cms.EDAnalyzer("DQMHis
     config = cms.VPSet(
         cms.PSet(
             meName_input = cms.string(
-              'fitTauIdEffZtoMuTauSideband_tauIdFailed/fitResults/norm_WplusJets'
+              'fitTauIdEffZtoMuTauSideband_tauIdFailed/fitResults' + '/' + meName_WplusJets_norm
             ),
             meName_inputErr = cms.string(
-              'fitTauIdEffZtoMuTauSideband_tauIdFailed/fitResults/normErr_WplusJets'
+              'fitTauIdEffZtoMuTauSideband_tauIdFailed/fitResults' + '/' + meName_WplusJets_normErr
             ),
             meNameNumerator = cms.string(
               dqmDirectory_WplusJets_sideband + '/' + 'tauIdEffBinningResultsComb3dWplusJets/binContent_region1' + meOptionsNumWeighted
@@ -438,10 +526,10 @@ process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed = cms.EDAnalyzer("DQMHis
         ),
         cms.PSet(
             meName_input = cms.string(
-              'fitTauIdEffZtoMuTauSideband_tauIdFailed/fitResults/norm_QCD'
+              'fitTauIdEffZtoMuTauSideband_tauIdFailed/fitResults' + '/' + meName_QCD_norm
             ),
             meName_inputErr = cms.string(
-              'fitTauIdEffZtoMuTauSideband_tauIdFailed/fitResults/normErr_QCD'
+              'fitTauIdEffZtoMuTauSideband_tauIdFailed/fitResults' + '/' + meName_QCD_normErr
             ),
             meNameNumerator = cms.string(
               dqmDirectory_QCD_sideband + '/' + 'tauIdEffBinningResultsComb3dQCD/binContent_region5' + meOptionsNumWeighted
@@ -468,82 +556,320 @@ process.extrapolateTauIdEffZtoMuTauSideband = cms.Sequence(
 )    
 
 #--------------------------------------------------------------------------------
-# compute sum of "known" backgrounds
-# (backgrounds the contributions of which are assumed
-#  to be reliable predicted by Monte Carlo simulation)
+# compute sum of "known" backgrounds plus
+# QCD and W + jets background contributions extrapolated from sidebands
 #--------------------------------------------------------------------------------
 
-process.addKnownBackgrounds = cms.EDAnalyzer("DQMHistAdder",
-    knownBgSum = cms.PSet(
-        dqmDirectories_input = cms.vstring(
-            'harvested/Zmumu/',
-            'harvested/TTplusJets/'
-        ),
-        dqmDirectory_output = cms.string('harvested/knownBgSum/')
-    )
-)
-
-#--------------------------------------------------------------------------------
-# subtract sum of "known" backgrounds
-# from QCD and W + jets sideband regions
-#--------------------------------------------------------------------------------
-
-process.compKnownBgCorrections = cms.EDAnalyzer("DQMHistSubtractor",
-    config = cms.VPSet(
+process.compBackgroundSumSideband_tauIdPassed = cms.EDAnalyzer("DQMHistAdder",
+    config = cms.VPSet(                                                               
         cms.PSet(
-            meNameMinuend = cms.string(
-              'harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
+            input = cms.VPSet( 
+                cms.PSet( 
+                    meName = dqmDirectory_Zmumu + '/' + 'binContent_region2' + meOptionsNumWeighted,
+                    meName_err = dqmDirectory_Zmumu + '/' + 'binError_region2' + meOptionsErrWeighted
+                ),
+                cms.PSet(
+                    meName = dqmDirectory_TTplusJets + '/' + 'binContent_region2' + meOptionsNumWeighted,
+                    meName_err = dqmDirectory_TTplusJets + '/' + 'binError_region2' + meOptionsErrWeighted
+                ),
+                cms.PSet(
+                    meName = process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed.config[0].meName_output,
+                    meName_err = process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed.config[0].meName_outputErr
+                ),
+                cms.PSet(
+                    meName = process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed.config[1].meName_output,
+                    meName_err = process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed.config[1].meName_outputErr
+                )
             ),
-            meNameSubtrahend = cms.string(
-              'harvested/knownBgSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
-            ),
-            meNameDifference = cms.string(
-              'harvested/knownBgCorr/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region07'
-            )
-        ),
-        cms.PSet(
-            meNameMinuend = cms.string(
-              'harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
-            ),
-            meNameSubtrahend = cms.string(
-              'harvested/knownBgSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
-            ),
-            meNameDifference = cms.string(
-              'harvested/knownBgCorr/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
-             + '/' + 'tauIdEffHistogramsComb3dQCD/region08'
+            output = cms.PSet(
+                meName = cms.string('extrapolateTauIdEffZtoMuTauSideband_tauIdPassed/norm_smBgSum'),
+                meName_err = cms.string('extrapolateTauIdEffZtoMuTauSideband_tauIdPassed/normErr_smBgSum')
             )
         )
     )
 )
+
+process.compBackgroundSumSideband_tauIdFailed = cms.EDAnalyzer("DQMHistAdder",
+    config = cms.VPSet(                                                               
+        cms.PSet(
+            input = cms.VPSet( 
+                cms.PSet( 
+                    meName = dqmDirectory_Zmumu + '/' + 'binContent_region1' + meOptionsNumWeighted,
+                    meName_err = dqmDirectory_Zmumu + '/' + 'binError_region1' + meOptionsErrWeighted
+                ),
+                cms.PSet(
+                    meName = dqmDirectory_TTplusJets + '/' + 'binContent_region1' + meOptionsNumWeighted,
+                    meName_err = dqmDirectory_TTplusJets + '/' + 'binError_region1' + meOptionsErrWeighted
+                ),
+                cms.PSet(
+                    meName = process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed.config[0].meName_output,
+                    meName_err = process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed.config[0].meName_outputErr
+                ),
+                cms.PSet(
+                    meName = process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed.config[1].meName_output,
+                    meName_err = process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed.config[1].meName_outputErr
+                )
+            ),
+            output = cms.PSet(
+                meName = cms.string('extrapolateTauIdEffZtoMuTauSideband_tauIdFailed/norm_smBgSum'),
+                meName_err = cms.string('extrapolateTauIdEffZtoMuTauSideband_tauIdFailed/normErr_smBgSum')
+            )
+        )
+   )
+)
+
+process.compBackgroundSumSideband = cms.Sequence(
+    process.computeBackgroundSumSideband_tauIdPassed
+   * process.computeBackgroundSumSideband_tauIdFailed
+)
+
+#--------------------------------------------------------------------------------
+# subtract sum of "known" backgrounds plus
+# QCD and W + jets background contributions extrapolated from sidebands
+# from number of events observed in data
+# (to obtain an estimate for the number of Ztautau events passing/failing tau id. criteria)
+#--------------------------------------------------------------------------------
+
+process.compBgCorrectionsSideband_tauIdPassed = cms.EDAnalyzer("DQMHistSubtractor",
+    config = cms.VPSet(
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_Data + '/' + 'tauIdEffBinningResults2regions/binContent_region2#a1#s1'),
+            meNameMinuendErr = cms.string(dqmDirectory_Data + '/' + 'tauIdEffBinningResults2regions/binError_region2#a2#s1'),
+            meNameSubtrahend = process.compBackgroundSumSideband_tauIdPassed.config[0].output.meName,
+            meNameSubtrahendErr = process.compBackgroundSumSideband_tauIdPassed.config[0].output.meName_err,
+            meNameDifference = cms.string('extrapolateTauIdEffZtoMuTauSideband_tauIdPassed/norm_Ztautau'),
+            meNameDifferenceErr = cms.string('extrapolateTauIdEffZtoMuTauSideband_tauIdPassed/normErr_Ztautau')
+        )
+    )
+)
+
+process.compBgCorrectionsSideband_tauIdFailed = cms.EDAnalyzer("DQMHistSubtractor",
+    config = cms.VPSet(
+        cms.PSet(
+            meNameMinuend = cms.string(dqmDirectory_Data + '/' + 'tauIdEffBinningResults2regions/binContent_region1#a1#s1'),
+            meNameMinuendErr = cms.string(dqmDirectory_Data + '/' + 'tauIdEffBinningResults2regions/binError_region1#a2#s1'),
+            meNameSubtrahend = process.compBackgroundSumSideband_tauIdFailed.config[0].output.meName,
+            meNameSubtrahendErr = process.compBackgroundSumSideband_tauIdFailed.config[0].output.meName_err,
+            meNameDifference = cms.string('extrapolateTauIdEffZtoMuTauSideband_tauIdFailed/norm_Ztautau'),
+            meNameDifferenceErr = cms.string('extrapolateTauIdEffZtoMuTauSideband_tauIdFailed/normErr_Ztautau')
+        )
+    )
+)
+
+process.compBgCorrectionsSideband = cms.Sequence(
+    process.compBgCorrectionsSideband_tauIdPassed
+   * process.compBgCorrectionsSideband_tauIdFailed
+)    
 
 #--------------------------------------------------------------------------------
 # compute tau id. efficiencies
 # (using binomial errors for events statistics expected in data)
 #--------------------------------------------------------------------------------
 
-meName_norm = 'Ztautau/norm/value#a1#s1'
-
 process.dumpBinErrorsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMBinErrorCalculator",
     config = cms.VPSet(
         cms.PSet(
-            meName_passed = cms.string(dqmDirectory_Ztautau_all + '/' + 'tauIdEffBinningResults2regions/binContent_region2#a1#s1'),
-            meName_failed = cms.string(dqmDirectory_Ztautau_all + '/' + 'tauIdEffBinningResults2regions/binContent_region1#a1#s1'),
+            meName_passed = cms.string(dqmDirectory_Ztautau_control + '/' + 'tauIdEffBinningResults2regions/binContent_region2#a1#s1'),
+            meName_passedErr = cms.string(dqmDirectory_Ztautau_control + '/' + 'tauIdEffBinningResults2regions/binError_region2#a2#s1'),
+            meName_failed = cms.string(dqmDirectory_Ztautau_control + '/' + 'tauIdEffBinningResults2regions/binContent_region1#a1#s1'),
+            meName_failedErr = cms.string(dqmDirectory_Ztautau_control + '/' + 'tauIdEffBinningResults2regions/binError_region1#a2#s1'),
             label = cms.string("Tau id., true")
         ),
         cms.PSet(
-            meName_passed = cms.string(process.fitTauIdEffZtoMuTau_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_norm),
-            meName_failed = cms.string(process.fitTauIdEffZtoMuTau_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_norm),
+            meName_passed = process.compBgCorrectionsSideband_tauIdPassed.config[0].meNameDifference,
+            meName_passedErr = process.compBgCorrectionsSideband_tauIdPassed.config[0].meNameDifferenceErr,
+            meName_failed = process.compBgCorrectionsSideband_tauIdFailed.config[0].meNameDifference,
+            meName_failedErr = process.compBgCorrectionsSideband_tauIdFailed.config[0].meNameDifferenceErr,
             label = cms.string("Tau id., fitted")
         )
     )
 )
 
-MAKE CONTROL PLOTS MUON pT, MUON ETA, VIS MASS. TAU PT, TAU ETA, TRANSMASS
+#--------------------------------------------------------------------------------
+# make control plots of muon Pt and eta, tau-jet Pt and eta,
+# transverse mass of muon + MEt and of visible invariant mass of muon + tau-jet
+#--------------------------------------------------------------------------------
+
+process.compNormalizedDistributions_tauIdPassed = cms.EDAnalyzer("DQMHistNormalizer",
+    config = cms.VPSet(
+        cms.PSet(
+            dqmDirectoryInput = cms.string(dqmDirectory_Ztautau_control_tauIdPassed),
+            dqmDirectoryOutput = cms.string(dqmDirectory_Ztautau_controlNormalized_tauIdPassed),
+        ),
+        cms.PSet(
+            dqmDirectoryInput = cms.string(dqmDirectory_WplusJets_control_tauIdPassed),
+            dqmDirectoryOutput = cms.string(dqmDirectory_WplusJets_controlNormalized_tauIdPassed),
+        ),
+        cms.PSet(
+            dqmDirectoryInput = cms.string(dqmDirectory_QCD_control_tauIdPassed),
+            dqmDirectoryOutput = cms.string(dqmDirectory_QCD_controlNormalized_tauIdPassed),
+        )
+    ),
+    norm = cms.double(1.)                                                             
+)
+
+process.compScaledDistributions_tauIdPassed = cms.EDAnalyzer("DQMHistScaler",
+    config = cms.VPSet(
+        cms.PSet(
+            dqmDirectory_input = cms.string(dqmDirectory_Ztautau_controlNormalized_tauIdPassed),
+            dqmDirectory_output = cms.string(dqmDirectory_Ztautau_controlScaled_tauIdPassed),
+            meNameScaleFactor = cms.string(
+              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_Ztautau_norm
+            ),
+            meNameScaleFactorErr = cms.string(
+              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_Ztautau_normErr
+            ),
+            meType = cms.string("real")
+        ),
+        cms.PSet(
+            dqmDirectory_input = cms.string(dqmDirectory_WplusJets_controlNormalized_tauIdPassed),
+            dqmDirectory_output = cms.string(dqmDirectory_WplusJets_controlScaled_tauIdPassed),
+            meNameScaleFactor = cms.string(
+              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_WplusJets_norm
+            ),
+            meNameScaleFactorErr = cms.string(
+              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_WplusJets_normErr
+            ),
+            meType = cms.string("real")
+        ),
+        cms.PSet(
+            dqmDirectory_input = cms.string(dqmDirectory_QCD_controlNormalized_tauIdPassed),
+            dqmDirectory_output = cms.string(dqmDirectory_QCD_controlScaled_tauIdPassed),
+            meNameScaleFactor = cms.string(
+              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_QCD_norm
+            ),
+            meNameScaleFactorErr = cms.string(
+              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_QCD_normErr
+            ),
+            meType = cms.string("real")
+        )
+    )
+)
+
+##process.addScaledDistributions_tauIdPassed = cms.EDAnalyzer("DQMHistAdder",
+##    smSum = cms.PSet(
+##        dqmDirectories_input = cms.vstring(
+##            dqmDirectory_Ztautau_controlScaled_tauIdPassed,
+##            dqmDirectory_WplusJets_controlScaled_tauIdPassed,
+##            dqmDirectory_QCD_controlScaled_tauIdPassed,
+##            dqmDirectory_Zmumu_control_tauIdPassed,
+##            dqmDirectory_TTplusJets_control_tauIdPassed
+##        ),
+##        dqmDirectory_output = cms.string(dqmDirectory_smSum_control_tauIdPassed)
+##    )
+##)
+
+process.plotScaledDistributions_tauIdPassed = copy.deepcopy(plotTauIdEffZtoMuTau)
+print process.dumpPython()
+process.plotScaledDistributions_tauIdPassed.processes.Ztautau.dqmDirectory = dqmDirectory_Ztautau_controlScaled_tauIdPassed
+process.plotScaledDistributions_tauIdPassed.processes.WplusJets.dqmDirectory = dqmDirectory_WplusJets_controlScaled_tauIdPassed
+process.plotScaledDistributions_tauIdPassed.processes.qcdSum.dqmDirectory = dqmDirectory_QCD_controlScaled_tauIdPassed
+process.plotScaledDistributions_tauIdPassed.processes.Zmumu.dqmDirectory = dqmDirectory_Zmumu_control_tauIdPassed
+process.plotScaledDistributions_tauIdPassed.processes.TTplusJets.dqmDirectory = dqmDirectory_TTplusJets_control_tauIdPassed
+drawJobConfigurator_TauIdEffZtoMuTau_tauIdPassed = drawJobConfigurator(
+    template = plots_TauIdEffZtoMuTau,
+    dqmDirectory = '#PROCESSDIR#/TauIdEffAnalyzerZtoMuTauCombinedFit/'
+)
+drawJobConfigurator_TauIdEffZtoMuTau_tauIdPassed.add(
+    plots = [
+        drawJobConfigEntry(
+            meName = 'MuonQuantities/Muon#PAR#',
+            PAR = [ 'Pt', 'Eta', 'Phi' ],
+            title = "Muon",
+            xAxis = '#PAR#',
+            name = "muon"
+        ),
+        drawJobConfigEntry(
+            meName = 'TauQuantities/Tau#PAR#',
+            PAR = [ 'Pt', 'Eta', 'Phi' ],
+            title = "Tau",
+            xAxis = '#PAR#',
+            name = "tau"
+        ),
+        drawJobConfigEntry(
+            meName = 'TauIdEffSpecificQuantities/DiTauVisMassFromJetP4',
+            title = "M_{vis}(Muon + Jet)",
+            xAxis = 'Mass',
+            name = "mVisiblePFJet"
+        ),
+        drawJobConfigEntry(
+            meName = 'DiTauCandidateQuantities/Mt1MET',
+            title = "M_{T}(Muon + MET)",
+            xAxis = 'Mt',
+            name = "mtMuonMET"
+        ),
+    ]
+)
+process.plotScaledDistributions_tauIdPassed.drawJobs = drawJobConfigurator_TauIdEffZtoMuTau_tauIdPassed.configure()
+process.plotScaledDistributions_tauIdPassed.indOutputFileName = cms.string('computeTauIdEffZtoMuTauCombinedFit_tauIdPassed_#PLOT#.png')
+
+process.makeControlPlotsTauIdEffZtoMuTauSideband_tauIdPassed = cms.Sequence(
+    process.compNormalizedDistributions_tauIdPassed
+   * process.compScaledDistributions_tauIdPassed
+   ##* process.addScaledDistributions_tauIdPassed
+   * process.plotScaledDistributions_tauIdPassed
+)
+
+process.compNormalizedDistributions_tauIdFailed = copy.deepcopy(process.compNormalizedDistributions_tauIdPassed)
+process.compNormalizedDistributions_tauIdFailed.config[0].dqmDirectoryInput = dqmDirectory_Ztautau_control_tauIdFailed
+process.compNormalizedDistributions_tauIdFailed.config[0].dqmDirectoryOutput = dqmDirectory_Ztautau_controlNormalized_tauIdFailed
+process.compNormalizedDistributions_tauIdFailed.config[1].dqmDirectoryInput = dqmDirectory_WplusJets_control_tauIdFailed
+process.compNormalizedDistributions_tauIdFailed.config[1].dqmDirectoryOutput = dqmDirectory_WplusJets_controlNormalized_tauIdFailed
+process.compNormalizedDistributions_tauIdFailed.config[2].dqmDirectoryInput = dqmDirectory_QCD_control_tauIdFailed
+process.compNormalizedDistributions_tauIdFailed.config[2].dqmDirectoryOutput = dqmDirectory_QCD_controlNormalized_tauIdFailed
+
+process.compScaledDistributions_tauIdFailed = copy.deepcopy(process.compScaledDistributions_tauIdPassed)
+process.compScaledDistributions_tauIdFailed.config[0].dqmDirectory_input = dqmDirectory_Ztautau_controlNormalized_tauIdFailed
+process.compScaledDistributions_tauIdFailed.config[0].dqmDirectory_output = dqmDirectory_Ztautau_controlScaled_tauIdFailed
+process.compScaledDistributions_tauIdFailed.config[0].meNameScaleFactor = \
+  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_Ztautau_norm
+process.compScaledDistributions_tauIdFailed.config[0].meNameScaleFactorErr = \
+  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_Ztautau_normErr
+process.compScaledDistributions_tauIdFailed.config[1].dqmDirectory_input = dqmDirectory_WplusJets_controlNormalized_tauIdFailed
+process.compScaledDistributions_tauIdFailed.config[1].dqmDirectory_output = dqmDirectory_WplusJets_controlScaled_tauIdFailed
+process.compScaledDistributions_tauIdFailed.config[1].meNameScaleFactor = \
+  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_WplusJets_norm
+process.compScaledDistributions_tauIdFailed.config[1].meNameScaleFactorErr = \
+  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_WplusJets_normErr
+process.compScaledDistributions_tauIdFailed.config[2].dqmDirectory_input = dqmDirectory_QCD_controlNormalized_tauIdFailed
+process.compScaledDistributions_tauIdFailed.config[2].dqmDirectory_output = dqmDirectory_QCD_controlScaled_tauIdFailed
+process.compScaledDistributions_tauIdFailed.config[2].meNameScaleFactor = \
+  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_QCD_norm
+process.compScaledDistributions_tauIdFailed.config[2].meNameScaleFactorErr = \
+  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_QCD_normErr
+
+##process.addScaledDistributions_tauIdFailed = cms.EDAnalyzer("DQMHistAdder",
+##    smSum = cms.PSet(
+##        dqmDirectories_input = cms.vstring(
+##            dqmDirectory_Ztautau_controlScaled_tauIdFailed,
+##            dqmDirectory_WplusJets_controlScaled_tauIdFailed,
+##            dqmDirectory_QCD_controlScaled_tauIdFailed,
+##            dqmDirectory_Zmumu_control_tauIdFailed,
+##            dqmDirectory_TTplusJets_control_tauIdFailed
+##        ),
+##        dqmDirectory_output = cms.string(dqmDirectory_smSum_control_tauIdFailed)
+##    )
+##)
+
+process.plotScaledDistributions_tauIdFailed = copy.deepcopy(process.plotScaledDistributions_tauIdPassed)
+process.plotScaledDistributions_tauIdFailed.processes.Ztautau.dqmDirectory = dqmDirectory_Ztautau_controlScaled_tauIdFailed
+process.plotScaledDistributions_tauIdFailed.processes.WplusJets.dqmDirectory = dqmDirectory_WplusJets_controlScaled_tauIdFailed
+process.plotScaledDistributions_tauIdFailed.processes.qcdSum.dqmDirectory = dqmDirectory_QCD_controlScaled_tauIdFailed
+process.plotScaledDistributions_tauIdFailed.processes.Zmumu.dqmDirectory = dqmDirectory_Zmumu_control_tauIdFailed
+process.plotScaledDistributions_tauIdFailed.processes.TTplusJets.dqmDirectory = dqmDirectory_TTplusJets_control_tauIdFailed
+process.plotScaledDistributions_tauIdFailed.indOutputFileName = cms.string('computeTauIdEffZtoMuTauCombinedFit_tauIdFailed_#PLOT#.png')
+
+process.makeControlPlotsTauIdEffZtoMuTauSideband_tauIdFailed = cms.Sequence(
+    process.compNormalizedDistributions_tauIdFailed
+   * process.compScaledDistributions_tauIdFailed
+   ##* process.addScaledDistributions_tauIdFailed
+   * process.plotScaledDistributions_tauIdFailed
+)
+
+process.makeControlPlotsTauIdEffZtoMuTauSideband = cms.Sequence(
+    process.makeControlPlotsTauIdEffZtoMuTauSideband_tauIdPassed
+   * process.makeControlPlotsTauIdEffZtoMuTauSideband_tauIdFailed
+)    
 
 process.saveFitResultsTauIdEffZtoMuTau = cms.EDAnalyzer("DQMSimpleFileSaver",
     outputFileName = cms.string('fitTauIdEffZtoMuTau_results.root'),
@@ -554,10 +880,15 @@ process.dumpDQMStore = cms.EDAnalyzer("DQMStoreDump")
 
 process.p = cms.Path(
     process.loadTauIdEffZtoMuTau
-  #+ process.dumpDQMStore
-   + process.plotTemplateHistTauIdEffZtoMuTau
-   + process.fitTauIdEffZtoMuTau
-   + process.dumpBinErrorsTauIdEffZtoMuTau 
+   #+ process.dumpDQMStore
+   + process.plotTauIdEffZtoMuTauCombinedFit
+   + process.fitTauIdEffZtoMuTauSideband
+   + process.dumpDQMStore
+   + process.extrapolateTauIdEffZtoMuTauSideband
+   + process.compBackgroundSumSideband
+   + process.compBgCorrectionsSideband
+   + process.dumpBinErrorsTauIdEffZtoMuTau
+   + process.makeControlPlotsTauIdEffZtoMuTauSideband
    + process.saveFitResultsTauIdEffZtoMuTau
 )
 
