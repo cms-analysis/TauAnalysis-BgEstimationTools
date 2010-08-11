@@ -75,36 +75,36 @@ meName_muonPtVsAbsEta_norm = meName_muonPtVsAbsEta + '_norm'
 process.normalizeTauIdEffKineReweightHistogramsZtoMuTau = cms.EDAnalyzer("DQMHistNormalizer",
     config = cms.VPSet(
         cms.PSet(
-            meNameInput = cms.string(dqmDirectory_qcdSumLooseMuonIso + '/' + meName_muonPtVsAbsEta),
-            meNameOutput = cms.string(dqmDirectory_qcdSumLooseMuonIso + '/' + meName_muonPtVsAbsEta_norm)
+            meName_input = cms.string(dqmDirectory_qcdSumLooseMuonIso + '/' + meName_muonPtVsAbsEta),
+            meName_output = cms.string(dqmDirectory_qcdSumLooseMuonIso + '/' + meName_muonPtVsAbsEta_norm)
         ),
         cms.PSet(
-            meNameInput = cms.string(dqmDirectory_qcdSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta),
-            meNameOutput = cms.string(dqmDirectory_qcdSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta_norm)
+            meName_input = cms.string(dqmDirectory_qcdSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta),
+            meName_output = cms.string(dqmDirectory_qcdSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta_norm)
         ),
         cms.PSet(
-            meNameInput = cms.string(dqmDirectory_qcdSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta),
-            meNameOutput = cms.string(dqmDirectory_qcdSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta_norm)
+            meName_input = cms.string(dqmDirectory_qcdSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta),
+            meName_output = cms.string(dqmDirectory_qcdSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta_norm)
         ),
         cms.PSet(
-            meNameInput = cms.string(dqmDirectory_qcdSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta),
-            meNameOutput = cms.string(dqmDirectory_qcdSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta_norm)
+            meName_input = cms.string(dqmDirectory_qcdSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta),
+            meName_output = cms.string(dqmDirectory_qcdSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta_norm)
         ),
         cms.PSet(
-            meNameInput = cms.string(dqmDirectory_smSumLooseMuonIso + '/' + meName_muonPtVsAbsEta),
-            meNameOutput = cms.string(dqmDirectory_smSumLooseMuonIso + '/' + meName_muonPtVsAbsEta_norm)
+            meName_input = cms.string(dqmDirectory_smSumLooseMuonIso + '/' + meName_muonPtVsAbsEta),
+            meName_output = cms.string(dqmDirectory_smSumLooseMuonIso + '/' + meName_muonPtVsAbsEta_norm)
         ),
         cms.PSet(
-            meNameInput = cms.string(dqmDirectory_smSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta),
-            meNameOutput = cms.string(dqmDirectory_smSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta_norm)
+            meName_input = cms.string(dqmDirectory_smSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta),
+            meName_output = cms.string(dqmDirectory_smSumTightMuonTrkIso + '/' + meName_muonPtVsAbsEta_norm)
         ),
         cms.PSet(
-            meNameInput = cms.string(dqmDirectory_smSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta),
-            meNameOutput = cms.string(dqmDirectory_smSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta_norm)
+            meName_input = cms.string(dqmDirectory_smSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta),
+            meName_output = cms.string(dqmDirectory_smSumTightMuonEcalIso + '/' + meName_muonPtVsAbsEta_norm)
         ),
         cms.PSet(
-            meNameInput = cms.string(dqmDirectory_smSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta),
-            meNameOutput = cms.string(dqmDirectory_smSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta_norm)
+            meName_input = cms.string(dqmDirectory_smSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta),
+            meName_output = cms.string(dqmDirectory_smSumTightMuonCombIso + '/' + meName_muonPtVsAbsEta_norm)
         )
     ),
     norm = cms.double(1.)                                                                     
