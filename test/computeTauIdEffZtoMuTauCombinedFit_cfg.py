@@ -878,34 +878,22 @@ process.compScaledDistributions_tauIdPassed = cms.EDAnalyzer("DQMHistScaler",
         cms.PSet(
             dqmDirectory_input = cms.string(dqmDirectory_Ztautau_controlNormalized_tauIdPassed),
             dqmDirectory_output = cms.string(dqmDirectory_Ztautau_controlScaled_tauIdPassed),
-            meName_scaleFactor = cms.string(
-              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_Ztautau_norm
-            ),
-            meName_scaleFactorErr = cms.string(
-              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_Ztautau_normErr
-            ),
+            meName_scaleFactor = process.compBgCorrectionsSideband_tauIdPassed.config[0].meName_difference,
+            meName_scaleFactorErr = process.compBgCorrectionsSideband_tauIdPassed.config[0].meName_differenceErr,
             meType = cms.string("real")
         ),
         cms.PSet(
             dqmDirectory_input = cms.string(dqmDirectory_WplusJets_controlNormalized_tauIdPassed),
             dqmDirectory_output = cms.string(dqmDirectory_WplusJets_controlScaled_tauIdPassed),
-            meName_scaleFactor = cms.string(
-              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_WplusJets_norm
-            ),
-            meName_scaleFactorErr = cms.string(
-              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_WplusJets_normErr
-            ),
+            meName_scaleFactor = process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed.config[0].meName_output,
+            meName_scaleFactorErr = process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed.config[0].meName_outputErr,
             meType = cms.string("real")
         ),
         cms.PSet(
             dqmDirectory_input = cms.string(dqmDirectory_QCD_controlNormalized_tauIdPassed),
             dqmDirectory_output = cms.string(dqmDirectory_QCD_controlScaled_tauIdPassed),
-            meName_scaleFactor = cms.string(
-              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_QCD_norm
-            ),
-            meName_scaleFactorErr = cms.string(
-              process.fitTauIdEffZtoMuTauSideband_tauIdPassed.output.fitResults.dqmDirectory.value() + '/' + meName_QCD_normErr
-            ),
+            meName_scaleFactor = process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed.config[1].meName_output,
+            meName_scaleFactorErr = process.extrapolateTauIdEffZtoMuTauSideband_tauIdPassed.config[1].meName_outputErr,
             meType = cms.string("real")
         )
     )
@@ -1002,21 +990,21 @@ process.compScaledDistributions_tauIdFailed = copy.deepcopy(process.compScaledDi
 process.compScaledDistributions_tauIdFailed.config[0].dqmDirectory_input = dqmDirectory_Ztautau_controlNormalized_tauIdFailed
 process.compScaledDistributions_tauIdFailed.config[0].dqmDirectory_output = dqmDirectory_Ztautau_controlScaled_tauIdFailed
 process.compScaledDistributions_tauIdFailed.config[0].meName_scaleFactor = \
-  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_Ztautau_norm
+  process.compBgCorrectionsSideband_tauIdFailed.config[0].meName_difference
 process.compScaledDistributions_tauIdFailed.config[0].meName_scaleFactorErr = \
-  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_Ztautau_normErr
+  process.compBgCorrectionsSideband_tauIdFailed.config[0].meName_differenceErr
 process.compScaledDistributions_tauIdFailed.config[1].dqmDirectory_input = dqmDirectory_WplusJets_controlNormalized_tauIdFailed
 process.compScaledDistributions_tauIdFailed.config[1].dqmDirectory_output = dqmDirectory_WplusJets_controlScaled_tauIdFailed
 process.compScaledDistributions_tauIdFailed.config[1].meName_scaleFactor = \
-  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_WplusJets_norm
+  process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed.config[0].meName_output
 process.compScaledDistributions_tauIdFailed.config[1].meName_scaleFactorErr = \
-  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_WplusJets_normErr
+  process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed.config[0].meName_outputErr
 process.compScaledDistributions_tauIdFailed.config[2].dqmDirectory_input = dqmDirectory_QCD_controlNormalized_tauIdFailed
 process.compScaledDistributions_tauIdFailed.config[2].dqmDirectory_output = dqmDirectory_QCD_controlScaled_tauIdFailed
 process.compScaledDistributions_tauIdFailed.config[2].meName_scaleFactor = \
-  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_QCD_norm
+  process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed.config[1].meName_output
 process.compScaledDistributions_tauIdFailed.config[2].meName_scaleFactorErr = \
-  process.fitTauIdEffZtoMuTauSideband_tauIdFailed.output.fitResults.dqmDirectory.value() + '/' + meName_QCD_normErr
+  process.extrapolateTauIdEffZtoMuTauSideband_tauIdFailed.config[1].meName_outputErr
 
 ##process.addScaledDistributions_tauIdFailed = cms.EDAnalyzer("DQMHistAdder",
 ##    smSum = cms.PSet(
