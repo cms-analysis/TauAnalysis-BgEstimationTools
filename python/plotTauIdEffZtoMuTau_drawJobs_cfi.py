@@ -33,7 +33,7 @@ plots_TauIdEffZtoMuTau = cms.PSet(
 
 drawJobConfigurator_TauIdEffZtoMuTau = drawJobConfigurator(
     template = plots_TauIdEffZtoMuTau,
-    dqmDirectory = '#PROCESSDIR#/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/'
+    dqmDirectory = '#PROCESSDIR#/TauIdEffAnalyzerZtoMuTauTemplateFit/'
 )
 
 #--------------------------------------------------------------------------------
