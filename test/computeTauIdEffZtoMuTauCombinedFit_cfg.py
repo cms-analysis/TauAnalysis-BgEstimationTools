@@ -13,8 +13,10 @@ import copy
 from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
 from TauAnalysis.BgEstimationTools.tools.drawTemplateHistConfigurator import drawTemplateHistConfigurator
 from TauAnalysis.BgEstimationTools.templateHistDefinitions_cfi import drawJobTemplateHist
-from TauAnalysis.BgEstimationTools.plotTauIdEffZtoMuTau_cff import plotTauIdEffZtoMuTau, plots_TauIdEffZtoMuTau
+from TauAnalysis.Configuration.plotZtoMuTau_cff import plotZtoMuTau
+from TauAnalysis.Configuration.plotZtoMuTau_drawJobs_cfi import plots_ZtoMuTau
 from TauAnalysis.DQMTools.tools.drawJobConfigurator import *
+from TauAnalysis.DQMTools.plotterStyleDefinitions_cfi import *
 
 processName = 'computeTauIdEffZtoMuTauCombinedFit'
 process = cms.Process(processName)
@@ -144,12 +146,94 @@ dqmDirectory_smSum_control_tauIdFailed = dqmDirectory_smSum_control + '/' + 'tau
 
 dqmDirectory_Data = \
   'harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'
+dqmDirectory_Data_tauIdPassed = dqmDirectory_Data + '/' + 'tauIdEffHistograms2regions/region02'
+dqmDirectory_Data_tauIdFailed = dqmDirectory_Data + '/' + 'tauIdEffHistograms2regions/region01'
 
 #--------------------------------------------------------------------------------
 # define names of histograms used in fit
 #--------------------------------------------------------------------------------
 
 meName_Mt = 'DiTauCandidateQuantities/Mt1MET'
+
+#--------------------------------------------------------------------------------
+# print-out contributions of different processes
+# to tau id. passed/tau id. failed regions and to sidebands
+#--------------------------------------------------------------------------------
+
+process.dumpTauIdEffZtoMuTauBinningResults2regions = cms.EDAnalyzer("DQMDumpBinningResults",
+    binningService = cms.PSet(
+        pluginType = cms.string("DataBinningService"),
+        dqmDirectories = cms.PSet(
+            Ztautau = cms.string(dqmDirectory_Ztautau_control + '/' + 'tauIdEffBinningResults2regions/'),
+            Zmumu = cms.string(dqmDirectory_Zmumu_control + '/' + 'tauIdEffBinningResults2regions/'),
+            WplusJets = cms.string(dqmDirectory_WplusJets_control + '/' + 'tauIdEffBinningResults2regions/'),
+            QCD = cms.string(dqmDirectory_QCD_control + '/' + 'tauIdEffBinningResults2regions/'),
+            TTplusJets = cms.string(dqmDirectory_TTplusJets_control + '/' + 'tauIdEffBinningResults2regions/')
+        )
+    )
+)
+
+process.dumpTauIdEffZtoMuTauBinningResultsSidebandQCD = cms.EDAnalyzer("DQMDumpBinningResults",
+    binningService = cms.PSet(
+        pluginType = cms.string("DataBinningService"),
+        dqmDirectories = cms.PSet(
+            Ztautau = cms.string(
+              'harvested/Ztautau/TauIdEffAnalyzerZtoMuTauCombinedFitQCD' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'
+            ),
+            Zmumu = cms.string(
+              'harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFitQCD' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'
+            ),
+            WplusJets = cms.string(
+              'harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitQCD' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'
+            ),
+            QCD = cms.string(
+              'harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'
+            ),
+            TTplusJets = cms.string(
+              'harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitQCD' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'
+            )
+        )
+    )
+)
+
+process.dumpTauIdEffZtoMuTauBinningResultsSidebandWplusJets = cms.EDAnalyzer("DQMDumpBinningResults",
+    binningService = cms.PSet(
+        pluginType = cms.string("DataBinningService"),
+        dqmDirectories = cms.PSet(
+            Ztautau = cms.string(
+              'harvested/Ztautau/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dWplusJets/'
+            ),
+            Zmumu = cms.string(
+              'harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dWplusJets/'
+            ),
+            WplusJets = cms.string(
+              'harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dWplusJets/'
+            ),
+            QCD = cms.string(
+              'harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dWplusJets/'
+            ),
+            TTplusJets = cms.string(
+              'harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets' \
+             + '/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dWplusJets/'
+            )
+        )
+    )
+)
+
+process.dumpTauIdEffZtoMuTauBinningResults = cms.Sequence(
+    process.dumpTauIdEffZtoMuTauBinningResults2regions
+   * process.dumpTauIdEffZtoMuTauBinningResultsSidebandQCD
+   * process.dumpTauIdEffZtoMuTauBinningResultsSidebandWplusJets
+)
 
 #--------------------------------------------------------------------------------
 # plot template histograms of "pure" Monte Carlo processes
@@ -840,14 +924,30 @@ process.compScaledDistributions_tauIdPassed = cms.EDAnalyzer("DQMHistScaler",
 ##    )
 ##)
 
-process.plotScaledDistributions_tauIdPassed = copy.deepcopy(plotTauIdEffZtoMuTau)
+process.plotScaledDistributions_template = copy.deepcopy(plots_ZtoMuTau)
+process.plotScaledDistributions_template.plots.processes = cms.vstring(
+    'Zmumu',
+    'WplusJets',
+    'TTplusJets',
+    'qcdSum',
+    'Ztautau',
+    'Data'
+)
+
+process.plotScaledDistributions_tauIdPassed = copy.deepcopy(plotZtoMuTau)
 process.plotScaledDistributions_tauIdPassed.processes.Ztautau.dqmDirectory = dqmDirectory_Ztautau_controlScaled_tauIdPassed
 process.plotScaledDistributions_tauIdPassed.processes.WplusJets.dqmDirectory = dqmDirectory_WplusJets_controlScaled_tauIdPassed
 process.plotScaledDistributions_tauIdPassed.processes.qcdSum.dqmDirectory = dqmDirectory_QCD_controlScaled_tauIdPassed
 process.plotScaledDistributions_tauIdPassed.processes.Zmumu.dqmDirectory = dqmDirectory_Zmumu_control_tauIdPassed
 process.plotScaledDistributions_tauIdPassed.processes.TTplusJets.dqmDirectory = dqmDirectory_TTplusJets_control_tauIdPassed
+process.plotScaledDistributions_tauIdPassed.processes.Data = cms.PSet(
+   dqmDirectory = cms.string(dqmDirectory_Data_tauIdPassed),
+   legendEntry = cms.string('Data'),
+   type = cms.string('Data') # 'Data' / 'smMC' / 'bsmMC' / 'smSumMC'
+)
+process.plotScaledDistributions_tauIdPassed.drawOptionSets.default.Data = drawOption_Data
 drawJobConfigurator_TauIdEffZtoMuTau_tauIdPassed = drawJobConfigurator(
-    template = plots_TauIdEffZtoMuTau,
+    template = process.plotScaledDistributions_template,
     dqmDirectory = '#PROCESSDIR#/'
 )
 drawJobConfigurator_TauIdEffZtoMuTau_tauIdPassed.add(
@@ -937,6 +1037,7 @@ process.plotScaledDistributions_tauIdFailed.processes.WplusJets.dqmDirectory = d
 process.plotScaledDistributions_tauIdFailed.processes.qcdSum.dqmDirectory = dqmDirectory_QCD_controlScaled_tauIdFailed
 process.plotScaledDistributions_tauIdFailed.processes.Zmumu.dqmDirectory = dqmDirectory_Zmumu_control_tauIdFailed
 process.plotScaledDistributions_tauIdFailed.processes.TTplusJets.dqmDirectory = dqmDirectory_TTplusJets_control_tauIdFailed
+process.plotScaledDistributions_tauIdFailed.processes.Data.dqmDirectory = dqmDirectory_Data_tauIdFailed
 process.plotScaledDistributions_tauIdFailed.indOutputFileName = cms.string('computeTauIdEffZtoMuTauCombinedFit_tauIdFailed_#PLOT#.png')
 
 process.makeControlPlotsTauIdEffZtoMuTauSideband_tauIdFailed = cms.Sequence(
@@ -961,6 +1062,7 @@ process.dumpDQMStore = cms.EDAnalyzer("DQMStoreDump")
 process.p = cms.Path(
     process.loadTauIdEffZtoMuTau
    #+ process.dumpDQMStore
+   + process.dumpTauIdEffZtoMuTauBinningResults
    + process.plotTauIdEffZtoMuTauCombinedFit
    + process.fitTauIdEffZtoMuTauSideband
    #+ process.dumpDQMStore
