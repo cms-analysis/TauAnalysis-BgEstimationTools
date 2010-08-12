@@ -256,7 +256,9 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     #       must enter event weight computation !!
     #
     process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('shrinkingConePFTauProducer')
+    process.producePrePat._seq = process.producePrePat._seq * process.associateTauFakeRates
     process.producePrePat._seq = process.producePrePat._seq * process.bgEstFakeRateJetWeights
+    process.patTaus.addEfficiencies = cms.bool(True)
     process.tausForFakeRateEventWeights = cms.EDFilter("PATTauSelector",
         src = cms.InputTag('selectedPatTausForMuTauLeadTrkPtCumulative'),               
         #cut = cms.string('tauID("againstMuon") > 0.5'),
