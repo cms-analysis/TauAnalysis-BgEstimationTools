@@ -114,9 +114,10 @@ produceDiMuPairsTauIdEffZtoMuTauTemplateFit = cms.Sequence(
 # produce collection of muon + tau-jet combinations
 #--------------------------------------------------------------------------------
 
+from TauAnalysis.CandidateTools.muTauPairProduction_cff import *
 from TauAnalysis.CandidateTools.resolutions_cfi import *
 
-muTauPairsTauIdEffZtoMuTauTemplateFit = cms.EDProducer("PATMuTauPairProducer",
+muTauPairsTauIdEffZtoMuTauTemplateFit = allMuTauPairs.clone(
     useLeadingTausOnly = cms.bool(False),
     srcLeg1 = cms.InputTag('muonsForTauIdEffZtoMuTauTemplateFitTrkIPcumulative'),
     srcLeg2 = cms.InputTag('tausForTauIdEffZtoMuTauTemplateFitMuonVetoCumulative'),
@@ -130,9 +131,7 @@ muTauPairsTauIdEffZtoMuTauTemplateFit = cms.EDProducer("PATMuTauPairProducer",
             metResolutionPx = pfMEtResolutionPx,
             metResolutionPy = pfMEtResolutionPy
         )
-    ),                                                       
-    scaleFuncImprovedCollinearApprox = cms.string('1'),                                        
-    verbosity = cms.untracked.int32(0)
+    )
 )
 
 muTauPairsTauIdEffZtoMuTauTemplateFitMt1MET = cms.EDFilter("PATMuTauPairSelector",
@@ -456,8 +455,8 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
             ),
             replace = cms.vstring(
                 'muonHistManagerTauIdEffZtoMuTauTemplateFit.muonSource = muonsForTauIdEffZtoMuTauTemplateFitTrkIPcumulative',
-                'diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit.diTauCandidateSource = muTauPairsTauIdEffZtoMuTauTemplateFitBackToBackCumulative',
-                'pfMEtHistManager.metSource = pfMEtForTauIdEffZtoMuTauTemplateFitPt20'
+                'diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit.diTauCandidateSource = muTauPairsTauIdEffZtoMuTauTemplateFitBackToBackCumulative'
+                ##'pfMEtHistManager.metSource = pfMEtForTauIdEffZtoMuTauTemplateFitPt20'
             )
         )
     )
