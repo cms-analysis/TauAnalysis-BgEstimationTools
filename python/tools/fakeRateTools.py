@@ -103,7 +103,7 @@ def addGenAnalyzerModule(process, genAnalyzerModule, label, analysisSequence):
 
 def addFakeRateGenAnalyzerModule(process, genAnalyzerModule, frType, bgEstFakeRateAnalysisSequence):
 
-    bgEstFakeRateAnalyzer = makeGenAnalyzerModule(process, genAnalyzerModule, frType)
+    bgEstFakeRateAnalyzer = makeGenAnalyzerModule(process, genAnalyzerModule, "fr" + "_" + frType)
 
     srcFakeRateEventWeight = cms.VInputTag(cms.InputTag("bgEstFakeRateEventWeights", frType))
     setattr(bgEstFakeRateAnalyzer, "eventWeightSource", srcFakeRateEventWeight)
@@ -230,6 +230,55 @@ def reconfigDQMFileLoader(dqmFileLoaderConfig, dqmDirectory):
                 setattr(processConfigEntry, "dqmDirectory_store", dqmDirectory_new)
 
 #--------------------------------------------------------------------------------
+# auxiliary functions needed for adding fake-rate producer modules
+# to PAT production sequence (**not** channel specific)
+#--------------------------------------------------------------------------------
+
+def configureFakeRateWeightProduction(process, method = None, preselPFTauJetSource = 'shrinkingConePFTauProducer',
+                                      patTauJetCut = "tauID('againstElectron') > 0.5 & tauID('againstMuon') > 0.5"):
+
+    # check validity of method parameter
+    if method is None:
+        raise ValueError("Undefined method Parameter !!")
+    else:
+        if method != "simple" and method != "CDF":
+            raise ValueError("Invalid method Parameter !!")
+    
+    # compute fake-rate weights
+    #
+    # NOTE: jet weights are computed for all (shrinking signal cone) reco::PFTaus,
+    #       but only those tau-jet candidates passing preselection on PAT level
+    #       must enter event weight computation !!
+    #    
+    process.load("RecoTauTag.TauAnalysisTools.PFTauEfficiencyAssociator_cfi")
+    process.producePrePat._seq = process.producePrePat._seq * process.associateTauFakeRates
+    
+    process.load("TauAnalysis.BgEstimationTools.fakeRateJetWeightProducer_cfi")    
+    process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag(preselPFTauJetSource)
+    process.bgEstFakeRateJetWeights.method = method
+    process.producePrePat._seq = process.producePrePat._seq * process.bgEstFakeRateJetWeights
+
+    process.tausForFakeRateEventWeights = cms.EDFilter("PATTauSelector",
+        src = cms.InputTag('selectedPatTausForMuTauLeadTrkPtCumulative'),               
+        cut = cms.string(patTauJetCut),
+        filter = cms.bool(False)
+    )
+    
+    process.load("TauAnalysis.BgEstimationTools.fakeRateEventWeightProducer_cfi")
+    process.bgEstFakeRateEventWeights.preselTauJetSource = cms.InputTag('tausForFakeRateEventWeights')
+    process.bgEstFakeRateEventWeights.method = method
+    process.produceFakeRateEventWeights = cms.Sequence(process.tausForFakeRateEventWeights + process.bgEstFakeRateEventWeights)
+    process.producePatTupleZtoMuTauSpecific._seq = process.producePatTupleZtoMuTauSpecific._seq * process.produceFakeRateEventWeights
+
+    # add fake-rates to pat::Tau
+    frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
+    for frType in frTypes: 
+        frLabel = "".join(["bgEstFakeRateJetWeight", "_", frType])
+        frInputTag = cms.InputTag('bgEstFakeRateJetWeights', frType)
+        setattr(process.patTaus.efficiencies, frLabel, frInputTag)
+    process.patTaus.addEfficiencies = cms.bool(True)    
+
+#--------------------------------------------------------------------------------
 # utility functions specific to application of fake-rate technique
 # for data-driven background estimation to Z --> mu + tau-jet channel
 #
@@ -250,24 +299,7 @@ def enableFakeRates_runZtoMuTau(process, method = None):
             raise ValueError("Invalid method Parameter !!")
 
     # compute fake-rate weights
-    #
-    # NOTE: jet weights are computed for all (shrinking signal cone) reco::PFTaus,
-    #       but only those tau-jet candidates passing preselection on PAT level
-    #       must enter event weight computation !!
-    #
-    process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag('shrinkingConePFTauProducer')
-    process.producePrePat._seq = process.producePrePat._seq * process.associateTauFakeRates
-    process.producePrePat._seq = process.producePrePat._seq * process.bgEstFakeRateJetWeights
-    process.patTaus.addEfficiencies = cms.bool(True)
-    process.tausForFakeRateEventWeights = cms.EDFilter("PATTauSelector",
-        src = cms.InputTag('selectedPatTausForMuTauLeadTrkPtCumulative'),               
-        #cut = cms.string('tauID("againstMuon") > 0.5'),
-        cut = cms.string('tauID("againstElectron") > 0.5 & tauID("againstMuon") > 0.5'),                                               
-        filter = cms.bool(False)
-    )
-    process.bgEstFakeRateEventWeights.preselTauJetSource = cms.InputTag('tausForFakeRateEventWeights')
-    process.produceFakeRateEventWeights = cms.Sequence(process.tausForFakeRateEventWeights + process.bgEstFakeRateEventWeights)
-    process.producePatTupleZtoMuTauSpecific._seq = process.producePatTupleZtoMuTauSpecific._seq * process.produceFakeRateEventWeights
+    configureFakeRateWeightProduction(process, method = method)
         
     # disable cuts on tau id. discriminators
     #
@@ -296,19 +328,6 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     #
     changeCut(process, "selectedMuTauPairsZeroCharge", "leg2.leadPFChargedHadrCand.isNonnull & (leg1.charge + leg2.leadPFChargedHadrCand.charge) = 0")
 
-    # set method parameter in fakeRateWeight producer modules
-    process.bgEstFakeRateJetWeights.method = method
-    process.bgEstFakeRateEventWeights.method = method
-
-    # get list of fake-rates types to be processed
-    frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
-
-    # add fake-rates to pat::Tau
-    for frType in frTypes: 
-        frLabel = "".join(["bgEstFakeRateJetWeight", "_", frType])
-        frInputTag = cms.InputTag('bgEstFakeRateJetWeights', frType)
-        setattr(process.patTaus.efficiencies, frLabel, frInputTag)
-
     # fill histograms only for events passing all event selection critera;
     # disable storing run and event numbers for events passing selection
     # (in order to save space in the .root files)
@@ -318,8 +337,6 @@ def enableFakeRates_runZtoMuTau(process, method = None):
         pruneAnalysisSequence(process.analyzeZtoMuTauEvents_factorizedWithMuonIsolation)
     else:
         pruneAnalysisSequence(process.analyzeZtoMuTauEvents)
-
-    bgEstFakeRateAnalysisSequence = None  
 
     # disable event print-out for all analysis sequences
     if ( hasattr(process, "analyzeZtoMuTauEvents_factorizedWithoutMuonIsolation") and \
@@ -332,6 +349,11 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     # enable checking of fake-rates and tau id. efficiencies
     # with event weights in tau-jet histogram manager
     setattr(process.tauHistManager, "checkWeightConsistency", cms.bool(True))
+
+    # get list of fake-rates types to be processed
+    frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
+
+    bgEstFakeRateAnalysisSequence = None  
 
     # duplicate analysis sequence:
     #  1.) tau id. discriminators not applied
@@ -452,11 +474,11 @@ def enableFakeRates_makeZtoMuTauPlots(process, enableFactorization = True):
 
         mod_addZtoMuTau_qcdSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate)
         modInputDir_addZtoMuTau_qcdSum = cms.vstring(
-            "".join(['tauFakeRate/harvested/InclusivePPmuX/zMuTauAnalyzer', '_', frType]),
-            "".join(['tauFakeRate/harvested/PPmuXptGt20/zMuTauAnalyzer', '_', frType])
+            "".join(['tauFakeRate/harvested/InclusivePPmuX/zMuTauAnalyzer', '_fr_', frType]),
+            "".join(['tauFakeRate/harvested/PPmuXptGt20/zMuTauAnalyzer', '_fr_', frType])
         )
         setattr(mod_addZtoMuTau_qcdSum.qcdSum, "dqmDirectories_input", modInputDir_addZtoMuTau_qcdSum)
-        modOutputDir_addZtoMuTau_qcdSum = cms.string("".join(['tauFakeRate/harvested/qcdSum/zMuTauAnalyzer', '_', frType]))
+        modOutputDir_addZtoMuTau_qcdSum = cms.string("".join(['tauFakeRate/harvested/qcdSum/zMuTauAnalyzer', '_fr_', frType]))
         setattr(mod_addZtoMuTau_qcdSum.qcdSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_qcdSum)
         modName_addZtoMuTau_qcdSum = "".join(["addBgEstFakeRateZtoMuTau_qcdSum_tauFakeRate", "_", frType])
         setattr(process, modName_addZtoMuTau_qcdSum, mod_addZtoMuTau_qcdSum)
@@ -467,13 +489,13 @@ def enableFakeRates_makeZtoMuTauPlots(process, enableFactorization = True):
         if hasattr(process, "addBgEstFakeRateZtoMuTau_smBgSum_tauFakeRate"):
             mod_addZtoMuTau_smBgSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_smBgSum_tauFakeRate)
             modInputDir_addZtoMuTau_smBgSum = cms.vstring(
-                "".join(['tauFakeRate/harvested/Zmumu/zMuTauAnalyzer', '_', frType]),
-                "".join(['tauFakeRate/harvested/WplusJets/zMuTauAnalyzer', '_', frType]),
-                "".join(['tauFakeRate/harvested/TTplusJets/zMuTauAnalyzer', '_', frType]),
-                "".join(['tauFakeRate/harvested/qcdSum/zMuTauAnalyzer', '_', frType])
+                "".join(['tauFakeRate/harvested/Zmumu/zMuTauAnalyzer', '_fr_', frType]),
+                "".join(['tauFakeRate/harvested/WplusJets/zMuTauAnalyzer', '_fr_', frType]),
+                "".join(['tauFakeRate/harvested/TTplusJets/zMuTauAnalyzer', '_fr_', frType]),
+                "".join(['tauFakeRate/harvested/qcdSum/zMuTauAnalyzer', '_fr_', frType])
             )
             setattr(mod_addZtoMuTau_smBgSum.smBgSum, "dqmDirectories_input", modInputDir_addZtoMuTau_smBgSum)
-            modOutputDir_addZtoMuTau_smBgSum = cms.string("".join(['tauFakeRate/harvested/smBgSum/zMuTauAnalyzer', '_', frType]))
+            modOutputDir_addZtoMuTau_smBgSum = cms.string("".join(['tauFakeRate/harvested/smBgSum/zMuTauAnalyzer', '_fr_', frType]))
             setattr(mod_addZtoMuTau_smBgSum.smBgSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_smBgSum)
             modName_addZtoMuTau_smBgSum = "".join(["addBgEstFakeRateZtoMuTau_smBgSum_tauFakeRate", "_", frType])
             setattr(process, modName_addZtoMuTau_smBgSum, mod_addZtoMuTau_smBgSum)
@@ -484,11 +506,11 @@ def enableFakeRates_makeZtoMuTauPlots(process, enableFactorization = True):
         if hasattr(process, "addBgEstFakeRateZtoMuTau_smSum_tauFakeRate"):
             mod_addZtoMuTau_smSum = copy.deepcopy(process.addBgEstFakeRateZtoMuTau_smSum_tauFakeRate)
             modInputDir_addZtoMuTau_smSum = cms.vstring(
-                "".join(['tauFakeRate/harvested/Ztautau/zMuTauAnalyzer', '_', frType]),
-                "".join(['tauFakeRate/harvested/smBgSum/zMuTauAnalyzer', '_', frType])
+                "".join(['tauFakeRate/harvested/Ztautau/zMuTauAnalyzer', '_fr_', frType]),
+                "".join(['tauFakeRate/harvested/smBgSum/zMuTauAnalyzer', '_fr_', frType])
             )
             setattr(mod_addZtoMuTau_smSum.smSum, "dqmDirectories_input", modInputDir_addZtoMuTau_smSum)
-            modOutputDir_addZtoMuTau_smSum = cms.string("".join(['tauFakeRate/harvested/smSum/zMuTauAnalyzer', '_', frType]))
+            modOutputDir_addZtoMuTau_smSum = cms.string("".join(['tauFakeRate/harvested/smSum/zMuTauAnalyzer', '_fr_', frType]))
             setattr(mod_addZtoMuTau_smSum.smSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_smSum)
             modName_addZtoMuTau_smSum = "".join(["addBgEstFakeRateZtoMuTau_smSum_tauFakeRate", "_", frType])
             setattr(process, modName_addZtoMuTau_smSum, mod_addZtoMuTau_smSum)
@@ -500,10 +522,14 @@ def enableFakeRates_makeZtoMuTauPlots(process, enableFactorization = True):
 
         if enableFactorization:
             enableFactorization_makeZtoMuTauPlots(process,
-              dqmDirectoryIn_InclusivePPmuX = "".join(['tauFakeRate/harvested/InclusivePPmuX/zMuTauAnalyzer', '_', frType]),
-              dqmDirectoryOut_InclusivePPmuX = "".join(['tauFakeRate/harvested/InclusivePPmuX_factorized/zMuTauAnalyzer', '_', frType]),
-              dqmDirectoryIn_PPmuXptGt20 = "".join(['tauFakeRate/harvested/PPmuXptGt20/zMuTauAnalyzer', '_', frType]),
-              dqmDirectoryOut_PPmuXptGt20 = "".join(['tauFakeRate/harvested/PPmuXptGt20_factorized/zMuTauAnalyzer', '_', frType]),
+              dqmDirectoryIn_InclusivePPmuX = \
+                "".join(['tauFakeRate/harvested/InclusivePPmuX/zMuTauAnalyzer', '_fr_', frType]),
+              dqmDirectoryOut_InclusivePPmuX = \
+                "".join(['tauFakeRate/harvested/InclusivePPmuX_factorized/zMuTauAnalyzer', '_fr_', frType]),
+              dqmDirectoryIn_PPmuXptGt20 = \
+                "".join(['tauFakeRate/harvested/PPmuXptGt20/zMuTauAnalyzer', '_fr_', frType]),
+              dqmDirectoryOut_PPmuXptGt20 = \
+                "".join(['tauFakeRate/harvested/PPmuXptGt20_factorized/zMuTauAnalyzer', '_fr_', frType]),
               modName_addZtoMuTau_qcdSum = modName_addZtoMuTau_qcdSum,
               modName_addZtoMuTau_smBgSum = modName_addZtoMuTau_smBgSum,         
               modName_addZtoMuTau_smSum = modName_addZtoMuTau_smSum,
@@ -514,7 +540,84 @@ def enableFakeRates_makeZtoMuTauPlots(process, enableFactorization = True):
             setattr(process, "addBgEstFakeRateZtoMuTau_tauFakeRate", cms.Sequence(getattr(process, seqName_addZtoMuTau)))
             seq_isFirstModule = False
         else:
-            process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq = process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq * getattr(process, seqName_addZtoMuTau)
+            process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq = \
+              process.addBgEstFakeRateZtoMuTau_tauFakeRate._seq * getattr(process, seqName_addZtoMuTau)
         
-        
+#--------------------------------------------------------------------------------
+# utility functions specific to application of fake-rate weights
+# to tau id. efficiency measurement analysis
+#--------------------------------------------------------------------------------
 
+def enableFakeRates_runTauIdEffAnalysisZtoMuTau(process):
+
+    method = "simple"
+
+    # compute fake-rate weights
+    configureFakeRateWeightProduction(process, method = method)
+
+    # enable checking of fake-rates and tau id. efficiencies
+    # with event weights in tau-jet histogram manager
+    setattr(process.tauHistManager, "checkWeightConsistency", cms.bool(True))
+
+    # get list of fake-rates types to be processed
+    frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
+
+    fakeRateAnalysisSequence = None  
+
+    # duplicate analysis sequence:
+    #  1.) tau id. discriminators not applied
+    #  2.) events weighted by fake-rate
+    # for each type of fake-rate weights given as function argument
+    #
+    # Note: special care is needed to avoid double-counting
+    #       in case there is more than one (loosely selected) tau-jet candidate in the event
+    #       when filling histograms that are sensitive to the tau-jet multiplicity
+    #
+    for frType in frTypes:
+        fakeRateAnalysisSequence = \
+          addFakeRateGenAnalyzerModule(process, process.analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets,
+                                       frType, fakeRateAnalysisSequence)
+
+    setattr(process, "fakeRateAnalysisSequence", cms.Sequence(fakeRateAnalysisSequence))
+
+    process.bgEstTauIdEffZtoMuTauCombinedFitAnalysisSequence._seq = \
+      process.bgEstTauIdEffZtoMuTauCombinedFitAnalysisSequence._seq * process.fakeRateAnalysisSequence
+
+def enableFakeRates_makeTauIdEffZtoMuTauPlots(process):
+
+    # get list of fake-rates types to be processed
+    process.load("TauAnalysis.BgEstimationTools.fakeRateJetWeightProducer_cfi")
+    frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
+
+    for frType in frTypes:
+
+        mod_addZtoMuTau_qcdSum = copy.deepcopy(process.addTauIdEffZtoMuTau_qcdSum)
+        modInputDir_addZtoMuTau_qcdSum = cms.vstring(
+            "".join(['harvested/InclusivePPmuX/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets', '_fr_', frType]),
+            "".join(['harvested/PPmuXptGt20/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets', '_fr_', frType])
+        )
+        setattr(mod_addZtoMuTau_qcdSum.qcdSum, "dqmDirectories_input", modInputDir_addZtoMuTau_qcdSum)
+        modOutputDir_addZtoMuTau_qcdSum = \
+          cms.string("".join(['tauFakeRate/harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets', '_fr_', frType]))
+        setattr(mod_addZtoMuTau_qcdSum.qcdSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_qcdSum)
+        modName_addZtoMuTau_qcdSum = "".join(["addTauIdEffZtoMuTau_qcdSum", "_", frType])
+        setattr(process, modName_addZtoMuTau_qcdSum, mod_addZtoMuTau_qcdSum)
+        
+        process.addTauIdEffZtoMuTau._seq = process.addTauIdEffZtoMuTau._seq * mod_addZtoMuTau_qcdSum
+             
+        mod_addZtoMuTau_smSum = copy.deepcopy(process.addTauIdEffZtoMuTau_smSum)
+        modInputDir_addZtoMuTau_smSum = cms.vstring(
+            "".join(['harvested/Ztautau/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets', '_fr_', frType]),
+            "".join(['harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets', '_fr_', frType]),
+            "".join(['harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets', '_fr_', frType]),
+            "".join(['harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets', '_fr_', frType]),
+            "".join(['harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets', '_fr_', frType])
+        )
+        setattr(mod_addZtoMuTau_smSum.smSum, "dqmDirectories_input", modInputDir_addZtoMuTau_smSum)
+        modOutputDir_addZtoMuTau_smSum = \
+          cms.string("".join(['tauFakeRate/harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets', '_fr_', frType]))
+        setattr(mod_addZtoMuTau_smSum.smSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_smSum)
+        modName_addZtoMuTau_smSum = "".join(["addTauIdEffZtoMuTau_smSum", "_", frType])
+        setattr(process, modName_addZtoMuTau_smSum, mod_addZtoMuTau_smSum)
+        
+        process.addTauIdEffZtoMuTau._seq = process.addTauIdEffZtoMuTau._seq * mod_addZtoMuTau_smSum
