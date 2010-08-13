@@ -57,6 +57,51 @@ process.dumpTauIdEffZtoMuTau = cms.Sequence(
    * process.dumpTauIdEffZtoMuTauCombinedFit
 )
 
+process.dumpTauIdEffZtoMuTauBinningResults2regionsCombinedFit = cms.EDAnalyzer("DQMDumpBinningResults",
+    binningService = cms.PSet(
+        pluginType = cms.string("DataBinningService"),
+        dqmDirectories = cms.PSet(
+            Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResults2regions/'),
+            Zmumu = cms.string('harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResults2regions/'),
+            WplusJets = cms.string('harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResults2regions/'),
+            QCD = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResults2regions/'),
+            TTplusJets = cms.string('harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResults2regions/'),
+        )
+    )
+)
+
+process.dumpTauIdEffZtoMuTauBinningResults2regionsCombinedFitQCD = cms.EDAnalyzer("DQMDumpBinningResults",
+    binningService = cms.PSet(
+        pluginType = cms.string("DataBinningService"),
+        dqmDirectories = cms.PSet(
+            Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'),
+            Zmumu = cms.string('harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'),
+            WplusJets = cms.string('harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'),
+            QCD = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'),
+            TTplusJets = cms.string('harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitQCD/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb3dQCD/'),
+        )
+    )
+)
+
+process.dumpTauIdEffZtoMuTauBinningResults2regionsCombinedFitWplusJets = cms.EDAnalyzer("DQMDumpBinningResults",
+    binningService = cms.PSet(
+        pluginType = cms.string("DataBinningService"),
+        dqmDirectories = cms.PSet(
+            Ztautau = cms.string('harvested/Ztautau/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb2dWplusJets/'),
+            Zmumu = cms.string('harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb2dWplusJets/'),
+            WplusJets = cms.string('harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb2dWplusJets/'),
+            QCD = cms.string('harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb2dWplusJets/'),
+            TTplusJets = cms.string('harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/tauIdEffBinningResultsComb2dWplusJets/'),
+        )
+    )
+)
+
+process.dumpTauIdEffZtoMuTauBinningResults2regions = cms.Sequence(
+    process.dumpTauIdEffZtoMuTauBinningResults2regionsCombinedFit
+   * process.dumpTauIdEffZtoMuTauBinningResults2regionsCombinedFitQCD
+   * process.dumpTauIdEffZtoMuTauBinningResults2regionsCombinedFitWplusJets
+)
+
 process.reloadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
     all = cms.PSet(        
         inputFileNames = cms.vstring('plotsTauIdEffZtoMuTau_all.root'),
@@ -71,7 +116,7 @@ process.p = cms.Path(
     process.reloadTauIdEffZtoMuTau
    + process.dumpDQMStore 
    #+ process.saveTauIdEffZtoMuTau
-   + process.dumpTauIdEffZtoMuTau
+   + process.dumpTauIdEffZtoMuTau + process.dumpTauIdEffZtoMuTauBinningResults2regions
    + process.plotTauIdEffZtoMuTau + process.plotTauIdEffZtoMuTauShapes
 )
 

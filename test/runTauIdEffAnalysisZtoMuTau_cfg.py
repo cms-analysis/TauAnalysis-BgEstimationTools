@@ -130,7 +130,7 @@ process.kineEventReweightTauIdEffQCD = cms.EDProducer("ObjValProducer",
         pluginType = cms.string("KineEventReweightExtractor"),
         weightLookupTable = cms.PSet(
             fileName = cms.string(
-                'rfio:/castor/cern.ch/user/v/veelken/CMSSW_3_3_x/kineEventReweights/muonKineReweightsTauIdEffZtoMuTau.root'
+                'file:/afs/cern.ch/user/v/veelken/public/TauAnalysis/CMSSW_3_3_x/muonKineReweightsTauIdEffZtoMuTau.root'
             ),
             meName = cms.string('DQMData/tauIdEffKineEventReweights/QCDenrichedMuonCombIsoFactorized_data/MuonPtVsAbsEta')
         ),
@@ -157,6 +157,12 @@ process.kineEventReweightTauIdEffQCD = cms.EDProducer("ObjValProducer",
 process.analyzeEventsBgEstQCDenriched_reweighted = copy.deepcopy(process.analyzeEventsBgEstQCDenriched)
 process.analyzeEventsBgEstQCDenriched_reweighted.name = cms.string('BgEstTemplateAnalyzer_QCDenriched_reweighted')
 setattr(process.analyzeEventsBgEstQCDenriched_reweighted, "eventWeightSource", cms.VInputTag("kineEventReweightTauIdEffQCD"))
+
+# add analysis sequences for applying fake-rate weights
+# to estimate contribution of W + jets and QCD backgrounds
+# to SS 'control', tau id. passed region
+from TauAnalysis.BgEstimationTools.tools.fakeRateTools import enableFakeRates_runTauIdEffAnalysisZtoMuTau
+enableFakeRates_runTauIdEffAnalysisZtoMuTau(process)
 
 process.p = cms.Path(
    process.producePatTupleZtoMuTauSpecific
