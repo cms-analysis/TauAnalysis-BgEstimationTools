@@ -31,7 +31,7 @@ plots_TauIdEffZtoMuTau = cms.PSet(
     ##)
 )
 
-drawJobConfigurator_TauIdEffZtoMuTau = drawJobConfigurator(
+drawJobConfigurator_TauIdEffZtoMuTauTemplateFit = drawJobConfigurator(
     template = plots_TauIdEffZtoMuTau,
     dqmDirectory = '#PROCESSDIR#/TauIdEffAnalyzerZtoMuTauTemplateFit/'
 )
@@ -41,8 +41,8 @@ drawJobConfigurator_TauIdEffZtoMuTau = drawJobConfigurator(
 # for events passing all event selection criteria
 #--------------------------------------------------------------------------------
 
-drawJobConfigurator_TauIdEffZtoMuTau.add(
-    afterCut = "uniqueMuonCandidateCutTauIdEffZtoMuTau",
+drawJobConfigurator_TauIdEffZtoMuTauTemplateFit.add(
+    afterCut = "uniqueMuonCandidateCutTauIdEffZtoMuTauTemplateFit",
     plots = [
         drawJobConfigEntry(
             meName = 'MuonQuantities/Muon#PAR#',
@@ -145,8 +145,8 @@ for iRegion in [ 1, 2]:
     
     name_region = "region%(i)02d" % {"i" : iRegion}
             
-    drawJobConfigurator_TauIdEffZtoMuTau.add(
-        afterCut = "uniqueMuonCandidateCutTauIdEffZtoMuTau",
+    drawJobConfigurator_TauIdEffZtoMuTauTemplateFit.add(
+        afterCut = "uniqueMuonCandidateCutTauIdEffZtoMuTauTemplateFit",
         plots = [        
             ##drawJobConfigEntry(
             ##    meName = dqmSubDirectory_region + 'MuonQuantities/Muon#PAR#',
@@ -301,7 +301,8 @@ def addDrawJob(drawJobs, meName, xAxis, label):
             index = { 1: 0,
                       2: 1 }[iRegion]
         
-            dqmDirectory = 'harvested/' + process + '/TauIdEffAnalyzerZtoMuTau_absMuonIsolation/afterUniqueMuonCandidateCutTauIdEffZtoMuTau/'    
+            dqmDirectory = 'harvested/' + process \
+                          + '/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/'
             dqmSubDirectory_region = 'tauIdEffHistograms2regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
             meName_full = dqmDirectory + dqmSubDirectory_region + meName
             drawJob_process.plots[index].dqmMonitorElements = cms.vstring(meName_full)

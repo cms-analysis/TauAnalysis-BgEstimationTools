@@ -111,13 +111,13 @@ process.reloadTauIdEffZtoMuTau = cms.EDAnalyzer("DQMFileLoader",
 )
  
 process.p = cms.Path(
-   # process.loadTauIdEffZtoMuTau
-   #+ process.addTauIdEffZtoMuTau
+   ## process.loadTauIdEffZtoMuTau
+   ##+ process.addTauIdEffZtoMuTau
     process.reloadTauIdEffZtoMuTau
    + process.dumpDQMStore 
-   #+ process.saveTauIdEffZtoMuTau
+   + process.saveTauIdEffZtoMuTau
    + process.dumpTauIdEffZtoMuTau + process.dumpTauIdEffZtoMuTauBinningResults2regions
-   + process.plotTauIdEffZtoMuTau + process.plotTauIdEffZtoMuTauShapes
+   + process.plotTauIdEffZtoMuTauTemplateFit + process.plotTauIdEffZtoMuTauShapes
 )
 
 # print-out all python configuration parameter information

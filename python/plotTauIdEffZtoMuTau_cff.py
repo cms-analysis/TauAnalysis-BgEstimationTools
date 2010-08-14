@@ -52,14 +52,14 @@ addTauIdEffZtoMuTau_smSum = cms.EDAnalyzer("DQMHistAdder",
 
 addTauIdEffZtoMuTau = cms.Sequence(addTauIdEffZtoMuTau_qcdSum + addTauIdEffZtoMuTau_smSum)
 
-plotTauIdEffZtoMuTau = copy.deepcopy(plotZtoMuTau)
-plotTauIdEffZtoMuTau.drawOptionSets.default.Ztautau = drawOption_red_separate
-plotTauIdEffZtoMuTau.drawOptionSets.default.Zmumu = drawOption_darkBlue_separate
-plotTauIdEffZtoMuTau.drawOptionSets.default.WplusJets = drawOption_lightBlue_separate
-plotTauIdEffZtoMuTau.drawOptionSets.default.TTplusJets = drawOption_violett_separate
-plotTauIdEffZtoMuTau.drawOptionSets.default.qcdSum = drawOption_orange_separate
-plotTauIdEffZtoMuTau.drawJobs = drawJobConfigurator_TauIdEffZtoMuTau.configure()
-plotTauIdEffZtoMuTau.indOutputFileName = cms.string('plotTauIdEffZtoMuTau_#PLOT#.png')
+plotTauIdEffZtoMuTauTemplateFit = copy.deepcopy(plotZtoMuTau)
+plotTauIdEffZtoMuTauTemplateFit.drawOptionSets.default.Ztautau = drawOption_red_separate
+plotTauIdEffZtoMuTauTemplateFit.drawOptionSets.default.Zmumu = drawOption_darkBlue_separate
+plotTauIdEffZtoMuTauTemplateFit.drawOptionSets.default.WplusJets = drawOption_lightBlue_separate
+plotTauIdEffZtoMuTauTemplateFit.drawOptionSets.default.TTplusJets = drawOption_violett_separate
+plotTauIdEffZtoMuTauTemplateFit.drawOptionSets.default.qcdSum = drawOption_orange_separate
+plotTauIdEffZtoMuTauTemplateFit.drawJobs = drawJobConfigurator_TauIdEffZtoMuTauTemplateFit.configure()
+plotTauIdEffZtoMuTauTemplateFit.indOutputFileName = cms.string('plotTauIdEffZtoMuTau_#PLOT#.png')
     
 plotTauIdEffZtoMuTauShapes = copy.deepcopy(plotZtoMuTau)
 plotTauIdEffZtoMuTauShapes.drawOptionEntries = cms.PSet(
