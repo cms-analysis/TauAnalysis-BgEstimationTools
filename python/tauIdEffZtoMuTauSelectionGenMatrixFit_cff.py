@@ -107,9 +107,10 @@ produceDiMuPairsTauIdEffZtoMuTauGenMatrixFit = cms.Sequence(
 # produce collection of muon + tau-jet combinations
 #--------------------------------------------------------------------------------
 
+from TauAnalysis.CandidateTools.muTauPairProduction_cff import *
 from TauAnalysis.CandidateTools.resolutions_cfi import *
 
-muTauPairsTauIdEffZtoMuTauGenMatrixFit = cms.EDProducer("PATMuTauPairProducer",
+muTauPairsTauIdEffZtoMuTauGenMatrixFit = allMuTauPairs.clone(
     useLeadingTausOnly = cms.bool(False),
     srcLeg1 = cms.InputTag('muonsForTauIdEffZtoMuTauGenMatrixFitTrkIPcumulative'),
     srcLeg2 = cms.InputTag('tausForTauIdEffZtoMuTauGenMatrixFitMuonVetoCumulative'),
@@ -123,9 +124,7 @@ muTauPairsTauIdEffZtoMuTauGenMatrixFit = cms.EDProducer("PATMuTauPairProducer",
             metResolutionPx = pfMEtResolutionPx,
             metResolutionPy = pfMEtResolutionPy
         )
-    ),                                                       
-    scaleFuncImprovedCollinearApprox = cms.string('1'),                                        
-    verbosity = cms.untracked.int32(0)
+    )
 )
 
 #--------------------------------------------------------------------------------  
