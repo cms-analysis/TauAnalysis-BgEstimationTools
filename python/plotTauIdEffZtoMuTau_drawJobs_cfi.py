@@ -272,13 +272,13 @@ plots_TauIdEffZtoMuTau_shapes = cms.PSet(
         cms.PSet(
             dqmMonitorElements = cms.vstring(),
             process = cms.string(''),
-            drawOptionEntry = cms.string('region05'),
+            drawOptionEntry = cms.string('region03'),
             legendEntry = cms.string('')
         ),
         cms.PSet(
             dqmMonitorElements = cms.vstring(),
             process = cms.string(''),
-            drawOptionEntry = cms.string('region06'),
+            drawOptionEntry = cms.string('region04'),
             legendEntry = cms.string('')
         )
     ),    
@@ -296,21 +296,25 @@ def addDrawJob(drawJobs, meName, xAxis, label):
     for process in [ 'Zmumu', 'WplusJets', 'qcdSum', 'Ztautau' ]:
         drawJob_process = copy.deepcopy(plots_TauIdEffZtoMuTau_shapes)
 
-        for iRegion in [ 1, 2 ]:
+        for iRegion in [ 1, 2, 3, 4 ]:
         
             index = { 1: 0,
-                      2: 1 }[iRegion]
+                      2: 1,
+                      3: 2,
+                      4: 3 }[iRegion]
         
             dqmDirectory = 'harvested/' + process \
                           + '/TauIdEffAnalyzerZtoMuTauCombinedFit/afterUniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit/'
-            dqmSubDirectory_region = 'tauIdEffHistograms2regions/region' + "%(i)02d" % {"i" : iRegion} + '/'
+            dqmSubDirectory_region = 'tauIdEffHistograms2d/region' + "%(i)02d" % {"i" : iRegion} + '/'
             meName_full = dqmDirectory + dqmSubDirectory_region + meName
             drawJob_process.plots[index].dqmMonitorElements = cms.vstring(meName_full)
             
             drawJob_process.plots[index].process = cms.string(process)
             
-            title_region = { 1: "Tau id. failed",
-                             2: "Tau id. passed" }[iRegion]
+            title_region = { 1: "OS, Tau id. failed",
+                             2: "OS, Tau id. passed",
+                             3: "SS, Tau id. failed",
+                             4: "SS, Tau id. passed" }[iRegion]
             title = title_region
             drawJob_process.plots[index].legendEntry = cms.string(title)
             

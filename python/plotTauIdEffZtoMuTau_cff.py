@@ -65,8 +65,8 @@ plotTauIdEffZtoMuTauShapes = copy.deepcopy(plotZtoMuTau)
 plotTauIdEffZtoMuTauShapes.drawOptionEntries = cms.PSet(
     region01 = copy.deepcopy(drawOption_orange_eff),
     region02 = copy.deepcopy(drawOption_red_eff),
-    region05 = copy.deepcopy(drawOption_lightBlue_eff),
-    region06 = copy.deepcopy(drawOption_green_eff)
+    region03 = copy.deepcopy(drawOption_lightBlue_eff),
+    region04 = copy.deepcopy(drawOption_green_eff)
 )
 #plotTauIdEffZtoMuTauShapes.legends.regular.posX = cms.double(0.50)
 #plotTauIdEffZtoMuTauShapes.legends.regular.posX = cms.double(0.64)
