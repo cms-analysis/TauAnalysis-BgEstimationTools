@@ -575,7 +575,7 @@ def enableFakeRates_runTauIdEffAnalysisZtoMuTau(process):
     #
     for frType in frTypes:
         fakeRateAnalysisSequence = \
-          addFakeRateGenAnalyzerModule(process, process.analyzeEventsTauIdEffZtoMuTauCombinedFitQCD,
+          addFakeRateGenAnalyzerModule(process, process.analyzeEventsTauIdEffZtoMuTauCombinedFit,
                                        frType, fakeRateAnalysisSequence)
 
     setattr(process, "fakeRateAnalysisSequence", cms.Sequence(fakeRateAnalysisSequence))
@@ -593,12 +593,12 @@ def enableFakeRates_makeTauIdEffZtoMuTauPlots(process):
 
         mod_addZtoMuTau_qcdSum = copy.deepcopy(process.addTauIdEffZtoMuTau_qcdSum)
         modInputDir_addZtoMuTau_qcdSum = cms.vstring(
-            "".join(['harvested/InclusivePPmuX/TauIdEffAnalyzerZtoMuTauCombinedFitQCD', '_fr_', frType]),
-            "".join(['harvested/PPmuXptGt20/TauIdEffAnalyzerZtoMuTauCombinedFitQCD', '_fr_', frType])
+            "".join(['harvested/InclusivePPmuX/TauIdEffAnalyzerZtoMuTauCombinedFit', '_fr_', frType]),
+            "".join(['harvested/PPmuXptGt20/TauIdEffAnalyzerZtoMuTauCombinedFit', '_fr_', frType])
         )
         setattr(mod_addZtoMuTau_qcdSum.qcdSum, "dqmDirectories_input", modInputDir_addZtoMuTau_qcdSum)
         modOutputDir_addZtoMuTau_qcdSum = \
-          cms.string("".join(['tauFakeRate/harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD', '_fr_', frType]))
+          cms.string("".join(['tauFakeRate/harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFit', '_fr_', frType]))
         setattr(mod_addZtoMuTau_qcdSum.qcdSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_qcdSum)
         modName_addZtoMuTau_qcdSum = "".join(["addTauIdEffZtoMuTau_qcdSum", "_", frType])
         setattr(process, modName_addZtoMuTau_qcdSum, mod_addZtoMuTau_qcdSum)
@@ -607,15 +607,15 @@ def enableFakeRates_makeTauIdEffZtoMuTauPlots(process):
              
         mod_addZtoMuTau_smSum = copy.deepcopy(process.addTauIdEffZtoMuTau_smSum)
         modInputDir_addZtoMuTau_smSum = cms.vstring(
-            "".join(['harvested/Ztautau/TauIdEffAnalyzerZtoMuTauCombinedFitQCD', '_fr_', frType]),
-            "".join(['harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFitQCD', '_fr_', frType]),
-            "".join(['harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitQCD', '_fr_', frType]),
-            "".join(['harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFitQCD', '_fr_', frType]),
-            "".join(['harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD', '_fr_', frType])
+            "".join(['harvested/Ztautau/TauIdEffAnalyzerZtoMuTauCombinedFit', '_fr_', frType]),
+            "".join(['harvested/Zmumu/TauIdEffAnalyzerZtoMuTauCombinedFit', '_fr_', frType]),
+            "".join(['harvested/WplusJets/TauIdEffAnalyzerZtoMuTauCombinedFit', '_fr_', frType]),
+            "".join(['harvested/TTplusJets/TauIdEffAnalyzerZtoMuTauCombinedFit', '_fr_', frType]),
+            "".join(['harvested/qcdSum/TauIdEffAnalyzerZtoMuTauCombinedFit', '_fr_', frType])
         )
         setattr(mod_addZtoMuTau_smSum.smSum, "dqmDirectories_input", modInputDir_addZtoMuTau_smSum)
         modOutputDir_addZtoMuTau_smSum = \
-          cms.string("".join(['tauFakeRate/harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFitQCD', '_fr_', frType]))
+          cms.string("".join(['tauFakeRate/harvested/smSum/TauIdEffAnalyzerZtoMuTauCombinedFit', '_fr_', frType]))
         setattr(mod_addZtoMuTau_smSum.smSum, "dqmDirectory_output", modOutputDir_addZtoMuTau_smSum)
         modName_addZtoMuTau_smSum = "".join(["addTauIdEffZtoMuTau_smSum", "_", frType])
         setattr(process, modName_addZtoMuTau_smSum, mod_addZtoMuTau_smSum)
