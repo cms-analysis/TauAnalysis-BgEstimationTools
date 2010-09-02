@@ -155,14 +155,8 @@ muTauPairsTauIdEffZtoMuTauCombinedFitBackToBack = cms.EDFilter("PATMuTauPairSele
     filter = cms.bool(False)
 )
 
-muTauPairsTauIdEffZtoMuTauCombinedFitZeroCharge = cms.EDFilter("PATMuTauPairSelector",
-    cut = cms.string('leg2.leadPFChargedHadrCand.isNonnull & (leg1.charge + leg2.leadPFChargedHadrCand.charge) = 0'),
-    filter = cms.bool(False)                                                               
-)
-
 muTauPairConfiguratorTauIdEffZtoMuTauCombinedFit = objSelConfigurator(
-    [ muTauPairsTauIdEffZtoMuTauCombinedFitBackToBack,
-      muTauPairsTauIdEffZtoMuTauCombinedFitZeroCharge ],
+    [ muTauPairsTauIdEffZtoMuTauCombinedFitBackToBack ],
     src = "muTauPairsTauIdEffZtoMuTauCombinedFit",
     pyModuleName = __name__,
     doSelIndividual = False
@@ -227,6 +221,40 @@ produceMuTauPairsTauIdEffZtoMuTauCombinedFit = cms.Sequence(
 )    
 
 #--------------------------------------------------------------------------------  
+# produce collection of central jets not overlapping with muon or tau-jet
+#--------------------------------------------------------------------------------
+
+jetsTauIdEffZtoMuTauCombinedFitEta25 = cms.EDFilter("PATJetSelector",
+    cut = cms.string('abs(eta) < 2.5'),
+    filter = cms.bool(False)
+)
+
+jetsTauIdEffZtoMuTauCombinedFitEt15 = cms.EDFilter("PATJetSelector",
+    cut = cms.string('et > 15.'), 
+    filter = cms.bool(False)
+)
+
+jetsTauIdEffZtoMuTauCombinedFitAntiOverlapWithLeptonsVeto = cms.EDFilter("PATJetAntiOverlapSelector",
+    srcNotToBeFiltered = cms.VInputTag(
+        "muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIsoCumulative",
+        "tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative"
+    ),                                                           
+    dRmin = cms.double(0.7),
+    filter = cms.bool(False)                                           
+)
+
+jetSelConfiguratorTauIdEffZtoMuTauCombinedFit = objSelConfigurator(
+    [ jetsTauIdEffZtoMuTauCombinedFitEta25,
+      jetsTauIdEffZtoMuTauCombinedFitEt15,
+      jetsTauIdEffZtoMuTauCombinedFitAntiOverlapWithLeptonsVeto ],
+    src = "cleanPatJets",
+    pyModuleName = __name__,
+    doSelIndividual = False
+)
+
+selectJetsForTauIdEffZtoMuTauCombinedFit = jetSelConfiguratorTauIdEffZtoMuTauCombinedFit.configure(pyNameSpace = locals())
+
+#--------------------------------------------------------------------------------  
 # apply event selection criteria; fill histograms
 #--------------------------------------------------------------------------------
 
@@ -244,7 +272,7 @@ diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit = copy.deepcopy(diTauCandid
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit.pluginName = \
   'diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit'
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit.diTauCandidateSource = \
-  'muTauPairsTauIdEffZtoMuTauCombinedFitZeroChargeCumulative'
+  'muTauPairsTauIdEffZtoMuTauCombinedFitBackToBackCumulative'
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit.visMassHypothesisSource = cms.InputTag('')
 from TauAnalysis.Core.diTauCandidateEventActivityHistManager_cfi import *
 diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit = copy.deepcopy(diTauCandidateEventActivityHistManager)
@@ -252,7 +280,7 @@ diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit.pluginName = \
   'diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit'
 diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit.pluginType = 'PATMuTauPairEventActivityHistManager'
 diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit.diTauCandidateSource = \
-  'muTauPairsTauIdEffZtoMuTauCombinedFitZeroChargeCumulative'
+  'muTauPairsTauIdEffZtoMuTauCombinedFitBackToBackCumulative'
 
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets = copy.deepcopy(diTauCandidateHistManagerForMuTau)
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets.pluginName = \
@@ -266,12 +294,16 @@ diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitQCD.pluginName = \
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitQCD.diTauCandidateSource = \
   'muTauPairsTauIdEffZtoMuTauCombinedFitPzetaDiffQCDcumulative'
 
+jetHistManagerTauIdEffZtoMuTauCombinedFit = copy.deepcopy(jetHistManager)
+jetHistManagerTauIdEffZtoMuTauCombinedFit.pluginName = 'jetHistManagerTauIdEffZtoMuTauCombinedFit'
+jetHistManagerTauIdEffZtoMuTauCombinedFit.jetSource = 'jetsTauIdEffZtoMuTauCombinedFitAntiOverlapWithLeptonsVetoCumulative'
+
 from TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauHistManager_cfi import *
 tauIdEffZtoMuTauHistManagerCombinedFit = copy.deepcopy(tauIdEffZtoMuTauHistManager)
 tauIdEffZtoMuTauHistManagerCombinedFit.pluginName = 'tauIdEffZtoMuTauHistManagerCombinedFit'
 tauIdEffZtoMuTauHistManagerCombinedFit.muonSource = 'muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIsoCumulative'
 tauIdEffZtoMuTauHistManagerCombinedFit.tauSource = 'tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative'
-tauIdEffZtoMuTauHistManagerCombinedFit.diTauSource = 'muTauPairsTauIdEffZtoMuTauCombinedFitZeroChargeCumulative'
+tauIdEffZtoMuTauHistManagerCombinedFit.diTauSource = 'muTauPairsTauIdEffZtoMuTauCombinedFitBackToBackCumulative'
 tauIdEffZtoMuTauHistManagerCombinedFit.diTauChargeSignExtractor.src = tauIdEffZtoMuTauHistManagerCombinedFit.diTauSource
 
 tauIdEffZtoMuTauHistManagerCombinedFitWplusJets = copy.deepcopy(tauIdEffZtoMuTauHistManagerCombinedFit)
@@ -300,6 +332,10 @@ binningTauIdEffZtoMuTauCombinedFit_relMuonIso.binning = cms.PSet(
     max = cms.double(0.24)
 )
 
+binningTauIdEffZtoMuTauCombinedFit_diTauAbsCharge = copy.deepcopy(binning_diTauAbsCharge)
+binningTauIdEffZtoMuTauCombinedFit_diTauAbsCharge.extractor.src = \
+  'muTauPairsTauIdEffZtoMuTauCombinedFitBackToBackCumulative'
+
 binningTauIdEffZtoMuTauCombinedFitWplusJets_diTauAbsCharge = copy.deepcopy(binning_diTauAbsCharge)
 binningTauIdEffZtoMuTauCombinedFitWplusJets_diTauAbsCharge.extractor.src = \
   'muTauPairsTauIdEffZtoMuTauCombinedFitPzetaDiffWplusJetsCumulative'
@@ -308,10 +344,11 @@ binningTauIdEffZtoMuTauCombinedFitQCD_diTauAbsCharge = copy.deepcopy(binning_diT
 binningTauIdEffZtoMuTauCombinedFitQCD_diTauAbsCharge.extractor.src = \
   'muTauPairsTauIdEffZtoMuTauCombinedFitPzetaDiffQCDcumulative'
 
-tauIdEffBinningZtoMuTau_comb1d = cms.PSet(
-    name = cms.string("tauIdEffBinningZtoMuTau_genMatrix1d"),
+tauIdEffBinningZtoMuTau_comb2d = cms.PSet(
+    name = cms.string("tauIdEffBinningZtoMuTau_comb2d"),
     config = cms.VPSet(
-        binningTauIdEffZtoMuTauCombinedFit_ewkTauId
+        binningTauIdEffZtoMuTauCombinedFit_ewkTauId,
+        binningTauIdEffZtoMuTauCombinedFit_diTauAbsCharge
     )
 )
 
@@ -405,12 +442,6 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
             minNumber = cms.uint32(1)
         ),
         cms.PSet(
-            pluginName = cms.string('muTauPairZeroChargeTauIdEffZtoMuTauCombinedFit'),
-            pluginType = cms.string('PATCandViewMinEventSelector'),
-            src = cms.InputTag('muTauPairsTauIdEffZtoMuTauCombinedFitZeroChargeCumulative'),
-            minNumber = cms.uint32(1)
-        ),
-        cms.PSet(
             pluginName = cms.string('muTauPairTauIdEffZtoMuTauCombinedFitWplusJets'),
             pluginType = cms.string('PATCandViewMinEventSelector'),
             src = cms.InputTag('muTauPairsTauIdEffZtoMuTauCombinedFitWplusJets'),
@@ -478,7 +509,8 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
         diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit,
         diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets,
         diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitQCD,
-        diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit,        
+        diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit,
+        jetHistManagerTauIdEffZtoMuTauCombinedFit,
         caloMEtHistManager,
         pfMEtHistManager,
         tauIdEffZtoMuTauHistManagerCombinedFit,
@@ -486,25 +518,25 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
         tauIdEffZtoMuTauHistManagerCombinedFitQCD,
         dataBinnerTauIdEffZtoMuTauCombinedFit,
         cms.PSet(
-            pluginName = cms.string('tauIdEffDataBinner2regions'),
+            pluginName = cms.string('tauIdEffDataBinner2d'),
             pluginType = cms.string('DataBinner'),
-            binning = tauIdEffBinningZtoMuTau_comb1d,
+            binning = tauIdEffBinningZtoMuTau_comb2d,
             binningService = cms.PSet(
                 pluginType = cms.string("DataBinningService")
             ),
-            dqmDirectory_store = cms.string('tauIdEffBinningResults2regions')
+            dqmDirectory_store = cms.string('tauIdEffBinningResults2d')
         ),
         cms.PSet(
-            pluginName = cms.string('tauIdEffBinGridHistManager2regions'),
+            pluginName = cms.string('tauIdEffBinGridHistManager2d'),
             pluginType = cms.string('BinGridHistManager'),
-            binning = tauIdEffBinningZtoMuTau_comb1d,
+            binning = tauIdEffBinningZtoMuTau_comb2d,
             histManagers = cms.VPSet(
                 muonHistManagerTauIdEffZtoMuTauCombinedFit,
                 tauHistManagerTauIdEffZtoMuTauCombinedFit,
                 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit,
                 tauIdEffZtoMuTauHistManagerCombinedFit
             ),
-            dqmDirectory_store = cms.string('tauIdEffHistograms2regions')
+            dqmDirectory_store = cms.string('tauIdEffHistograms2d')
         ),
         cms.PSet(
             pluginName = cms.string('tauIdEffDataBinnerComb2dWplusJets'),
@@ -637,10 +669,6 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
             title = cms.string('dPhi(Muon,Tau) > 160 deg.')
         ),
         cms.PSet(
-            filter = cms.string('muTauPairZeroChargeTauIdEffZtoMuTauCombinedFit'),
-            title = cms.string('Charge(Muon+Tau) = 0'),
-        ),
-        cms.PSet(
             filter = cms.string('diMuPairZmumuHypothesisVeto'),
             title = cms.string('not 80 < M (Muon-Muon) < 100 GeV')
         ),        
@@ -658,20 +686,21 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
                 'tauHistManagerTauIdEffZtoMuTauCombinedFit',
                 'diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit',
                 'diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit',
+                'jetHistManagerTauIdEffZtoMuTauCombinedFit',
                 'caloMEtHistManager',
                 'pfMEtHistManager',
                 'tauIdEffZtoMuTauHistManagerCombinedFit',
                 'dataBinnerTauIdEffZtoMuTauCombinedFit',
-                'tauIdEffDataBinner2regions',
-                'tauIdEffBinGridHistManager2regions'
+                'tauIdEffDataBinner2d',
+                'tauIdEffBinGridHistManager2d'
             ),
             replace = cms.vstring(
                 'muonHistManagerTauIdEffZtoMuTauCombinedFit.muonSource = ' \
                + 'muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIsoCumulative',
                 'diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit.diTauCandidateSource = ' \
-               + 'muTauPairsTauIdEffZtoMuTauCombinedFitZeroChargeCumulative',
+               + 'muTauPairsTauIdEffZtoMuTauCombinedFitBackToBackCumulative',
                 'diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit.diTauCandidateSource = ' \
-               + 'muTauPairsTauIdEffZtoMuTauCombinedFitZeroChargeCumulative'
+               + 'muTauPairsTauIdEffZtoMuTauCombinedFitBackToBackCumulative'
             )
         )
     )
@@ -938,6 +967,7 @@ bgEstTauIdEffZtoMuTauCombinedFitAnalysisSequence = cms.Sequence(
    + selectTausForTauIdEffZtoMuTauCombinedFit
    + produceDiMuPairsTauIdEffZtoMuTauCombinedFit
    + produceMuTauPairsTauIdEffZtoMuTauCombinedFit
+   + selectJetsForTauIdEffZtoMuTauCombinedFit
    + analyzeEventsTauIdEffZtoMuTauCombinedFit
    + analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets + analyzeEventsTauIdEffZtoMuTauCombinedFitQCD
 )
