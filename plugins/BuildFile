@@ -20,4 +20,5 @@
   <use name=TauAnalysis/FittingTools>
   <use name=root>
   <use name=roofit>
+  <use name=roostats>
 </library>
