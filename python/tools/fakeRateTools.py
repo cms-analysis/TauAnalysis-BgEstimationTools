@@ -57,13 +57,13 @@ def pruneAnalysisSequence(genAnalyzerModule):
                 analysisSequenceEntry.analyzers = cms.vstring(keepAnalyzers)
                 
                 # in all cases, disable storing run and events numbers
-                setattr(genAnalyzerModule.analysisSequence[iAnalysisSequenceEntry], "saveRunEventNumbers", cms.vstring())
+                setattr(genAnalyzerModule.analysisSequence[iAnalysisSequenceEntry], "saveRunLumiSectionEventNumbers", cms.vstring())
                 
                 prunedAnalysisSequence.append(analysisSequenceEntry)
         else:
             # keep all filter entries,
             # but disable saving of run and event numbers of events passing filter
-            setattr(analysisSequenceEntry, "saveRunEventNumbers", cms.vstring(''))
+            setattr(analysisSequenceEntry, "saveRunLumiSectionEventNumbers", cms.vstring(''))
             prunedAnalysisSequence.append(analysisSequenceEntry)
 
     genAnalyzerModule.analysisSequence = cms.VPSet(prunedAnalysisSequence)
