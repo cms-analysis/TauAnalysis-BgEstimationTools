@@ -5,7 +5,7 @@ import copy
 from TauAnalysis.Configuration.tools.changeCut import changeCut
 
 # import utility function to enable factorization
-from TauAnalysis.Configuration.tools.factorizationTools import enableFactorization_makeZtoMuTauPlots
+from TauAnalysis.Configuration.tools.factorizationTools import enableFactorization_makeZtoMuTauPlots_grid
 
 # import configuration parameters of histogram manager
 # for validation of tau id. efficiencies/fake-rates
@@ -520,21 +520,21 @@ def enableFakeRates_makeZtoMuTauPlots(process, enableFactorization = True):
         seqName_addZtoMuTau = "".join(["addBgEstFakeRateZtoMuTau_tauFakeRate", "_", frType])
         setattr(process, seqName_addZtoMuTau, seq_addZtoMuTau)
 
-        if enableFactorization:
-            enableFactorization_makeZtoMuTauPlots(process,
-              dqmDirectoryIn_InclusivePPmuX = \
-                "".join(['tauFakeRate/harvested/InclusivePPmuX/zMuTauAnalyzer', '_fr_', frType]),
-              dqmDirectoryOut_InclusivePPmuX = \
-                "".join(['tauFakeRate/harvested/InclusivePPmuX_factorized/zMuTauAnalyzer', '_fr_', frType]),
-              dqmDirectoryIn_PPmuXptGt20 = \
-                "".join(['tauFakeRate/harvested/PPmuXptGt20/zMuTauAnalyzer', '_fr_', frType]),
-              dqmDirectoryOut_PPmuXptGt20 = \
-                "".join(['tauFakeRate/harvested/PPmuXptGt20_factorized/zMuTauAnalyzer', '_fr_', frType]),
-              modName_addZtoMuTau_qcdSum = modName_addZtoMuTau_qcdSum,
-              modName_addZtoMuTau_smBgSum = modName_addZtoMuTau_smBgSum,         
-              modName_addZtoMuTau_smSum = modName_addZtoMuTau_smSum,
-              seqName_addZtoMuTau = seqName_addZtoMuTau,
-              pyObjectLabel = frType)
+        ##if enableFactorization:
+        ##    enableFactorization_makeZtoMuTauPlots_grid(process,
+        ##      dqmDirectoryIn_InclusivePPmuX = \
+        ##        "".join(['tauFakeRate/harvested/InclusivePPmuX/zMuTauAnalyzer', '_fr_', frType]),
+        ##      dqmDirectoryOut_InclusivePPmuX = \
+        ##        "".join(['tauFakeRate/harvested/InclusivePPmuX_factorized/zMuTauAnalyzer', '_fr_', frType]),
+        ##      dqmDirectoryIn_PPmuXptGt20 = \
+        ##        "".join(['tauFakeRate/harvested/PPmuXptGt20/zMuTauAnalyzer', '_fr_', frType]),
+        ##      dqmDirectoryOut_PPmuXptGt20 = \
+        ##        "".join(['tauFakeRate/harvested/PPmuXptGt20_factorized/zMuTauAnalyzer', '_fr_', frType]),
+        ##      modName_addZtoMuTau_qcdSum = modName_addZtoMuTau_qcdSum,
+        ##      modName_addZtoMuTau_smBgSum = modName_addZtoMuTau_smBgSum,         
+        ##      modName_addZtoMuTau_smSum = modName_addZtoMuTau_smSum,
+        ##      seqName_addZtoMuTau = seqName_addZtoMuTau,
+        ##      pyObjectLabel = frType)
 
         if seq_isFirstModule:
             setattr(process, "addBgEstFakeRateZtoMuTau_tauFakeRate", cms.Sequence(getattr(process, seqName_addZtoMuTau)))
