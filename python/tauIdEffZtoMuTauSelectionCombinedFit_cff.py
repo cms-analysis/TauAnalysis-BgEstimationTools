@@ -31,7 +31,7 @@ muonSelConfiguratorTauIdEffZtoMuTauCombinedFitLooseIso = objSelConfigurator(
       muonsForTauIdEffZtoMuTauCombinedFitPionVetoLooseIso,
       muonsForTauIdEffZtoMuTauCombinedFitTrkLooseIso,
       muonsForTauIdEffZtoMuTauCombinedFitTrkIPlooseIso ],
-    src = "selectedPatMuonsPt15Cumulative",
+    src = "selectedPatMuonsPt10Cumulative",
     pyModuleName = __name__,
     doSelIndividual = False
 )
@@ -54,7 +54,7 @@ muonSelConfiguratorTauIdEffZtoMuTauCombinedFitTightIso = objSelConfigurator(
       muonsForTauIdEffZtoMuTauCombinedFitPionVetoTightIso,
       muonsForTauIdEffZtoMuTauCombinedFitTrkTightIso,
       muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIso ],
-    src = "selectedPatMuonsPt15Cumulative",
+    src = "selectedPatMuonsPt10Cumulative",
     pyModuleName = __name__,
     doSelIndividual = False
 )
@@ -140,14 +140,7 @@ muTauPairsTauIdEffZtoMuTauCombinedFit = allMuTauPairs.clone(
     dRmin12 = cms.double(0.7),
     srcMET = cms.InputTag('patMETs'),
     recoMode = cms.string(""),
-    collinearApproxMassCompatibility = cms.PSet(
-        mZ = cms.PSet(
-            resonanceMass = cms.double(91.2),
-            resonanceWidth = cms.double(2.5),
-            metResolutionPx = pfMEtResolutionPx,
-            metResolutionPy = pfMEtResolutionPy
-        )
-    )
+    doSVreco = cms.bool(False)
 )
 
 muTauPairsTauIdEffZtoMuTauCombinedFitBackToBack = cms.EDFilter("PATMuTauPairSelector",
@@ -374,7 +367,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
     name = cms.string('TauIdEffAnalyzerZtoMuTauCombinedFit'), 
                             
     filters = cms.VPSet(
-        genPhaseSpaceCut,
+        evtSelGenPhaseSpace,
         evtSelTrigger,
         evtSelPrimaryEventVertex,
         evtSelPrimaryEventVertexQuality,
@@ -598,7 +591,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
         ),
         cms.PSet(
             filter = cms.string('evtSelTrigger'),
-            title = cms.string('mu15 || isoMu11 Trigger')
+            title = cms.string('Muon Trigger')
         ),
         cms.PSet(
             filter = cms.string('evtSelPrimaryEventVertex'),

@@ -8,12 +8,15 @@ process = cms.Process('runTauIdEffAnalysisZtoMuTau')
 process.load('Configuration/StandardSequences/Services_cff')
 process.load('FWCore/MessageService/MessageLogger_cfi')
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
+#process.MessageLogger.cerr.FwkReport.reportEvery = 1
 #process.MessageLogger.cerr.threshold = cms.untracked.string('INFO')
+#process.MessageLogger.suppressInfo = cms.untracked.vstring()
+process.MessageLogger.suppressWarning = cms.untracked.vstring("PATTriggerProducer",)
 process.load('Configuration/StandardSequences/GeometryIdeal_cff')
 process.load('Configuration/StandardSequences/MagneticField_cff')
 process.load('Configuration/StandardSequences/Reconstruction_cff')
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = cms.string('MC_36Y_V7A::All')
+process.GlobalTag.globaltag = cms.string('START38_V12::All')
 
 #--------------------------------------------------------------------------------
 # import sequences for PAT-tuple production
@@ -22,6 +25,7 @@ process.load("TauAnalysis.Configuration.producePatTupleZtoMuTauSpecific_cff")
 
 # import sequence for event selection
 process.load("TauAnalysis.Configuration.selectZtoMuTau_cff")
+process.load("TauAnalysis.RecoTools.filterDataQuality_cfi")
 
 # import configuration parameters for submission of jobs to CERN batch system
 # (running over skimmed samples stored on CASTOR)
@@ -37,15 +41,13 @@ process.saveTauIdEffZtoMuTauPlots = cms.EDAnalyzer("DQMSimpleFileSaver",
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1) 
-    #input = cms.untracked.int32(1000)    
 )
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         #'/store/relval/CMSSW_3_6_1/RelValZTT/GEN-SIM-RECO/START36_V7-v1/0021/F405BC9A-525D-DF11-AB96-002618943811.root',
         #'/store/relval/CMSSW_3_6_1/RelValZTT/GEN-SIM-RECO/START36_V7-v1/0020/EE3E8F74-365D-DF11-AE3D-002618FDA211.root'
-        'rfio:/castor/cern.ch/user/l/lusito/SkimOctober09/ZtautauSkimMT314_3/muTauSkim_1.root',
-        'rfio:/castor/cern.ch/user/l/lusito/SkimOctober09/ZtautauSkimMT314_3/muTauSkim_2.root'
+        'file:/data1/veelken/CMSSW_3_6_x/skims/Ztautau_1_1_sXK.root'
     )
     #skipBadFiles = cms.untracked.bool(True) 
 )
@@ -76,6 +78,13 @@ from PhysicsTools.PatAlgos.tools.tauTools import *
 # as input for pat::Tau production
 switchToPFTauShrinkingCone(process)
 #switchToPFTauFixedCone(process)
+
+# disable preselection on of pat::Taus
+# (disabled also in TauAnalysis/RecoTools/python/patPFTauConfig_cfi.py ,
+#  but re-enabled after switching tau collection)
+process.cleanPatTaus.preselection = cms.string('')
+
+# add "ewkTauId" flag
 setattr(process.patTaus.tauIDSources, "ewkTauId", cms.InputTag('ewkTauId'))
 #--------------------------------------------------------------------------------
 
@@ -84,7 +93,10 @@ setattr(process.patTaus.tauIDSources, "ewkTauId", cms.InputTag('ewkTauId'))
 from PhysicsTools.PatAlgos.tools.jetTools import *
 
 # uncomment to replace caloJets by pfJets
-switchJetCollection(process, jetCollection = cms.InputTag("ak5PFJets"))
+##switchJetCollection(process, jetCollection = cms.InputTag("ak5PFJets"))
+##runBTagging(process, cms.InputTag("ak5CaloJets"), 'AOD')
+process.patJets.addDiscriminators = False
+process.patJets.addTagInfos = False
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -107,20 +119,6 @@ process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauWplusJetsEnrichedSelect
 process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauTTplusJetsEnrichedSelection_cff')
 process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauZmumuEnrichedSelection_cff')
 process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauQCDenrichedSelection_cff')
-
-# set generator level phase-space selection
-# (to avoid overlap of different  Monte Carlo samples in simulated phase-space)
-if hasattr(process, "isBatchMode"):
-    process.analyzeEventsTauIdEffZtoMuTauTemplateFit.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsTauIdEffZtoMuTauGenMatrixFit.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsTauIdEffZtoMuTauCombinedFit.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsTauIdEffZtoMuTauCombinedFitQCD.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsBgEstWplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsBgEstTTplusJetsEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsBgEstZmumuJetMisIdEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsBgEstZmumuMuonMisIdEnriched.filters[0] = getattr(process, "genPhaseSpaceCut")
-    process.analyzeEventsBgEstQCDenriched.filters[0] = getattr(process, "genPhaseSpaceCut")
 
 # produce event weight variable for correcting "bias"
 # of muon |eta| distribution caused by cuts on muon track and ECAL isolation variables
@@ -178,12 +176,9 @@ process.p = cms.Path(
   + process.saveTauIdEffZtoMuTauPlots 
 )
 
-#--------------------------------------------------------------------------------
-# disable estimation of systematic uncertainties
-from TauAnalysis.Configuration.tools.sysUncertaintyTools import disableSysUncertainties_runZtoMuTau
-#
-disableSysUncertainties_runZtoMuTau(process)
-#--------------------------------------------------------------------------------
+process.q = cms.Path(process.dataQualityFilters)
+
+process.schedule = cms.Schedule(process.q, process.p)
 
 #--------------------------------------------------------------------------------
 #
@@ -198,5 +193,4 @@ if not hasattr(process, "isBatchMode"):
 #--------------------------------------------------------------------------------
 
 # print-out all python configuration parameter information
-#del process.patJetMETCorrections
 #print process.dumpPython()

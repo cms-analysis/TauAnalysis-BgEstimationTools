@@ -140,7 +140,7 @@ muonSelConfiguratorTauIdEffQCDenriched = objSelConfigurator(
     [ process.muonsTauIdEffQCDenrichedLooseTrkIso,
       process.muonsTauIdEffQCDenrichedLooseEcalIso,
       process.muonsTauIdEffQCDenrichedPionVeto ],
-    src = "selectedPatMuonsPt15Cumulative",
+    src = "selectedPatMuonsPt10Cumulative",
     pyModuleName = __name__,
     doSelIndividual = False
 )

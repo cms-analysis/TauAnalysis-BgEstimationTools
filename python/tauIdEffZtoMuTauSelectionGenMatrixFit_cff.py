@@ -36,7 +36,7 @@ muonSelConfiguratorTauIdEffZtoMuTauGenMatrixFit = objSelConfigurator(
       muonsForTauIdEffZtoMuTauGenMatrixFitPionVeto,
       muonsForTauIdEffZtoMuTauGenMatrixFitTrk,
       muonsForTauIdEffZtoMuTauGenMatrixFitTrkIP ],
-    src = "selectedPatMuonsPt15Cumulative",
+    src = "selectedPatMuonsPt10Cumulative",
     pyModuleName = __name__,
     doSelIndividual = False
 )
@@ -117,14 +117,7 @@ muTauPairsTauIdEffZtoMuTauGenMatrixFit = allMuTauPairs.clone(
     dRmin12 = cms.double(0.7),
     srcMET = cms.InputTag('patMETs'),
     recoMode = cms.string(""),
-    collinearApproxMassCompatibility = cms.PSet(
-        mZ = cms.PSet(
-            resonanceMass = cms.double(91.2),
-            resonanceWidth = cms.double(2.5),
-            metResolutionPx = pfMEtResolutionPx,
-            metResolutionPy = pfMEtResolutionPy
-        )
-    )
+    doSVreco = cms.bool(False)
 )
 
 #--------------------------------------------------------------------------------  
@@ -194,7 +187,7 @@ analyzeEventsTauIdEffZtoMuTauGenMatrixFit = cms.EDAnalyzer("GenericAnalyzer",
     name = cms.string('TauIdEffAnalyzerZtoMuTauGenMatrixFit'), 
                             
     filters = cms.VPSet(
-        genPhaseSpaceCut,
+        evtSelGenPhaseSpace,
         evtSelTrigger,
         evtSelPrimaryEventVertex,
         evtSelPrimaryEventVertexQuality,
@@ -344,7 +337,7 @@ analyzeEventsTauIdEffZtoMuTauGenMatrixFit = cms.EDAnalyzer("GenericAnalyzer",
         ),
         cms.PSet(
             filter = cms.string('evtSelTrigger'),
-            title = cms.string('mu15 || isoMu11 Trigger')
+            title = cms.string('Muon Trigger')
         ),
         cms.PSet(
             filter = cms.string('evtSelPrimaryEventVertex'),
