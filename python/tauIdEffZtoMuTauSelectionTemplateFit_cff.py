@@ -167,6 +167,12 @@ tauHistManagerTauIdEffZtoMuTauTemplateFit = copy.deepcopy(tauHistManager)
 tauHistManagerTauIdEffZtoMuTauTemplateFit.pluginName = 'tauHistManagerTauIdEffZtoMuTauTemplateFit'
 tauHistManagerTauIdEffZtoMuTauTemplateFit.tauSource = 'tausForTauIdEffZtoMuTauTemplateFitMuonVetoCumulative'
 
+from TauAnalysis.Core.leptonPFIsolationHistManager_cfi import *
+tauPFIsolationHistManagerZtoMuTauTemplateFit = copy.deepcopy(tauPFIsolationHistManager)
+tauPFIsolationHistManagerZtoMuTauTemplateFit.pluginName = 'tauPFIsolationHistManagerZtoMuTauTemplateFit'
+tauPFIsolationHistManagerZtoMuTauTemplateFit.leptonSource = 'tausForTauIdEffZtoMuTauTemplateFitMuonVetoCumulative'
+del tauPFIsolationHistManagerZtoMuTauTemplateFit.genLeptonMatch
+
 diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit = copy.deepcopy(diTauCandidateHistManagerForMuTau)
 diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit.pluginName = 'diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit'
 diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit.diTauCandidateSource = 'muTauPairsTauIdEffZtoMuTauTemplateFitBackToBackCumulative'
@@ -296,9 +302,10 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
     analyzers = cms.VPSet(
         muonHistManagerTauIdEffZtoMuTauTemplateFit,
         tauHistManagerTauIdEffZtoMuTauTemplateFit,
+        tauPFIsolationHistManagerZtoMuTauTemplateFit,
         diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit,
         caloMEtHistManager,
-        pfMEtHistManager,
+        pfMEtHistManager,        
         tauIdEffZtoMuTauHistManagerTemplateFit,
         dataBinnerTauIdEffZtoMuTauTemplateFit,
         cms.PSet(
@@ -317,6 +324,7 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
             histManagers = cms.VPSet(
                 muonHistManagerTauIdEffZtoMuTauTemplateFit,
                 tauHistManagerTauIdEffZtoMuTauTemplateFit,
+                tauPFIsolationHistManagerZtoMuTauTemplateFit,
                 diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit,
                 tauIdEffZtoMuTauHistManagerTemplateFit
             ),
@@ -438,6 +446,7 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
             analyzers = cms.vstring(
                 'muonHistManagerTauIdEffZtoMuTauTemplateFit',
                 'tauHistManagerTauIdEffZtoMuTauTemplateFit',
+                'tauPFIsolationHistManagerZtoMuTauTemplateFit',
                 'diTauCandidateHistManagerTauIdEffZtoMuTauTemplateFit',
                 'caloMEtHistManager',
                 'pfMEtHistManager',

@@ -261,6 +261,12 @@ tauHistManagerTauIdEffZtoMuTauCombinedFit = copy.deepcopy(tauHistManager)
 tauHistManagerTauIdEffZtoMuTauCombinedFit.pluginName = 'tauHistManagerTauIdEffZtoMuTauCombinedFit'
 tauHistManagerTauIdEffZtoMuTauCombinedFit.tauSource = 'tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative'
 
+from TauAnalysis.Core.leptonPFIsolationHistManager_cfi import *
+tauPFIsolationHistManagerZtoMuTauCombinedFit = copy.deepcopy(tauPFIsolationHistManager)
+tauPFIsolationHistManagerZtoMuTauCombinedFit.pluginName = 'tauPFIsolationHistManagerZtoMuTauCombinedFit'
+tauPFIsolationHistManagerZtoMuTauCombinedFit.leptonSource = 'tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative'
+del tauPFIsolationHistManagerZtoMuTauCombinedFit.genLeptonMatch
+
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit = copy.deepcopy(diTauCandidateHistManagerForMuTau)
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit.pluginName = \
   'diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit'
@@ -499,11 +505,12 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
     analyzers = cms.VPSet(
         muonHistManagerTauIdEffZtoMuTauCombinedFit,
         tauHistManagerTauIdEffZtoMuTauCombinedFit,
+        tauPFIsolationHistManagerZtoMuTauCombinedFit,
         diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit,
         diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets,
         diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitQCD,
         diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit,
-        jetHistManagerTauIdEffZtoMuTauCombinedFit,
+        jetHistManagerTauIdEffZtoMuTauCombinedFit,        
         caloMEtHistManager,
         pfMEtHistManager,
         tauIdEffZtoMuTauHistManagerCombinedFit,
@@ -677,6 +684,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
             analyzers = cms.vstring(
                 'muonHistManagerTauIdEffZtoMuTauCombinedFit',
                 'tauHistManagerTauIdEffZtoMuTauCombinedFit',
+                'tauPFIsolationHistManagerZtoMuTauCombinedFit',
                 'diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit',
                 'diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit',
                 'jetHistManagerTauIdEffZtoMuTauCombinedFit',
@@ -807,8 +815,9 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets = analyzeEventsTauIdEffZtoMuTa
             analyzers = cms.vstring(
                 'muonHistManagerTauIdEffZtoMuTauCombinedFit',
                 'tauHistManagerTauIdEffZtoMuTauCombinedFit',
-                'diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets',
                 'tauIdEffZtoMuTauHistManagerCombinedFitWplusJets',
+                'diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets',
+                'tauPFIsolationHistManagerZtoMuTauCombinedFit',
                 'dataBinnerTauIdEffZtoMuTauCombinedFit',
                 'tauIdEffDataBinnerComb2dWplusJets',
                 'tauIdEffBinGridHistManagerComb2dWplusJets'
@@ -935,6 +944,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitQCD = analyzeEventsTauIdEffZtoMuTauCombi
             analyzers = cms.vstring(
                 'muonHistManagerTauIdEffZtoMuTauCombinedFit',
                 'tauHistManagerTauIdEffZtoMuTauCombinedFit',
+                'tauPFIsolationHistManagerZtoMuTauCombinedFit',
                 'diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitQCD',
                 'tauIdEffZtoMuTauHistManagerCombinedFitQCD',
                 'dataBinnerTauIdEffZtoMuTauCombinedFit',
