@@ -35,7 +35,7 @@ from TauAnalysis.Configuration.recoSampleDefinitionsZtoMuTau_10TeV_cfi import *
 
 process.DQMStore = cms.Service("DQMStore")
 
-process.saveTauIdEffZtoMuTauPlots = cms.EDAnalyzer("DQMSimpleFileSaver",
+process.saveZtoMuTauPlots = cms.EDAnalyzer("DQMSimpleFileSaver",
     outputFileName = cms.string('plotsTauIdEffZtoMuTau.root')
 )
 
@@ -123,38 +123,38 @@ process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauQCDenrichedSelection_cf
 # produce event weight variable for correcting "bias"
 # of muon |eta| distribution caused by cuts on muon track and ECAL isolation variables
 # in QCD background events
-process.kineEventReweightTauIdEffQCD = cms.EDProducer("ObjValProducer",
-    config = cms.PSet(
-        pluginType = cms.string("KineEventReweightExtractor"),
-        weightLookupTable = cms.PSet(
-            fileName = cms.string(
-                'file:/afs/cern.ch/user/v/veelken/public/TauAnalysis/CMSSW_3_3_x/muonKineReweightsTauIdEffZtoMuTau.root'
-            ),
-            meName = cms.string('DQMData/tauIdEffKineEventReweights/QCDenrichedMuonCombIsoFactorized_data/MuonPtVsAbsEta')
-        ),
-        variables = cms.PSet(
-            x = cms.PSet(
-                pluginType = cms.string("PATMuTauPairValExtractor"),
-                src = cms.InputTag('muTauPairsBgEstQCDenriched'),
-                value = cms.string("abs(leg1.eta)"),
-                indices = cms.vuint32(0)
-            ),
-            y = cms.PSet(
-                pluginType = cms.string("PATMuTauPairValExtractor"),
-                src = cms.InputTag('muTauPairsBgEstQCDenriched'),
-                value = cms.string("leg1.pt"),
-                indices = cms.vuint32(0)
-            )
-        )
-    )
-)
+##process.kineEventReweightTauIdEffQCD = cms.EDProducer("ObjValProducer",
+##    config = cms.PSet(
+##        pluginType = cms.string("KineEventReweightExtractor"),
+##        weightLookupTable = cms.PSet(
+##            fileName = cms.string(
+##                'file:/afs/cern.ch/user/v/veelken/public/TauAnalysis/CMSSW_3_3_x/muonKineReweightsTauIdEffZtoMuTau.root'
+##            ),
+##            meName = cms.string('DQMData/tauIdEffKineEventReweights/QCDenrichedMuonCombIsoFactorized_data/MuonPtVsAbsEta')
+##        ),
+##        variables = cms.PSet(
+##            x = cms.PSet(
+##                pluginType = cms.string("PATMuTauPairValExtractor"),
+##                src = cms.InputTag('muTauPairsBgEstQCDenriched'),
+##                value = cms.string("abs(leg1.eta)"),
+##                indices = cms.vuint32(0)
+##            ),
+##            y = cms.PSet(
+##                pluginType = cms.string("PATMuTauPairValExtractor"),
+##                src = cms.InputTag('muTauPairsBgEstQCDenriched'),
+##                value = cms.string("leg1.pt"),
+##                indices = cms.vuint32(0)
+##            )
+##        )
+##    )
+##)
 
 # add another analysis sequence for producing QCD templates
 # in which the events are reweighted in order to correct for "bias" of muon Pt and eta distributions
 # caused by cuts on (absolute) muon track and ECAL isolation
-process.analyzeEventsBgEstQCDenriched_reweighted = copy.deepcopy(process.analyzeEventsBgEstQCDenriched)
-process.analyzeEventsBgEstQCDenriched_reweighted.name = cms.string('BgEstTemplateAnalyzer_QCDenriched_reweighted')
-setattr(process.analyzeEventsBgEstQCDenriched_reweighted, "eventWeightSource", cms.VInputTag("kineEventReweightTauIdEffQCD"))
+##process.analyzeEventsBgEstQCDenriched_reweighted = copy.deepcopy(process.analyzeEventsBgEstQCDenriched)
+##process.analyzeEventsBgEstQCDenriched_reweighted.name = cms.string('BgEstTemplateAnalyzer_QCDenriched_reweighted')
+##setattr(process.analyzeEventsBgEstQCDenriched_reweighted, "eventWeightSource", cms.VInputTag("kineEventReweightTauIdEffQCD"))
 
 # add analysis sequences for applying fake-rate weights
 # to estimate contribution of W + jets and QCD backgrounds
@@ -172,8 +172,8 @@ process.p = cms.Path(
   + process.bgEstTTplusJetsEnrichedAnalysisSequence
   + process.bgEstZmumuEnrichedAnalysisSequence
   + process.bgEstQCDenrichedAnalysisSequence
-  + process.kineEventReweightTauIdEffQCD + process.analyzeEventsBgEstQCDenriched_reweighted
-  + process.saveTauIdEffZtoMuTauPlots 
+  ##+ process.kineEventReweightTauIdEffQCD + process.analyzeEventsBgEstQCDenriched_reweighted
+  + process.saveZtoMuTauPlots 
 )
 
 process.q = cms.Path(process.dataQualityFilters)
