@@ -68,7 +68,7 @@ def setupFakeRates(process, patProducer):
         # Build our discriminator that computes the fake rate
         discriminator = cms.EDProducer(
             "RecoTauMVADiscriminator",
-            PFTauProducer = cms.InputTag(producer),
+            PFTauProducer = cms.InputTag(fake_rate_config['producer_name']),
             Prediscriminants = noPrediscriminants,
             # Point it to the correct DB instance
             dbLabel = cms.string("%s_%s" % (producer, fake_rate)),
@@ -86,7 +86,7 @@ def setupFakeRates(process, patProducer):
         converter = cms.EDProducer(
             "PFTauDiscriminatorToPatEfficiencies",
             discSrc = cms.InputTag(discriminator_name),
-            tauSrc = cms.InputTag(producer),
+            tauSrc = cms.InputTag(fake_rate_config['producer_name']),
         )
         converter_name = "tauFakeRates%s%s" % (producer, fake_rate)
         setattr(process, converter_name, converter)
