@@ -160,8 +160,8 @@ process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauQCDenrichedSelection_cf
 # add analysis sequences for applying fake-rate weights
 # to estimate contribution of W + jets and QCD backgrounds
 # to SS 'control', tau id. passed region
-from TauAnalysis.BgEstimationTools.tools.fakeRateTools import enableFakeRates_runTauIdEffAnalysisZtoMuTau
-enableFakeRates_runTauIdEffAnalysisZtoMuTau(process)
+##from TauAnalysis.BgEstimationTools.tools.fakeRateTools import enableFakeRates_runTauIdEffAnalysisZtoMuTau
+##enableFakeRates_runTauIdEffAnalysisZtoMuTau(process)
 
 process.p = cms.Path(
    process.producePatTupleZtoMuTauSpecific
