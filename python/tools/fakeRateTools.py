@@ -312,9 +312,10 @@ def enableFakeRates_runZtoMuTau(process, method = None):
     #
     #changeCut(process, "selectedPatTausForMuTauLeadTrk", "tauID('leadingTrackFinding') > -1.")
     #changeCut(process, "selectedPatTausForMuTauLeadTrkPt", "tauID('leadingTrackPtCut') > -1.")
+    changeCut(process, "selectedPatTausForMuTauTaNCdiscr", "tauID('byTaNCfrQuarterPercent') > -1.e+3")
     changeCut(process, "selectedPatTausForMuTauTrkIso", "tauID('trackIsolation') > -1.")
-    changeCut(process, "selectedPatTausForMuTauEcalIso", "tauID('ecalIsolation') > -1.")
-    changeCut(process, "selectedPatTausForMuTauProng", "signalTracks.size() > -1")
+    changeCut(process, "selectedPatTausForMuTauEcalIso", "tauID('ecalIsolation') > -1.")    
+    changeCut(process, "selectedPatTausForMuTauProng", "signalPFChargedHadrCands.size() > -1")
     changeCut(process, "selectedPatTausForMuTauCharge", "abs(charge) > -1")
     #changeCut(process, "selectedPatTausForMuTauMuonVeto", "tauID('againstMuon') > -1.")
     # require muon and loosely selected tau-jet candidate to have opposite charges
