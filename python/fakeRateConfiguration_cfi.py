@@ -4,19 +4,61 @@ import shutil
 from CondCore.DBCommon.CondDBSetup_cfi import CondDBSetup
 from RecoTauTag.RecoTau.TauDiscriminatorTools import noPrediscriminants
 
+def frproducer_name(tautype, fake_rate):
+    return "tauFakeRates%s%s" % (tautype, fake_rate)
+
+def pateff_name(fake_rate, fake_rate_config):
+    return ((fake_rate_config['is_eff'] and 'eff' or 'fr') +
+            fake_rate_config['cut'] + fake_rate)
+
 fake_rates = {
     'shrinkingCone' : {
         'producer_name' : 'shrinkingConePFTauProducer',
         'fake_rates' : {
-            'qcdDijet' : {
-                'db' : '/afs/cern.ch/user/v/veelken/public/fakeRate.db',
+            # WARNING DUPLICATED DIJET HIGH PT FAKE RATES TO TEST SOFTWARE
+            # FIXME FIXME FIXME
+            'ppMuXData' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/public/fakeRates/'
+                'fakerate_qcdDiJet1st/fakeRate.db',
                 'tag' : 'FakeRate',
-            }
+            },
+            'DiJetHighPtdata' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/public/fakeRates/'
+                'fakerate_qcdDiJet1st/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'DiJetSecondPtdata' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/public/fakeRates/'
+                'fakerate_qcdDiJet2nd/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'WplusJetsdata' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/public/fakeRates/'
+                'fakerate_wjets/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'ZTTsim' : {
+                'is_eff' : True,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/public/fakeRates/'
+                'fakerate_zttEff/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
         },
     }
 }
 
-fake_rates_to_add = [('shrinkingCone', 'qcdDijet')]
+PRODUCER = 'shrinkingCone'
+fake_rates_to_add = ['DiJetHighPtdata', 'DiJetSecondPtdata',
+                     'ZTTsim', 'WplusJetsdata', 'ppMuXData']
 
 data_directory = os.path.join(os.environ['CMSSW_BASE'], 'src', 'TauAnalysis',
                               'TauIdEfficiency', 'data')
@@ -27,7 +69,8 @@ def setupFakeRates(process, patProducer):
     print "Warning: Deleting any existing efficiencies!"
     patProducer.efficiencies = cms.PSet()
     patProducer.addEfficiencies = cms.bool(True)
-    for producer, fake_rate in fake_rates_to_add:
+    producer = PRODUCER
+    for fake_rate in fake_rates_to_add:
         print "Making DB loader: %s fake rates for %s" % (fake_rate, producer)
         fake_rate_config = fake_rates[producer]['fake_rates'][fake_rate]
         # Copy the db to the working area
@@ -64,7 +107,8 @@ def setupFakeRates(process, patProducer):
     # Sequence that produces PFTauDiscriminators containing the fake rates
     if not hasattr(process, "tauFakeRates"):
         setattr(process, "tauFakeRates", cms.Sequence(process.dummyForFakeRate))
-    for producer, fake_rate in fake_rates_to_add:
+    for fake_rate in fake_rates_to_add:
+        fake_rate_config = fake_rates[producer]['fake_rates'][fake_rate]
         # Build our discriminator that computes the fake rate
         discriminator = cms.EDProducer(
             "RecoTauMVADiscriminator",
@@ -88,9 +132,16 @@ def setupFakeRates(process, patProducer):
             discSrc = cms.InputTag(discriminator_name),
             tauSrc = cms.InputTag(fake_rates[producer]['producer_name']),
         )
-        converter_name = "tauFakeRates%s%s" % (producer, fake_rate)
+        converter_name = frproducer_name(producer, fake_rate)
         setattr(process, converter_name, converter)
         process.tauFakeRates += converter
+        # Build the efficiency name.  The convention (defined in the code of
+        # TauIdEffValidationHistManager) is (fr/eff) + CutName + Sample +
+        # (data/sim)
+        fake_rate_config = fake_rates[producer]['fake_rates'][fake_rate]
+        pat_eff_name = pateff_name(fake_rate, fake_rate_config)
         # Finally, add this to our efficiency collection
         setattr(patProducer.efficiencies,
-                fake_rate, cms.InputTag(converter_name))
+                pat_eff_name, cms.InputTag(converter_name))
+        fake_rate_config['pateffname'] = pat_eff_name
+        print "Adding efficiency:", pat_eff_name, "to pat::Tau"
