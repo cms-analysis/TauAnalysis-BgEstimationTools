@@ -11,9 +11,16 @@ def pateff_name(fake_rate, fake_rate_config):
     return ((fake_rate_config['is_eff'] and 'eff' or 'fr') +
             fake_rate_config['cut'] + fake_rate)
 
+from RecoTauTag.RecoTau.TauDiscriminatorTools import noPrediscriminants
+
+from RecoTauTag.RecoTau.PFRecoTauDiscriminationByLeadingTrackPtCut_cfi import \
+        pfRecoTauDiscriminationByLeadingTrackPtCut
+
 fake_rates = {
     'shrinkingCone' : {
-        'producer_name' : 'shrinkingConePFTauProducer',
+        #'producer_name' : 'shrinkingConePFTauProducer',
+        # Just testing!
+        'producer_name' : 'hpsTancTaus',
         'fake_rates' : {
             # WARNING DUPLICATED DIJET HIGH PT FAKE RATES TO TEST SOFTWARE
             # FIXME FIXME FIXME
@@ -61,9 +68,10 @@ fake_rates_to_add = ['DiJetHighPtdata', 'DiJetSecondPtdata',
                      'ZTTsim', 'WplusJetsdata', 'ppMuXData']
 
 data_directory = os.path.join(os.environ['CMSSW_BASE'], 'src', 'TauAnalysis',
-                              'TauIdEfficiency', 'data')
+                              'BgEstimationTools', 'data')
+
 # File-in-path version
-data_directory_fip = os.path.join('TauAnalysis', 'TauIdEfficiency', 'data')
+data_directory_fip = os.path.join('TauAnalysis', 'BgEstimationTools', 'data')
 
 def setupFakeRates(process, patProducer):
     print "Warning: Deleting any existing efficiencies!"
@@ -75,15 +83,18 @@ def setupFakeRates(process, patProducer):
         fake_rate_config = fake_rates[producer]['fake_rates'][fake_rate]
         # Copy the db to the working area
         db_source_file = fake_rate_config['db']
+        local_db_file_name = fake_rate + os.path.basename(db_source_file)
         local_db_copy_name = os.path.join(
-            data_directory, os.path.basename(db_source_file))
+            data_directory, local_db_file_name)
+        if not os.path.exists(data_directory):
+            os.makedirs(data_directory)
         if not os.path.exists(local_db_copy_name):
             print "Copying fakerate db:", db_source_file, \
                     "->", local_db_copy_name
             shutil.copy(db_source_file, local_db_copy_name)
 
-        local_db_file_in_path = os.path.join(data_directory_fip,
-                                             os.path.basename(db_source_file))
+        local_db_file_in_path = os.path.join(
+            data_directory_fip, local_db_file_name)
         loader = cms.ESSource(
             "PoolDBESSource",
             CondDBSetup,
@@ -109,11 +120,24 @@ def setupFakeRates(process, patProducer):
         setattr(process, "tauFakeRates", cms.Sequence(process.dummyForFakeRate))
     for fake_rate in fake_rates_to_add:
         fake_rate_config = fake_rates[producer]['fake_rates'][fake_rate]
+        prediscriminator = pfRecoTauDiscriminationByLeadingTrackPtCut.clone(
+            PFTauProducer = fake_rates[producer]['producer_name'],
+            Prediscriminants = noPrediscriminants,
+        )
+        prediscriminator_name = "computeFakeRates%s%sLeadTrk" % (producer, fake_rate)
+        setattr(process, prediscriminator_name, prediscriminator)
+        process.tauFakeRates += prediscriminator
         # Build our discriminator that computes the fake rate
         discriminator = cms.EDProducer(
             "RecoTauMVADiscriminator",
             PFTauProducer = cms.InputTag(fake_rates[producer]['producer_name']),
-            Prediscriminants = noPrediscriminants,
+            Prediscriminants = cms.PSet(
+                BooleanOperator = cms.string("and"),
+                leadTrack = cms.PSet(
+                    Producer = cms.InputTag(prediscriminator_name),
+                    cut = cms.double(0.5),
+                )
+            ),
             # Point it to the correct DB instance
             dbLabel = cms.string("%s_%s" % (producer, fake_rate)),
             # We don't specify for individual decay modes
