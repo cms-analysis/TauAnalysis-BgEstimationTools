@@ -68,7 +68,7 @@ process.source = cms.Source("PoolSource",
 #--------------------------------------------------------------------------------
 # import utility function for switching pat::Tau input
 # to different reco::Tau collection stored on AOD
-from PhysicsTools.PatAlgos.tools.tauTools import * 
+from PhysicsTools.PatAlgos.tools.tauTools import *
 
 # comment-out to take reco::CaloTaus instead of reco::PFTaus
 # as input for pat::Tau production
@@ -77,8 +77,11 @@ from PhysicsTools.PatAlgos.tools.tauTools import *
 # comment-out to take shrinking dR = 5.0/Et(PFTau) signal cone
 # instead of fixed dR = 0.07 signal cone reco::PFTaus
 # as input for pat::Tau production
-switchToPFTauShrinkingCone(process)
+#switchToPFTauShrinkingCone(process)
 #switchToPFTauFixedCone(process)
+
+# comment-out to take new HPS + TaNC combined tau id. algorithm
+switchToPFTauHPSpTaNC(process)
 
 # disable preselection on of pat::Taus
 # (disabled also in TauAnalysis/RecoTools/python/patPFTauConfig_cfi.py ,
@@ -94,10 +97,7 @@ setattr(process.patTaus.tauIDSources, "ewkTauId", cms.InputTag('ewkTauId'))
 from PhysicsTools.PatAlgos.tools.jetTools import *
 
 # uncomment to replace caloJets by pfJets
-##switchJetCollection(process, jetCollection = cms.InputTag("ak5PFJets"))
-##runBTagging(process, cms.InputTag("ak5CaloJets"), 'AOD')
-process.patJets.addDiscriminators = False
-process.patJets.addTagInfos = False
+switchJetCollection(process, jetCollection = cms.InputTag("ak5PFJets"), outputModule = '')
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -162,6 +162,84 @@ process.load('TauAnalysis.BgEstimationTools.bgEstZtoMuTauQCDenrichedSelection_cf
 # to SS 'control', tau id. passed region
 ##from TauAnalysis.BgEstimationTools.tools.fakeRateTools import enableFakeRates_runTauIdEffAnalysisZtoMuTau
 ##enableFakeRates_runTauIdEffAnalysisZtoMuTau(process)
+
+#--------------------------------------------------------------------------------
+# switch to pfMET in all analysis sequences 
+if hasattr(process, "patPFMETs"):
+    process.muTauPairsTauIdEffZtoMuTauTemplateFit.srcMET = cms.InputTag('patPFMETs')
+
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+# import utility function for changing cut values
+from TauAnalysis.Configuration.tools.changeCut import changeCut
+
+# change muon Pt threshold to 20 GeV
+changeCut(process, "selectedPatMuonsPt10", "pt > 20.")
+changeCut(process, "muonsBgEstWplusJetsEnrichedPt", "pt > 15.")
+
+# disable cut on muon calo. + segment compatibility
+# (check that muon calo. compatibility is not affected by pile-up before re-enabling this cut)
+changeCut(process, "selectedPatMuonsPionVeto", -1000., attribute = "AntiPionCut")
+changeCut(process, "selectedPatMuonsPionVetoLooseIsolation", -1000., attribute = "AntiPionCut")
+changeCut(process, "muonsForTauIdEffZtoMuTauTemplateFitPionVeto", -1000., attribute = "AntiPionCut")
+changeCut(process, "muonsForTauIdEffZtoMuTauCombinedFitPionVetoLooseIso", -1000., attribute = "AntiPionCut")
+
+
+# change upper limit on tranverse impact parameter of muon track to 2mm
+changeCut(process, "selectedPatMuonsTrkIP", 0.2, attribute = "IpMax")
+changeCut(process, "muonsForTauIdEffZtoMuTauTemplateFitTrkIP", 0.2, attribute = "IpMax")
+changeCut(process, "muonsForTauIdEffZtoMuTauCombinedFitTrkIPlooseIso", 0.2, attribute = "IpMax")
+
+# change eta acceptance for tau-jets to |eta| < 2.3
+changeCut(process, "selectedPatTausForMuTauEta21", "abs(eta) < 2.3")
+changeCut(process, "selectedPatTausForMuTauEta21", "abs(eta) < 2.3")
+
+# change cut on TaNC output in case using new HPS + TaNC combined tau id. algorithm
+# CV: discriminators by Track/ECAL isolation do not exist for the combined tau id. algorithm
+#     and need to be replaced by dummy cuts, in order to avoid run-time exceptions
+changeCut(process, "selectedPatTausTrkIso", "tauID('byTaNCloose') > -1.")
+changeCut(process, "selectedPatTausForMuTauTrkIso", "tauID('byTaNCloose') > -1.")
+changeCut(process, "selectedPatTausEcalIso", "tauID('byTaNCloose') > -1.")
+changeCut(process, "selectedPatTausForMuTauEcalIso", "tauID('byTaNCloose') > -1.")
+changeCut(process, "selectedPatTausTaNCdiscr", "tauID('byTaNCmedium') > 0.5")
+changeCut(process, "selectedPatTausForMuTauTaNCdiscr", "tauID('byTaNCmedium') > 0.5")
+changeCut(process, "tausBgEstQCDenrichedTaNCdiscr", "tauID('byTaNCloose') > 0.5 & tauID('byTaNCmedium') < 0.5")
+changeCut(process, "tausBgEstQCDenrichedTrkIso", "tauID('byTaNCloose') > -1.")
+changeCut(process, "tausBgEstQCDenrichedEcalIso", "tauID('byTaNCloose') > -1.")
+changeCut(process, "tausBgEstWplusJetsEnrichedTaNCdiscr", "tauID('byTaNCloose') > 0.5 & tauID('byTaNCmedium') < 0.5")
+changeCut(process, "tausBgEstWplusJetsEnrichedTrkIso", "tauID('byTaNCloose') > -1.")
+changeCut(process, "tausBgEstWplusJetsEnrichedEcalIso", "tauID('byTaNCloose') > -1.")
+changeCut(process, "tausBgEstZmumuJetMisIdEnrichedTaNCdiscr", "tauID('byTaNCloose') > 0.5 & tauID('byTaNCmedium') < 0.5")
+changeCut(process, "tausBgEstZmumuJetMisIdEnrichedTrkIso", "tauID('byTaNCloose') > -1.")
+changeCut(process, "tausBgEstZmumuJetMisIdEnrichedEcalIso", "tauID('byTaNCloose') > -1.")
+
+# change lower limit on separation required between muon and tau-jet to dR > 0.5
+changeCut(process, "selectedMuTauPairsAntiOverlapVeto", "dR12 > 0.5")
+changeCut(process, "selectedMuTauPairsAntiOverlapVetoLooseMuonIsolation", "dR12 > 0.5")
+changeCut(process, "muTauPairsTauIdEffZtoMuTauTemplateFit", 0.5, attribute = "dRmin12")
+changeCut(process, "muTauPairsTauIdEffZtoMuTauCombinedFit", 0.5, attribute = "dRmin12")
+changeCut(process, "muTauPairsBgEstQCDenriched", 0.5, attribute = "dRmin12")
+changeCut(process, "muTauPairsBgEstWplusJetsEnriched", 0.5, attribute = "dRmin12")
+changeCut(process, "muTauPairsBgEstTTplusJetsEnriched", 0.5, attribute = "dRmin12") 
+changeCut(process, "muTauPairsBgEstZmumuJetMisIdEnriched", 0.5, attribute = "dRmin12") 
+changeCut(process, "muTauPairsBgEstZmumuMuonMisIdEnriched", 0.5, attribute = "dRmin12")
+
+# change upper limit on muon + MET transverse mass to 40 GeV
+changeCut(process, "selectedMuTauPairsMt1MET", "mt1MET < 40.")
+changeCut(process, "selectedMuTauPairsMt1METlooseMuonIsolation", "mt1MET < 40.")
+changeCut(process, "muTauPairsBgEstQCDenrichedMt1MET", "mt1MET < 40.")
+changeCut(process, "muTauPairsBgEstZmumuJetMisIdEnrichedMt1MET", "mt1MET < 40.")
+
+# disable cut on Pzeta variable
+changeCut(process, "selectedMuTauPairsPzetaDiff", "(pZeta - 1.5*pZetaVis) > -1000.")
+changeCut(process, "selectedMuTauPairsPzetaDiffLooseMuonIsolation", "(pZeta - 1.5*pZetaVis) > -1000.")
+changeCut(process, "muTauPairsBgEstQCDenrichedPzetaDiff", "(pZeta - 1.5*pZetaVis) > -1000.")
+changeCut(process, "muTauPairsBgEstZmumuJetMisIdEnrichedPzetaDiff", "(pZeta - 1.5*pZetaVis) > -1000.")
+
+# disable b-tagging for now
+#changeCut(process, "jetsBgEstTTplusJetsEnrichedEt40bTag", "bDiscriminator('trackCountingHighEffBJetTags') > -1000.")
+#--------------------------------------------------------------------------------
 
 process.p = cms.Path(
    process.producePatTupleZtoMuTauSpecific

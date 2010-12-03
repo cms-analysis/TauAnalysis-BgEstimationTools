@@ -15,12 +15,29 @@ from TauAnalysis.RecoTools.tools.eventSelFlagProdConfigurator import *
 
 from TauAnalysis.RecoTools.patMuonSelection_cfi import *
 
-muonsForTauIdEffZtoMuTauCombinedFitCombRelIsoLoose = cms.EDFilter("PATMuonSelector",
-    cut = cms.string('(userIsolation("pat::TrackIso") + userIsolation("pat::EcalIso")) < (0.24*pt)'),
-    filter = cms.bool(False)
+muonsForTauIdEffZtoMuTauCombinedFitCombRelIsoLoose = cms.EDFilter("PATMuonPFIsolationSelector",
+    pfCandidateSource = cms.InputTag('pfNoPileUp'),
+    chargedHadronIso = cms.PSet(
+        ptMin = cms.double(-1.),        
+        dRvetoCone = cms.double(-1.),
+        dRisoCone = cms.double(0.6)
+    ),
+    neutralHadronIso = cms.PSet(
+        ptMin = cms.double(0.5),        
+        dRvetoCone = cms.double(0.08),        
+        dRisoCone = cms.double(0.6)
+    ),
+    photonIso = cms.PSet(
+        ptMin = cms.double(0.5),        
+        dPhiVeto = cms.double(-1.),  # asymmetric Eta x Phi veto region 
+        dEtaVeto = cms.double(-1.),  # to account for photon conversions in electron isolation case        
+        dRvetoCone = cms.double(-1.),
+        dRisoCone = cms.double(0.6)
+    ),
+    sumPtMax = cms.double(0.30),
+    sumPtMethod = cms.string("relative"), # either "relative" or "absolute"
+    filter = cms.bool(False)                                                        
 )
-
-muonsForTauIdEffZtoMuTauCombinedFitPionVetoLooseIso = copy.deepcopy(selectedPatMuonsPionVeto)
 
 muonsForTauIdEffZtoMuTauCombinedFitTrkLooseIso = copy.deepcopy(selectedPatMuonsTrk)
 
@@ -28,7 +45,6 @@ muonsForTauIdEffZtoMuTauCombinedFitTrkIPlooseIso = copy.deepcopy(selectedPatMuon
 
 muonSelConfiguratorTauIdEffZtoMuTauCombinedFitLooseIso = objSelConfigurator(
     [ muonsForTauIdEffZtoMuTauCombinedFitCombRelIsoLoose,
-      muonsForTauIdEffZtoMuTauCombinedFitPionVetoLooseIso,
       muonsForTauIdEffZtoMuTauCombinedFitTrkLooseIso,
       muonsForTauIdEffZtoMuTauCombinedFitTrkIPlooseIso ],
     src = "selectedPatMuonsPt10Cumulative",
@@ -38,12 +54,9 @@ muonSelConfiguratorTauIdEffZtoMuTauCombinedFitLooseIso = objSelConfigurator(
 
 selectMuonsForTauIdEffZtoMuTauCombinedFitLooseIso = muonSelConfiguratorTauIdEffZtoMuTauCombinedFitLooseIso.configure(pyNameSpace = locals())
 
-muonsForTauIdEffZtoMuTauCombinedFitCombRelIsoTight = cms.EDFilter("PATMuonSelector",
-    cut = cms.string('(userIsolation("pat::TrackIso") + userIsolation("pat::EcalIso")) < (0.06*pt)'),
-    filter = cms.bool(False)
+muonsForTauIdEffZtoMuTauCombinedFitCombRelIsoTight = muonsForTauIdEffZtoMuTauCombinedFitCombRelIsoLoose.clone(
+    sumPtMax = cms.double(0.10)
 )
-
-muonsForTauIdEffZtoMuTauCombinedFitPionVetoTightIso = copy.deepcopy(selectedPatMuonsPionVeto)
 
 muonsForTauIdEffZtoMuTauCombinedFitTrkTightIso = copy.deepcopy(selectedPatMuonsTrk)
 
@@ -51,7 +64,6 @@ muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIso = copy.deepcopy(selectedPatMuon
 
 muonSelConfiguratorTauIdEffZtoMuTauCombinedFitTightIso = objSelConfigurator(
     [ muonsForTauIdEffZtoMuTauCombinedFitCombRelIsoTight,
-      muonsForTauIdEffZtoMuTauCombinedFitPionVetoTightIso,
       muonsForTauIdEffZtoMuTauCombinedFitTrkTightIso,
       muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIso ],
     src = "selectedPatMuonsPt10Cumulative",
@@ -73,10 +85,13 @@ selectMuonsForTauIdEffZtoMuTauCombinedFit = cms.Sequence(
 from TauAnalysis.RecoTools.patPFTauSelection_cfi import *
 from TauAnalysis.RecoTools.patPFTauSelectionForMuTau_cfi import *
 
-tausForTauIdEffZtoMuTauCombinedFitMuonVeto = copy.deepcopy(selectedPatTausMuonVeto)
+tausForTauIdEffZtoMuTauCombinedFitMuonVeto = copy.deepcopy(selectedPatTausForMuTauMuonVeto)
+
+tausForTauIdEffZtoMuTauCombinedFitCaloMuonVeto = copy.deepcopy(selectedPatTausForMuTauCaloMuonVeto)
 
 tauSelConfiguratorTauIdEffZtoMuTauCombinedFit = objSelConfigurator(
-    [ tausForTauIdEffZtoMuTauCombinedFitMuonVeto ],
+    [ tausForTauIdEffZtoMuTauCombinedFitMuonVeto,
+      tausForTauIdEffZtoMuTauCombinedFitCaloMuonVeto ],
     src = "selectedPatTausForMuTauLeadTrkPtCumulative",
     pyModuleName = __name__,
     doSelIndividual = False
@@ -136,7 +151,7 @@ from TauAnalysis.CandidateTools.resolutions_cfi import *
 muTauPairsTauIdEffZtoMuTauCombinedFit = allMuTauPairs.clone(
     useLeadingTausOnly = cms.bool(False),
     srcLeg1 = cms.InputTag('muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIsoCumulative'),
-    srcLeg2 = cms.InputTag('tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative'),
+    srcLeg2 = cms.InputTag('tausForTauIdEffZtoMuTauCombinedFitCaloMuonVetoCumulative'),
     dRmin12 = cms.double(0.7),
     srcMET = cms.InputTag('patMETs'),
     recoMode = cms.string(""),
@@ -144,7 +159,8 @@ muTauPairsTauIdEffZtoMuTauCombinedFit = allMuTauPairs.clone(
 )
 
 muTauPairsTauIdEffZtoMuTauCombinedFitBackToBack = cms.EDFilter("PATMuTauPairSelector",
-    cut = cms.string('dPhi12 > 2.793'),
+    ##cut = cms.string('dPhi12 > 2.793'),
+    cut = cms.string('dPhi12 > -1.01'),                                                            
     filter = cms.bool(False)
 )
 
@@ -161,7 +177,7 @@ selectMuTauPairsTauIdEffZtoMuTauCombinedFit = \
 muTauPairsTauIdEffZtoMuTauCombinedFitWplusJets = copy.deepcopy(muTauPairsTauIdEffZtoMuTauCombinedFit)
 
 muTauPairsTauIdEffZtoMuTauCombinedFitMt1MEtWplusJets = cms.EDFilter("PATMuTauPairSelector",
-    cut = cms.string('mt1MET > 50.'),
+    cut = cms.string('mt1MET > 60.'),
     filter = cms.bool(False)
 )
 
@@ -230,7 +246,7 @@ jetsTauIdEffZtoMuTauCombinedFitEt15 = cms.EDFilter("PATJetSelector",
 jetsTauIdEffZtoMuTauCombinedFitAntiOverlapWithLeptonsVeto = cms.EDFilter("PATJetAntiOverlapSelector",
     srcNotToBeFiltered = cms.VInputTag(
         "muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIsoCumulative",
-        "tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative"
+        "tausForTauIdEffZtoMuTauCombinedFitCaloMuonVetoCumulative"
     ),                                                           
     dRmin = cms.double(0.7),
     filter = cms.bool(False)                                           
@@ -255,16 +271,16 @@ from TauAnalysis.Configuration.analyzeZtoMuTau_cfi import *
 
 muonHistManagerTauIdEffZtoMuTauCombinedFit = copy.deepcopy(muonHistManager)
 muonHistManagerTauIdEffZtoMuTauCombinedFit.pluginName = 'muonHistManagerTauIdEffZtoMuTauCombinedFit'
-muonHistManagerTauIdEffZtoMuTauCombinedFit.muonSource = 'muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIsoCumulative'
+muonHistManagerTauIdEffZtoMuTauCombinedFit.muonSource = muTauPairsTauIdEffZtoMuTauCombinedFit.srcLeg1
 
 tauHistManagerTauIdEffZtoMuTauCombinedFit = copy.deepcopy(tauHistManager)
 tauHistManagerTauIdEffZtoMuTauCombinedFit.pluginName = 'tauHistManagerTauIdEffZtoMuTauCombinedFit'
-tauHistManagerTauIdEffZtoMuTauCombinedFit.tauSource = 'tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative'
+tauHistManagerTauIdEffZtoMuTauCombinedFit.tauSource = muTauPairsTauIdEffZtoMuTauCombinedFit.srcLeg2
 
 from TauAnalysis.Core.leptonPFIsolationHistManager_cfi import *
 tauPFIsolationHistManagerZtoMuTauCombinedFit = copy.deepcopy(tauPFIsolationHistManager)
 tauPFIsolationHistManagerZtoMuTauCombinedFit.pluginName = 'tauPFIsolationHistManagerZtoMuTauCombinedFit'
-tauPFIsolationHistManagerZtoMuTauCombinedFit.leptonSource = 'tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative'
+tauPFIsolationHistManagerZtoMuTauCombinedFit.leptonSource = muTauPairsTauIdEffZtoMuTauCombinedFit.srcLeg2
 del tauPFIsolationHistManagerZtoMuTauCombinedFit.genLeptonMatch
 
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit = copy.deepcopy(diTauCandidateHistManagerForMuTau)
@@ -279,7 +295,7 @@ diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit.pluginName = \
   'diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit'
 diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit.pluginType = 'PATMuTauPairEventActivityHistManager'
 diTauCandidateEventActivityHistManagerTauIdEffZtoMuTauCombinedFit.diTauCandidateSource = \
-  'muTauPairsTauIdEffZtoMuTauCombinedFitBackToBackCumulative'
+  diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit.diTauCandidateSource
 
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets = copy.deepcopy(diTauCandidateHistManagerForMuTau)
 diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets.pluginName = \
@@ -300,19 +316,22 @@ jetHistManagerTauIdEffZtoMuTauCombinedFit.jetSource = 'jetsTauIdEffZtoMuTauCombi
 from TauAnalysis.BgEstimationTools.tauIdEffZtoMuTauHistManager_cfi import *
 tauIdEffZtoMuTauHistManagerCombinedFit = copy.deepcopy(tauIdEffZtoMuTauHistManager)
 tauIdEffZtoMuTauHistManagerCombinedFit.pluginName = 'tauIdEffZtoMuTauHistManagerCombinedFit'
-tauIdEffZtoMuTauHistManagerCombinedFit.muonSource = 'muonsForTauIdEffZtoMuTauCombinedFitTrkIPtightIsoCumulative'
-tauIdEffZtoMuTauHistManagerCombinedFit.tauSource = 'tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative'
-tauIdEffZtoMuTauHistManagerCombinedFit.diTauSource = 'muTauPairsTauIdEffZtoMuTauCombinedFitBackToBackCumulative'
+tauIdEffZtoMuTauHistManagerCombinedFit.muonSource = muTauPairsTauIdEffZtoMuTauCombinedFit.srcLeg1
+tauIdEffZtoMuTauHistManagerCombinedFit.tauSource = muTauPairsTauIdEffZtoMuTauCombinedFit.srcLeg2
+tauIdEffZtoMuTauHistManagerCombinedFit.diTauSource = \
+  diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit.diTauCandidateSource
 tauIdEffZtoMuTauHistManagerCombinedFit.diTauChargeSignExtractor.src = tauIdEffZtoMuTauHistManagerCombinedFit.diTauSource
 
 tauIdEffZtoMuTauHistManagerCombinedFitWplusJets = copy.deepcopy(tauIdEffZtoMuTauHistManagerCombinedFit)
 tauIdEffZtoMuTauHistManagerCombinedFitWplusJets.pluginName = 'tauIdEffZtoMuTauHistManagerCombinedFitWplusJets'
-tauIdEffZtoMuTauHistManagerCombinedFitWplusJets.diTauSource = 'muTauPairsTauIdEffZtoMuTauCombinedFitPzetaDiffWplusJetsCumulative'
+tauIdEffZtoMuTauHistManagerCombinedFitWplusJets.diTauSource = \
+  diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets.diTauCandidateSource
 tauIdEffZtoMuTauHistManagerCombinedFitWplusJets.diTauChargeSignExtractor.src = tauIdEffZtoMuTauHistManagerCombinedFitWplusJets.diTauSource
 
 tauIdEffZtoMuTauHistManagerCombinedFitQCD = copy.deepcopy(tauIdEffZtoMuTauHistManagerCombinedFit)
 tauIdEffZtoMuTauHistManagerCombinedFitQCD.pluginName ='tauIdEffZtoMuTauHistManagerCombinedFitQCD'
-tauIdEffZtoMuTauHistManagerCombinedFitQCD.diTauSource = 'muTauPairsTauIdEffZtoMuTauCombinedFitPzetaDiffQCDcumulative'
+tauIdEffZtoMuTauHistManagerCombinedFitQCD.diTauSource = \
+  diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitQCD.diTauCandidateSource                                                      
 tauIdEffZtoMuTauHistManagerCombinedFitQCD.diTauChargeSignExtractor.src = tauIdEffZtoMuTauHistManagerCombinedFitQCD.diTauSource
 
 from TauAnalysis.BgEstimationTools.bgEstBinGridZtoMuTau_cfi import *
@@ -321,27 +340,27 @@ dataBinnerTauIdEffZtoMuTauCombinedFit = copy.deepcopy(dataBinner)
 dataBinnerTauIdEffZtoMuTauCombinedFit.pluginName = 'dataBinnerTauIdEffZtoMuTauCombinedFit'
 
 binningTauIdEffZtoMuTauCombinedFit_ewkTauId = copy.deepcopy(binning_ewkTauId)
-binningTauIdEffZtoMuTauCombinedFit_ewkTauId.extractor.src = 'tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative'
+binningTauIdEffZtoMuTauCombinedFit_ewkTauId.extractor.src = muTauPairsTauIdEffZtoMuTauCombinedFit.srcLeg2
 
 binningTauIdEffZtoMuTauCombinedFit_relMuonIso = copy.deepcopy(binning_relMuonIso)
-binningTauIdEffZtoMuTauCombinedFit_relMuonIso.extractor.src = 'muonsForTauIdEffZtoMuTauCombinedFitTrkIPlooseIsoCumulative'
+binningTauIdEffZtoMuTauCombinedFit_relMuonIso.extractor.src = muTauPairsTauIdEffZtoMuTauCombinedFit.srcLeg1
 binningTauIdEffZtoMuTauCombinedFit_relMuonIso.binning = cms.PSet(
-    boundaries = cms.vdouble(0.06, 0.12),
+    boundaries = cms.vdouble(0.10),
     min = cms.double(-0.01),
-    max = cms.double(0.24)
+    max = cms.double(0.25)
 )
 
 binningTauIdEffZtoMuTauCombinedFit_diTauAbsCharge = copy.deepcopy(binning_diTauAbsCharge)
 binningTauIdEffZtoMuTauCombinedFit_diTauAbsCharge.extractor.src = \
-  'muTauPairsTauIdEffZtoMuTauCombinedFitBackToBackCumulative'
+  diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFit.diTauCandidateSource
 
 binningTauIdEffZtoMuTauCombinedFitWplusJets_diTauAbsCharge = copy.deepcopy(binning_diTauAbsCharge)
 binningTauIdEffZtoMuTauCombinedFitWplusJets_diTauAbsCharge.extractor.src = \
-  'muTauPairsTauIdEffZtoMuTauCombinedFitPzetaDiffWplusJetsCumulative'
+  diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitWplusJets.diTauCandidateSource
 
 binningTauIdEffZtoMuTauCombinedFitQCD_diTauAbsCharge = copy.deepcopy(binning_diTauAbsCharge)
 binningTauIdEffZtoMuTauCombinedFitQCD_diTauAbsCharge.extractor.src = \
-  'muTauPairsTauIdEffZtoMuTauCombinedFitPzetaDiffQCDcumulative'
+  diTauCandidateHistManagerTauIdEffZtoMuTauCombinedFitQCD.diTauCandidateSource
 
 tauIdEffBinningZtoMuTau_comb2d = cms.PSet(
     name = cms.string("tauIdEffBinningZtoMuTau_comb2d"),
@@ -388,12 +407,6 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
             minNumber = cms.uint32(1)
         ),
         cms.PSet(
-            pluginName = cms.string('muonAntiPionCutTauIdEffZtoMuTauCombinedFitLooseIso'),
-            pluginType = cms.string('PATCandViewMinEventSelector'),
-            src = cms.InputTag('muonsForTauIdEffZtoMuTauCombinedFitPionVetoLooseIsoCumulative'),
-            minNumber = cms.uint32(1)
-        ),
-        cms.PSet(
             pluginName = cms.string('muonTrkIPcutTauIdEffZtoMuTauCombinedFitLooseIso'),
             pluginType = cms.string('PATCandViewMinEventSelector'),
             src = cms.InputTag('muonsForTauIdEffZtoMuTauCombinedFitTrkLooseIsoCumulative'),
@@ -403,12 +416,6 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
             pluginName = cms.string('muonCombRelIsoTightCutTauIdEffZtoMuTauCombinedFit'),
             pluginType = cms.string('PATCandViewMinEventSelector'),
             src = cms.InputTag('muonsForTauIdEffZtoMuTauCombinedFitCombRelIsoTightCumulative'),
-            minNumber = cms.uint32(1)
-        ),
-        cms.PSet(
-            pluginName = cms.string('muonAntiPionCutTauIdEffZtoMuTauCombinedFitTightIso'),
-            pluginType = cms.string('PATCandViewMinEventSelector'),
-            src = cms.InputTag('muonsForTauIdEffZtoMuTauCombinedFitPionVetoTightIsoCumulative'),
             minNumber = cms.uint32(1)
         ),
         cms.PSet(
@@ -425,7 +432,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
         cms.PSet(
             pluginName = cms.string('tauMuonVetoTauIdEffZtoMuTauCombinedFit'),
             pluginType = cms.string('PATCandViewMinEventSelector'),
-            src = cms.InputTag('tausForTauIdEffZtoMuTauCombinedFitMuonVetoCumulative'),
+            src = cms.InputTag('tausForTauIdEffZtoMuTauCombinedFitCaloMuonVetoCumulative'),
             minNumber = cms.uint32(1)
         ),
         cms.PSet(
@@ -488,12 +495,6 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
             src = cms.InputTag('selectedDiMuPairZmumuHypothesesTauIdEffZtoMuTauCombinedFit'),
             maxNumber = cms.uint32(0)
         ),
-        ##cms.PSet(
-        ##    pluginName = cms.string('uniqueTauCandidateCutTauIdEffZtoMuTauCombinedFit'),
-        ##    pluginType = cms.string('PATCandViewMaxEventSelector'),
-        ##    src = cms.InputTag('tausForTauIdEffZtoMuTauCombinedFitMuonVeto'),
-        ##    maxNumber = cms.uint32(0)
-        ##),
         cms.PSet(
             pluginName = cms.string('uniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'),
             pluginType = cms.string('PATCandViewMaxEventSelector'),
@@ -606,11 +607,11 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
         ),
         cms.PSet(
             filter = cms.string('evtSelPrimaryEventVertexQuality'),
-            title = cms.string('p(chi2Vertex) > 0.01')
+            title = cms.string('Vertex quality')
         ),
         cms.PSet(
             filter = cms.string('evtSelPrimaryEventVertexPosition'),
-            title = cms.string('-25 < zVertex < +25 cm')
+            title = cms.string('-24 < zVertex < +24 cm')
         ),
         cms.PSet(
             filter = cms.string('evtSelGlobalMuon'),
@@ -630,7 +631,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
         ),
         cms.PSet(
             filter = cms.string('evtSelTauEta'),
-            title = cms.string('-2.1 < eta(Tau) < +2.1')
+            title = cms.string('-2.3 < eta(Tau) < +2.3')
         ),
         cms.PSet(
             filter = cms.string('evtSelTauPt'),
@@ -638,11 +639,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
         ),        
         cms.PSet(
             filter = cms.string('muonCombRelIsoTightCutTauIdEffZtoMuTauCombinedFit'),
-            title = cms.string('Muon tight Track + ECAL relative iso.')
-        ),
-        cms.PSet(
-            filter = cms.string('muonAntiPionCutTauIdEffZtoMuTauCombinedFitTightIso'),
-            title = cms.string('Muon pi-Veto')
+            title = cms.string('Muon iso.')
         ),
         cms.PSet(
             filter = cms.string('muonTrkIPcutTauIdEffZtoMuTauCombinedFitTightIso'),
@@ -676,10 +673,6 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
             filter = cms.string('uniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'),
             title = cms.string('num. global Muons < 2')
         ),
-        ##cms.PSet(
-        ##    filter = cms.string('uniqueTauCandidateCutTauIdEffZtoMuTauCombinedFit'),
-        ##    title = cms.string('num. Tau-Jet Candidates < 2')
-        ##),
         cms.PSet(
             analyzers = cms.vstring(
                 'muonHistManagerTauIdEffZtoMuTauCombinedFit',
@@ -733,11 +726,11 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets = analyzeEventsTauIdEffZtoMuTa
         ),
         cms.PSet(
             filter = cms.string('evtSelPrimaryEventVertexQuality'),
-            title = cms.string('p(chi2Vertex) > 0.01')
+            title = cms.string('Vertex quality')
         ),
         cms.PSet(
             filter = cms.string('evtSelPrimaryEventVertexPosition'),
-            title = cms.string('-25 < zVertex < +25 cm')
+            title = cms.string('-24 < zVertex < +24 cm')
         ),
         cms.PSet(
             filter = cms.string('evtSelGlobalMuon'),
@@ -757,7 +750,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets = analyzeEventsTauIdEffZtoMuTa
         ),
         cms.PSet(
             filter = cms.string('evtSelTauEta'),
-            title = cms.string('-2.1 < eta(Tau) < +2.1')
+            title = cms.string('-2.3 < eta(Tau) < +2.3')
         ),
         cms.PSet(
             filter = cms.string('evtSelTauPt'),
@@ -765,11 +758,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets = analyzeEventsTauIdEffZtoMuTa
         ),        
         cms.PSet(
             filter = cms.string('muonCombRelIsoTightCutTauIdEffZtoMuTauCombinedFit'),
-            title = cms.string('Muon tight Track + ECAL relative iso.')
-        ),
-        cms.PSet(
-            filter = cms.string('muonAntiPionCutTauIdEffZtoMuTauCombinedFitTightIso'),
-            title = cms.string('Muon pi-Veto')
+            title = cms.string('Muon iso.')
         ),
         cms.PSet(
             filter = cms.string('muonTrkIPcutTauIdEffZtoMuTauCombinedFitTightIso'),
@@ -793,7 +782,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets = analyzeEventsTauIdEffZtoMuTa
         ),
         cms.PSet(
             filter = cms.string('muTauPairMt1MEtTauIdEffZtoMuTauCombinedFitWplusJets'),
-            title = cms.string('M_{T}(Muon-MET) > 50 GeV')
+            title = cms.string('M_{T}(Muon-MET) > 60 GeV')
         ),
         cms.PSet(
             filter = cms.string('muTauPairPzetaDiffTauIdEffZtoMuTauCombinedFitWplusJets'),
@@ -807,10 +796,6 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets = analyzeEventsTauIdEffZtoMuTa
             filter = cms.string('uniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'),
             title = cms.string('num. global Muons < 2')
         ),
-        ##cms.PSet(
-        ##    filter = cms.string('uniqueTauCandidateCutTauIdEffZtoMuTauCombinedFit'),
-        ##    title = cms.string('num. Tau-Jet Candidates < 2')
-        ##),
         cms.PSet(
             analyzers = cms.vstring(
                 'muonHistManagerTauIdEffZtoMuTauCombinedFit',
@@ -858,11 +843,11 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitQCD = analyzeEventsTauIdEffZtoMuTauCombi
         ),
         cms.PSet(
             filter = cms.string('evtSelPrimaryEventVertexQuality'),
-            title = cms.string('p(chi2Vertex) > 0.01')
+            title = cms.string('Vertex quality')
         ),
         cms.PSet(
             filter = cms.string('evtSelPrimaryEventVertexPosition'),
-            title = cms.string('-25 < zVertex < +25 cm')
+            title = cms.string('-24 < zVertex < +24 cm')
         ),
         cms.PSet(
             filter = cms.string('evtSelGlobalMuon'),
@@ -882,7 +867,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitQCD = analyzeEventsTauIdEffZtoMuTauCombi
         ),
         cms.PSet(
             filter = cms.string('evtSelTauEta'),
-            title = cms.string('-2.1 < eta(Tau) < +2.1')
+            title = cms.string('-2.3 < eta(Tau) < +2.3')
         ),
         cms.PSet(
             filter = cms.string('evtSelTauPt'),
@@ -890,11 +875,7 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitQCD = analyzeEventsTauIdEffZtoMuTauCombi
         ),        
         cms.PSet(
             filter = cms.string('muonCombRelIsoLooseCutTauIdEffZtoMuTauCombinedFit'),
-            title = cms.string('Muon loose Track + ECAL relative iso.')
-        ),
-        cms.PSet(
-            filter = cms.string('muonAntiPionCutTauIdEffZtoMuTauCombinedFitLooseIso'),
-            title = cms.string('Muon pi-Veto')
+            title = cms.string('Muon iso.')
         ),
         cms.PSet(
             filter = cms.string('muonTrkIPcutTauIdEffZtoMuTauCombinedFitLooseIso'),
@@ -936,10 +917,6 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitQCD = analyzeEventsTauIdEffZtoMuTauCombi
             filter = cms.string('uniqueMuonCandidateCutTauIdEffZtoMuTauCombinedFit'),
             title = cms.string('num. global Muons < 2')
         ),
-        ##cms.PSet(
-        ##    filter = cms.string('uniqueTauCandidateCutTauIdEffZtoMuTauCombinedFit'),
-        ##    title = cms.string('num. Tau-Jet Candidates < 2')
-        ##),
         cms.PSet(
             analyzers = cms.vstring(
                 'muonHistManagerTauIdEffZtoMuTauCombinedFit',
