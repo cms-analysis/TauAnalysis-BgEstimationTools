@@ -108,8 +108,14 @@ def addFakeRateGenAnalyzerModule(process, genAnalyzerModule, frType, bgEstFakeRa
 
     bgEstFakeRateAnalyzer = makeGenAnalyzerModule(process, genAnalyzerModule, "fr" + "_" + frType)
 
-    srcFakeRateEventWeight = cms.VInputTag(cms.InputTag("bgEstFakeRateEventWeights", frType))
-    setattr(bgEstFakeRateAnalyzer, "eventWeightSource", srcFakeRateEventWeight)
+    psetFakeRateEventWeight = cms.PSet(
+        src = cms.InputTag("bgEstFakeRateEventWeights", frType),
+        applyAfterFilter = "evtSelTauTaNCdiscr"
+    )
+    if hasattr(bgEstFakeRateAnalyzer, "eventWeights"):
+        getattr(bgEstFakeRateAnalyzer, "eventWeights").append(psetFakeRateEventWeight)
+    else:
+        setattr(bgEstFakeRateAnalyzer, "eventWeights", cms.VPSet(psetFakeRateEventWeight))
 
     srcFakeRateJetWeight = cms.vstring("".join(["bgEstFakeRateJetWeight", "_", frType]))
     setAnalyzerParameter(bgEstFakeRateAnalyzer, "tauHistManager", "tauJetWeightSource", srcFakeRateJetWeight)
@@ -591,7 +597,7 @@ def enableFakeRates_runZtoMuTau_old(process, method = None):
         )
 
         setattr(process.bgEstFakeRateJetWeights.frTypes, "tauIdEfficiency", tauIdEfficiency)
-        setattr( process.bgEstFakeRateEventWeights.frTypes, "tauIdEfficiency", tauIdEfficiency)
+        setattr(process.bgEstFakeRateEventWeights.frTypes, "tauIdEfficiency", tauIdEfficiency)
         frLabel = "".join(["bgEstFakeRateJetWeight", "_", "tauIdEfficiency"])
         frInputTag = cms.InputTag('bgEstFakeRateJetWeights', "tauIdEfficiency")
         setattr(process.patTaus.efficiencies, frLabel, frInputTag)
