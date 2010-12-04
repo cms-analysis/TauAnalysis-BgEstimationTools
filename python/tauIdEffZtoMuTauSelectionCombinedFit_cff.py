@@ -700,6 +700,8 @@ analyzeEventsTauIdEffZtoMuTauCombinedFit = cms.EDAnalyzer("GenericAnalyzer",
     )
 )
 
+analysisSequenceTauIdEffZtoMuTauCombinedFit = cms.Sequence(analyzeEventsTauIdEffZtoMuTauCombinedFit)
+
 analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets = analyzeEventsTauIdEffZtoMuTauCombinedFit.clone(
   
     name = cms.string('TauIdEffAnalyzerZtoMuTauCombinedFitWplusJets'), 
@@ -816,6 +818,8 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets = analyzeEventsTauIdEffZtoMuTa
         )
     )
 )
+
+analysisSequenceTauIdEffZtoMuTauCombinedFitWplusJets = cms.Sequence(analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets)
 
 analyzeEventsTauIdEffZtoMuTauCombinedFitQCD = analyzeEventsTauIdEffZtoMuTauCombinedFit.clone(
   
@@ -938,6 +942,8 @@ analyzeEventsTauIdEffZtoMuTauCombinedFitQCD = analyzeEventsTauIdEffZtoMuTauCombi
     )
 )
 
+analysisSequenceTauIdEffZtoMuTauCombinedFitQCD = cms.Sequence(analyzeEventsTauIdEffZtoMuTauCombinedFitQCD)
+
 #--------------------------------------------------------------------------------  
 # define (final) analysis sequence
 #--------------------------------------------------------------------------------
@@ -948,6 +954,6 @@ bgEstTauIdEffZtoMuTauCombinedFitAnalysisSequence = cms.Sequence(
    + produceDiMuPairsTauIdEffZtoMuTauCombinedFit
    + produceMuTauPairsTauIdEffZtoMuTauCombinedFit
    + selectJetsForTauIdEffZtoMuTauCombinedFit
-   + analyzeEventsTauIdEffZtoMuTauCombinedFit
-   + analyzeEventsTauIdEffZtoMuTauCombinedFitWplusJets + analyzeEventsTauIdEffZtoMuTauCombinedFitQCD
+   + analysisSequenceTauIdEffZtoMuTauCombinedFit
+   + analysisSequenceTauIdEffZtoMuTauCombinedFitWplusJets + analysisSequenceTauIdEffZtoMuTauCombinedFitQCD
 )

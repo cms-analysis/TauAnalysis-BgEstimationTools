@@ -502,7 +502,7 @@ analyzeEventsTauIdEffZtoMuTauTemplateFit = cms.EDAnalyzer("GenericAnalyzer",
     )
 )
 
-analyzeEventsTauIdEffZtoMuTauTemplateFitSequence = cms.Sequence(analyzeEventsTauIdEffZtoMuTauTemplateFit)
+analysisSequenceTauIdEffZtoMuTauTemplateFit = cms.Sequence(analyzeEventsTauIdEffZtoMuTauTemplateFit)
 
 #--------------------------------------------------------------------------------  
 # define (final) analysis sequence
@@ -513,5 +513,5 @@ bgEstTauIdEffZtoMuTauTemplateFitAnalysisSequence = cms.Sequence(
    + selectTausForTauIdEffZtoMuTauTemplateFit 
    + produceDiMuPairsTauIdEffZtoMuTauTemplateFit
    + muTauPairsTauIdEffZtoMuTauTemplateFit + selectMuTauPairsTauIdEffZtoMuTauTemplateFit 
-   + analyzeEventsTauIdEffZtoMuTauTemplateFitSequence
+   + analysisSequenceTauIdEffZtoMuTauTemplateFit
 )
