@@ -15,17 +15,34 @@ from TauAnalysis.RecoTools.tools.eventSelFlagProdConfigurator import *
 
 from TauAnalysis.RecoTools.patMuonSelection_cfi import *
 
-muonsForTauIdEffZtoMuTauGenMatrixFitCombRelIso = cms.EDFilter("PATMuonSelector",
+muonsForTauIdEffZtoMuTauGenMatrixFitCombRelIso = cms.EDFilter("PATMuonPFIsolationSelector",
+    pfCandidateSource = cms.InputTag('pfNoPileUp'),
+    chargedHadronIso = cms.PSet(
+        ptMin = cms.double(-1.),        
+        dRvetoCone = cms.double(-1.),
+        dRisoCone = cms.double(0.6)
+    ),
+    neutralHadronIso = cms.PSet(
+        ptMin = cms.double(0.5),        
+        dRvetoCone = cms.double(0.08),        
+        dRisoCone = cms.double(0.6)
+    ),
+    photonIso = cms.PSet(
+        ptMin = cms.double(0.5),        
+        dPhiVeto = cms.double(-1.),  # asymmetric Eta x Phi veto region 
+        dEtaVeto = cms.double(-1.),  # to account for photon conversions in electron isolation case        
+        dRvetoCone = cms.double(-1.),
+        dRisoCone = cms.double(0.6)
+    ),
     #
     # CV: apply loose cut on (relative) muon isolation only,
     #     in order to have still some discrimination between Ztautau/WplusJets and QCD left
     #     for "generalized matrix method"                                                   
-    #                                              
-    cut = cms.string('(userIsolation("pat::TrackIso") + userIsolation("pat::EcalIso")) < (0.15*pt)'),
-    filter = cms.bool(False)
+    # 
+    sumPtMax = cms.double(0.30),
+    sumPtMethod = cms.string("relative"), # either "relative" or "absolute"
+    filter = cms.bool(False)                                                        
 )
-
-muonsForTauIdEffZtoMuTauGenMatrixFitPionVeto = copy.deepcopy(selectedPatMuonsPionVeto)
 
 muonsForTauIdEffZtoMuTauGenMatrixFitTrk = copy.deepcopy(selectedPatMuonsTrk)
 
@@ -33,10 +50,9 @@ muonsForTauIdEffZtoMuTauGenMatrixFitTrkIP = copy.deepcopy(selectedPatMuonsTrkIP)
 
 muonSelConfiguratorTauIdEffZtoMuTauGenMatrixFit = objSelConfigurator(
     [ muonsForTauIdEffZtoMuTauGenMatrixFitCombRelIso,
-      muonsForTauIdEffZtoMuTauGenMatrixFitPionVeto,
       muonsForTauIdEffZtoMuTauGenMatrixFitTrk,
       muonsForTauIdEffZtoMuTauGenMatrixFitTrkIP ],
-    src = "selectedPatMuonsPt10Cumulative",
+    src = "selectedPatMuonsPt15Cumulative",
     pyModuleName = __name__,
     doSelIndividual = False
 )
@@ -202,12 +218,6 @@ analyzeEventsTauIdEffZtoMuTauGenMatrixFit = cms.EDAnalyzer("GenericAnalyzer",
             minNumber = cms.uint32(1)
         ),
         cms.PSet(
-            pluginName = cms.string('muonAntiPionCutTauIdEffZtoMuTauGenMatrixFit'),
-            pluginType = cms.string('PATCandViewMinEventSelector'),
-            src = cms.InputTag('muonsForTauIdEffZtoMuTauGenMatrixFitPionVetoCumulative'),
-            minNumber = cms.uint32(1)
-        ),
-        cms.PSet(
             pluginName = cms.string('muonTrkIPcutTauIdEffZtoMuTauGenMatrixFit'),
             pluginType = cms.string('PATCandViewMinEventSelector'),
             src = cms.InputTag('muonsForTauIdEffZtoMuTauGenMatrixFitTrkCumulative'),
@@ -369,7 +379,7 @@ analyzeEventsTauIdEffZtoMuTauGenMatrixFit = cms.EDAnalyzer("GenericAnalyzer",
         ),
         cms.PSet(
             filter = cms.string('evtSelTauEta'),
-            title = cms.string('-2.1 < eta(Tau) < +2.1')
+            title = cms.string('-2.3 < eta(Tau) < +2.3')
         ),
         cms.PSet(
             filter = cms.string('evtSelTauPt'),
@@ -377,11 +387,7 @@ analyzeEventsTauIdEffZtoMuTauGenMatrixFit = cms.EDAnalyzer("GenericAnalyzer",
         ),
         cms.PSet(
             filter = cms.string('muonCombRelIsoCutTauIdEffZtoMuTauGenMatrixFit'),
-            title = cms.string('Muon Track + ECAL relative iso.')
-        ),
-        cms.PSet(
-            filter = cms.string('muonAntiPionCutTauIdEffZtoMuTauGenMatrixFit'),
-            title = cms.string('Muon pi-Veto')
+            title = cms.string('Muon loose iso.')
         ),
         cms.PSet(
             filter = cms.string('muonTrkIPcutTauIdEffZtoMuTauGenMatrixFit'),

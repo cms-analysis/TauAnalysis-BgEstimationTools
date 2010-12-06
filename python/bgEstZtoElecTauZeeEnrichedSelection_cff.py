@@ -385,7 +385,7 @@ analyzeEventsBgEstZeeEnriched = cms.EDAnalyzer("GenericAnalyzer",
     name = cms.string('BgEstTemplateAnalyzer_ZeeEnriched'), 
 
     filters = cms.VPSet(
-        genPhaseSpaceCut,
+        evtSelGenPhaseSpace,
         evtSelTrigger,
         evtSelPrimaryEventVertex,
         evtSelPrimaryEventVertexQuality,
@@ -530,12 +530,10 @@ analyzeEventsBgEstZeeEnriched = cms.EDAnalyzer("GenericAnalyzer",
             src = cms.InputTag('diTauCandidatePzetaDiffCutBgEstZeeEnriched','cumulative')
         ),
         cms.PSet(
-            pluginName = cms.string('diTauCandidateZeeHypothesisVetoBgEstZeeEnriched'),
-            pluginType = cms.string('BoolEventSelector'),
-            src = cms.InputTag('diTauCandidateZeeHypothesisVetoBgEstZeeEnriched','cumulative')
-        ),
-        
-        
+             pluginName = cms.string('diTauCandidateZeeHypothesisVetoBgEstZeeEnriched'),
+             pluginType = cms.string('BoolEventSelector'),
+             src = cms.InputTag('diTauCandidateZeeHypothesisVetoBgEstZeeEnriched','cumulative')
+        )
     ),
   
     analyzers = cms.VPSet(
