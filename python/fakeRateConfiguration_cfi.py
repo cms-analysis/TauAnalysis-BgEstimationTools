@@ -17,9 +17,7 @@ from RecoTauTag.RecoTau.PFRecoTauDiscriminationByLeadingTrackPtCut_cfi import \
         pfRecoTauDiscriminationByLeadingTrackPtCut
 
 fake_rates = {
-    'shrinkingCone' : {
-        #'producer_name' : 'shrinkingConePFTauProducer',
-        # Just testing!
+    'TaNCmedium' : {
         'producer_name' : 'hpsTancTaus',
         'fake_rates' : {
             # WARNING DUPLICATED DIJET HIGH PT FAKE RATES TO TEST SOFTWARE
@@ -63,7 +61,7 @@ fake_rates = {
     }
 }
 
-PRODUCER = 'shrinkingCone'
+PRODUCER = 'TaNCmedium'
 fake_rates_to_add = ['DiJetHighPtdata', 'DiJetSecondPtdata',
                      'ZTTsim', 'WplusJetsdata', 'ppMuXData']
 

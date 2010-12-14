@@ -104,23 +104,27 @@ def addGenAnalyzerModule(process, genAnalyzerModule, label, analysisSequence):
 
     return analysisSequence
 
-def addFakeRateGenAnalyzerModule(process, genAnalyzerModule, frType, bgEstFakeRateAnalysisSequence):
+def addFakeRateGenAnalyzerModule(process, genAnalyzerModule, frType, frConfig, bgEstFakeRateAnalysisSequence):
 
     bgEstFakeRateAnalyzer = makeGenAnalyzerModule(process, genAnalyzerModule, "fr" + "_" + frType)
 
-    psetFakeRateEventWeight = cms.PSet(
-        src = cms.InputTag("bgEstFakeRateEventWeights", frType),
-        applyAfterFilter = cms.string("evtSelTauTaNCdiscr")
-    )
-    if hasattr(bgEstFakeRateAnalyzer, "eventWeights"):
-        getattr(bgEstFakeRateAnalyzer, "eventWeights").append(psetFakeRateEventWeight)
-    else:
-        setattr(bgEstFakeRateAnalyzer, "eventWeights", cms.VPSet(psetFakeRateEventWeight))
+    if frConfig is not None:
+        psetFakeRateEventWeight = cms.PSet(
+            src = frConfig['srcEventWeight'],
+            applyAfterFilter = cms.string("evtSelTauTaNCdiscr")
+        )
+        if hasattr(bgEstFakeRateAnalyzer, "eventWeights"):
+            getattr(bgEstFakeRateAnalyzer, "eventWeights").append(psetFakeRateEventWeight)
+        else:
+            setattr(bgEstFakeRateAnalyzer, "eventWeights", cms.VPSet(psetFakeRateEventWeight))
 
-    srcFakeRateJetWeight = cms.vstring("".join(["bgEstFakeRateJetWeight", "_", frType]))
-    setAnalyzerParameter(bgEstFakeRateAnalyzer, "tauHistManager", "tauJetWeightSource", srcFakeRateJetWeight)
-    setAnalyzerParameter(bgEstFakeRateAnalyzer, "diTauCandidateZmumuHypothesisHistManagerForMuTau", "lepton2WeightSource", srcFakeRateJetWeight)
-    setAnalyzerParameter(bgEstFakeRateAnalyzer, "diTauCandidateHistManagerForMuTau", "diTauLeg2WeightSource", srcFakeRateJetWeight)
+        srcFakeRateJetWeight = cms.vstring(frConfig['patLabel'])
+        setAnalyzerParameter(bgEstFakeRateAnalyzer,
+                             "tauHistManager", "tauJetWeightSource", srcFakeRateJetWeight)
+        setAnalyzerParameter(bgEstFakeRateAnalyzer,
+                             "diTauCandidateZmumuHypothesisHistManagerForMuTau", "lepton2WeightSource", srcFakeRateJetWeight)
+        setAnalyzerParameter(bgEstFakeRateAnalyzer,
+                             "diTauCandidateHistManagerForMuTau", "diTauLeg2WeightSource", srcFakeRateJetWeight)
 
     # add module to sequence
     if bgEstFakeRateAnalysisSequence is None:
@@ -216,6 +220,27 @@ def getPSetAttributes(object):
 
     return attributes
 
+def getFakeRateConfigParameters(process):
+    
+    frConfig = {}
+
+    frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
+
+    for frType in frTypes:
+        frConfig[frType] = {}
+        frConfig[frType]['srcJetWeight']   = cms.InputTag("bgEstFakeRateJetWeights",   frType)
+        frConfig[frType]['srcEventWeight'] = cms.InputTag("bgEstFakeRateEventWeights", frType)
+        frConfig[frType]['patLabel']       = "".join(["bgEstFakeRateJetWeight", "_", frType])
+
+        for shift in [ "SysTauIdEffUp", "SysTauIdEffDown" ]:
+            if hasattr(process, "bgEstFakeRateJetWeights" + shift):
+                frConfig[frType + shift] = {}
+                frConfig[frType + shift]['srcJetWeight']   = cms.InputTag("bgEstFakeRateJetWeights"   + shift, frType)
+                frConfig[frType + shift]['srcEventWeight'] = cms.InputTag("bgEstFakeRateEventWeights" + shift, frType)
+                frConfig[frType + shift]['patLabel']       = "".join(["bgEstFakeRateJetWeight", "_", frType + shift])
+
+    return frConfig
+
 #--------------------------------------------------------------------------------
 # auxiliary functions needed for reconfiguration of DQM file loader modules
 #--------------------------------------------------------------------------------
@@ -243,8 +268,8 @@ def reconfigDQMFileLoader(dqmFileLoaderConfig, dqmDirectory):
 # to PAT production sequence (**not** channel specific)
 #--------------------------------------------------------------------------------
 
-# FIXME EK  - to change tau type for fake rate
-def configureFakeRateWeightProduction(process, method = None, preselPFTauJetSource = 'shrinkingConePFTauProducer',
+# FIXME EK - to change tau type for fake rate
+def configureFakeRateWeightProduction(process, method = None, preselPFTauJetSource = 'hpsTancTaus',
                                       patTauJetCut = "tauID('againstElectron') > 0.5 & tauID('againstMuon') > 0.5",
                                       patTupleProdSeq = "producePatTupleZtoMuTauSpecific"):
 
@@ -262,16 +287,26 @@ def configureFakeRateWeightProduction(process, method = None, preselPFTauJetSour
     #       must enter event weight computation !!
     #
     #process.load("RecoTauTag.TauAnalysisTools.PFTauEfficiencyAssociator_cfi")
-    #process.producePrePat._seq = process.producePrePat._seq * process.associateTauFakeRates
+    #process.producePrePat += process.associateTauFakeRates
     setupFakeRates(process, process.patTaus)
     # Build all the RECO level discriminators that have the KNN lookups
-    process.producePrePat._seq = process.producePrePat._seq * process.tauFakeRates
+    process.producePrePat += process.tauFakeRates
 
     process.load("TauAnalysis.BgEstimationTools.fakeRateJetWeightProducer_cfi")
-    # FIXME EK - don't update the preslected source
-    #process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag(preselPFTauJetSource)
+    # FIXME EK - don't update the preselected source
+    #process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag(preselPFTauJetSource)    
     process.bgEstFakeRateJetWeights.method = method
-    process.producePrePat._seq = process.producePrePat._seq * process.bgEstFakeRateJetWeights
+    process.producePrePat += process.bgEstFakeRateJetWeights
+
+    # add jet weights computed for tau id. efficiency shifted up/down by 30%
+    if method == "CDF":
+        process.bgEstFakeRateJetWeightsSysTauIdEffUp = copy.deepcopy(process.bgEstFakeRateJetWeights)
+        process.bgEstFakeRateJetWeightsSysTauIdEffUp.shiftTauIdEff = cms.double(+0.30)
+        process.producePrePat += process.bgEstFakeRateJetWeightsSysTauIdEffUp
+        
+        process.bgEstFakeRateJetWeightsSysTauIdEffDown = copy.deepcopy(process.bgEstFakeRateJetWeights)
+        process.bgEstFakeRateJetWeightsSysTauIdEffDown.shiftTauIdEff = cms.double(+0.30)
+        process.producePrePat += process.bgEstFakeRateJetWeightsSysTauIdEffDown
 
     process.tausForFakeRateEventWeights = cms.EDFilter("PATTauSelector",
         src = cms.InputTag('selectedPatTausForMuTauLeadTrkPtCumulative'),
@@ -285,14 +320,21 @@ def configureFakeRateWeightProduction(process, method = None, preselPFTauJetSour
     process.produceFakeRateEventWeights = cms.Sequence(process.tausForFakeRateEventWeights + process.bgEstFakeRateEventWeights)
     pat_tuple_seq = getattr(process, patTupleProdSeq)
     pat_tuple_seq += process.produceFakeRateEventWeights
-    #process.producePatTupleZtoMuTauSpecific._seq = process.producePatTupleZtoMuTauSpecific._seq * process.produceFakeRateEventWeights
+    #process.producePatTupleZtoMuTauSpecific += process.produceFakeRateEventWeights
+
+    # add event weights for tau id. efficiency shifted up/down by 30%
+    for shift in [ "SysTauIdEffUp", "SysTauIdEffDown" ]:
+        if hasattr(process, "bgEstFakeRateJetWeights" + shift):
+            frEventWeightProducerModule = copy.deepcopy(process.bgEstFakeRateEventWeights)
+            frEventWeightProducerModule.shiftTauIdEff = \
+              getattr(process, "bgEstFakeRateJetWeights" + shift).shiftTauIdEff
+            frEventWeightProducerModuleName = "bgEstFakeRateEventWeights" + shift
+            setattr(process, frEventWeightProducerModuleName, frEventWeightProducerModule)
 
     # add fake-rates to pat::Tau
-    frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
-    for frType in frTypes:
-        frLabel = "".join(["bgEstFakeRateJetWeight", "_", frType])
-        frInputTag = cms.InputTag('bgEstFakeRateJetWeights', frType)
-        setattr(process.patTaus.efficiencies, frLabel, frInputTag)
+    frConfigParameters = getFakeRateConfigParameters(process)
+    for frType, frConfig in frConfigParameters.items():
+        setattr(process.patTaus.efficiencies, frConfig['patLabel'], frConfig['srcJetWeight'])
     process.patTaus.addEfficiencies = cms.bool(True)
 
 def enableFakeRatesImpl(process, method=None, analyzers=None, tau_ids=None,
@@ -323,7 +365,7 @@ def enableFakeRatesImpl(process, method=None, analyzers=None, tau_ids=None,
         changeCut(process, source, new_cut)
 
     # get list of fake-rates types to be processed
-    frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
+    frConfigParameters = getFakeRateConfigParameters(process)
     bgEstFakeRateAnalysisSequence = None
 
     # Fill histograms only for events passing all event selection criteria
@@ -346,7 +388,7 @@ def enableFakeRatesImpl(process, method=None, analyzers=None, tau_ids=None,
         # Note: special care is needed to avoid double-counting in case there is
         # more than one (loosely selected) tau-jet candidate in the event when
         # filling histograms that are sensitive to the tau-jet multiplicity
-        for frType in frTypes:
+        for frType, frConfig in frConfigParameters.items():
             print "FR method: Building frType:", frType
             # check if factorization is enabled; if so, apply fake-rate event
             # weights to analysis paths without/with muon isolation, else apply
@@ -354,7 +396,7 @@ def enableFakeRatesImpl(process, method=None, analyzers=None, tau_ids=None,
             bgEstFakeRateAnalysisSequence = \
               addFakeRateGenAnalyzerModule(
                   process, analyzer_sequence,
-                  frType, bgEstFakeRateAnalysisSequence)
+                  frType, frConfig, bgEstFakeRateAnalysisSequence)
 
         # add analysis sequence: 1.) with tau id. discriminators not applied 2.)
         # events **not** weighted by fake-rate (for the purpose of making
@@ -364,7 +406,7 @@ def enableFakeRatesImpl(process, method=None, analyzers=None, tau_ids=None,
         print "FR method: Adding unweighted sequence"
         bgEstFakeRateAnalysisSequence = \
           addGenAnalyzerModule(process, analyzer_sequence,
-                               "frUnweighted", bgEstFakeRateAnalysisSequence)
+                               "frUnweighted", None, bgEstFakeRateAnalysisSequence)
         # if method is "simple", add one more analysis sequence:
         #  1.) with tau id. discriminators not applied
         #  2.) events weighted by tau id. efficiency
@@ -374,17 +416,18 @@ def enableFakeRatesImpl(process, method=None, analyzers=None, tau_ids=None,
             # The extra frType is stored in an unused PSet in the jet fake rate
             # weight producer
             process.bgEstFakeRateJetWeights.frTypes.tauIdEfficiency = \
-                    process.bgEstFakeRateJetWeights.frTypesExtras.tauIdEfficiency
+              process.bgEstFakeRateJetWeights.frTypesExtras.tauIdEfficiency
             process.bgEstFakeRateEventWeights.frTypes.tauIdEfficiency = \
-                    process.bgEstFakeRateJetWeights.frTypesExtras.tauIdEfficiency
-            frLabel = "".join(["bgEstFakeRateJetWeight", "_", "tauIdEfficiency"])
-            frInputTag = cms.InputTag('bgEstFakeRateJetWeights', "tauIdEfficiency")
-            setattr(process.patTaus.efficiencies, frLabel, frInputTag)
+              process.bgEstFakeRateJetWeights.frTypesExtras.tauIdEfficiency
+            frConfig[frType] = {}
+            frConfig[frType]['srcJetWeight']   = cms.InputTag("bgEstFakeRateJetWeights",   "tauIdEfficiency")
+            frConfig[frType]['srcEventWeight'] = cms.InputTag("bgEstFakeRateEventWeights", "tauIdEfficiency")
+            frConfig[frType]['patLabel']       = "".join(["bgEstFakeRateJetWeight", "_", "tauIdEfficiency"])
             print "FR method: Using simple weights, adding ZTT eff"
             bgEstFakeRateAnalysisSequence = \
               addFakeRateGenAnalyzerModule(
                   process, analyzer_sequence,
-                  "tauIdEfficiency", bgEstFakeRateAnalysisSequence)
+                  "tauIdEfficiency", frConfig, bgEstFakeRateAnalysisSequence)
 
         setattr(process, "bgEstFakeRateAnalysisSequence" + analyzer, cms.Sequence(bgEstFakeRateAnalysisSequence))
         new_sequence = getattr(process, "bgEstFakeRateAnalysisSequence" + analyzer)
@@ -395,7 +438,6 @@ def enableFakeRatesImpl(process, method=None, analyzers=None, tau_ids=None,
     # with event weights in tau-jet histogram manager
     print "FR method: Enabling weight consistency check"
     setattr(process.tauHistManager, "checkWeightConsistency", cms.bool(True))
-
 
 #--------------------------------------------------------------------------------
 # utility functions specific to application of fake-rate technique
@@ -449,8 +491,7 @@ _FAKE_RATE_CONFIGS = {
     }
 }
 
-
-def enableFakeRates(channel, process, method = None):
+def enableFakeRates(process, channel, method = None):
     enableFakeRatesImpl(process, method, **_FAKE_RATE_CONFIGS[channel])
 
 def enableFakeRates_runZtoMuTau_old(process, method = None):
