@@ -159,6 +159,8 @@ muTauPairsTauIdEffZtoMuTauTemplateFit = allMuTauPairs.clone(
     doSVreco = cms.bool(False)
 )
 
+produceMuTauPairsTauIdEffZtoMuTauTemplateFit = cms.Sequence(muTauPairsTauIdEffZtoMuTauTemplateFit)
+
 muTauPairsTauIdEffZtoMuTauTemplateFitMt1MET = cms.EDFilter("PATMuTauPairSelector",
     cut = cms.string('mt1MET < 40.'),
     filter = cms.bool(False)
@@ -512,6 +514,6 @@ bgEstTauIdEffZtoMuTauTemplateFitAnalysisSequence = cms.Sequence(
     selectMuonsForTauIdEffZtoMuTauTemplateFit 
    + selectTausForTauIdEffZtoMuTauTemplateFit 
    + produceDiMuPairsTauIdEffZtoMuTauTemplateFit
-   + muTauPairsTauIdEffZtoMuTauTemplateFit + selectMuTauPairsTauIdEffZtoMuTauTemplateFit 
+   + produceMuTauPairsTauIdEffZtoMuTauTemplateFit + selectMuTauPairsTauIdEffZtoMuTauTemplateFit 
    + analysisSequenceTauIdEffZtoMuTauTemplateFit
 )
