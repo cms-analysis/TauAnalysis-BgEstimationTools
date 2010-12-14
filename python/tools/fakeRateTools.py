@@ -110,7 +110,7 @@ def addFakeRateGenAnalyzerModule(process, genAnalyzerModule, frType, bgEstFakeRa
 
     psetFakeRateEventWeight = cms.PSet(
         src = cms.InputTag("bgEstFakeRateEventWeights", frType),
-        applyAfterFilter = "evtSelTauTaNCdiscr"
+        applyAfterFilter = cms.string("evtSelTauTaNCdiscr")
     )
     if hasattr(bgEstFakeRateAnalyzer, "eventWeights"):
         getattr(bgEstFakeRateAnalyzer, "eventWeights").append(psetFakeRateEventWeight)
@@ -418,8 +418,6 @@ _FAKE_RATE_CONFIGS = {
         ],
         'tau_ids' : [
             ("selectedPatTausForMuTauTaNCdiscr", "tauID('byTaNCloose') > -1.e+3"),
-            ("selectedPatTausForMuTauTrkIso", "tauID('byTaNCloose') > -1."),
-            ("selectedPatTausForMuTauEcalIso", "tauID('byTaNCloose') > -1."),
             ("selectedPatTausForMuTauProng", "signalPFChargedHadrCands.size() > -1"),
             ("selectedPatTausForMuTauCharge", "abs(charge) > -1"),
             ("selectedMuTauPairsZeroCharge", "leg2.leadPFChargedHadrCand.isNonnull & (leg1.charge + leg2.leadPFChargedHadrCand.charge) = 0"),
@@ -428,20 +426,25 @@ _FAKE_RATE_CONFIGS = {
     'AHtoMuTau' : {
         'patTupleProdSeq' : 'producePatTupleAHtoMuTauSpecific',
         'analyzers' : [
-            "analyzeAHtoMuTauEvents_woBtag_factorizedWithoutMuonIsolation",
-            "analyzeAHtoMuTauEvents_woBtag_factorizedWithMuonIsolation",
-            "analyzeAHtoMuTauEvents_woBtag",
-            "analyzeAHtoMuTauEvents_wBtag_factorizedWithoutMuonIsolation",
-            "analyzeAHtoMuTauEvents_wBtag_factorizedWithMuonIsolation",
-            "analyzeAHtoMuTauEvents_wBtag",
+            "analyzeAHtoMuTauEventsOS_woBtag_factorizedWithoutMuonIsolation",
+            "analyzeAHtoMuTauEventsOS_woBtag_factorizedWithMuonIsolation",
+            "analyzeAHtoMuTauEventsOS_woBtag",
+            "analyzeAHtoMuTauEventsOS_wBtag_factorizedWithoutMuonIsolation",
+            "analyzeAHtoMuTauEventsOS_wBtag_factorizedWithMuonIsolation",
+            "analyzeAHtoMuTauEventsOS_wBtag",
+            "analyzeAHtoMuTauEventsSS_woBtag_factorizedWithoutMuonIsolation",
+            "analyzeAHtoMuTauEventsSS_woBtag_factorizedWithMuonIsolation",
+            "analyzeAHtoMuTauEventsSS_woBtag",
+            "analyzeAHtoMuTauEventsSS_wBtag_factorizedWithoutMuonIsolation",
+            "analyzeAHtoMuTauEventsSS_wBtag_factorizedWithMuonIsolation",
+            "analyzeAHtoMuTauEventsSS_wBtag",
         ],
         'tau_ids' : [
             ("selectedPatTausForMuTauTaNCdiscr", "tauID('byTaNCloose') > -1.e+3"),
-            ("selectedPatTausForMuTauTrkIso", "tauID('byTaNCloose') > -1."),
-            ("selectedPatTausForMuTauEcalIso", "tauID('byTaNCloose') > -1."),
             ("selectedPatTausForMuTauProng", "signalPFChargedHadrCands.size() > -1"),
             ("selectedPatTausForMuTauCharge", "abs(charge) > -1"),
-            ("selectedMuTauPairsZeroCharge", "leg2.leadPFChargedHadrCand.isNonnull & (leg1.charge + leg2.leadPFChargedHadrCand.charge) = 0"),
+            ("selectedMuTauPairsForAHtoMuTauZeroCharge", "leg2.leadPFChargedHadrCand.isNonnull & (leg1.charge + leg2.leadPFChargedHadrCand.charge) = 0"),
+            ("selectedMuTauPairsForAHtoMuTauNonZeroCharge", "leg2.leadPFChargedHadrCand.isNonnull & (leg1.charge + leg2.leadPFChargedHadrCand.charge) != 0"),
         ],
     }
 }
