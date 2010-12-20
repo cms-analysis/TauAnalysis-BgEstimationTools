@@ -17,7 +17,7 @@ from RecoTauTag.RecoTau.PFRecoTauDiscriminationByLeadingTrackPtCut_cfi import \
         pfRecoTauDiscriminationByLeadingTrackPtCut
 
 fake_rates = {
-    'TaNCmedium' : {
+    'shrinkingCone' : {
         'producer_name' : 'hpsTancTaus',
         'fake_rates' : {
             # WARNING DUPLICATED DIJET HIGH PT FAKE RATES TO TEST SOFTWARE
@@ -58,12 +58,78 @@ fake_rates = {
                 'tag' : 'FakeRate',
             },
         },
+    },
+    'hpsTancTaus' : {
+        'producer_name' : 'hpsTancTaus',
+        'fake_rates' : {
+            # MC fake rates
+            'ppMuXSim' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_PPmuX_mcPU156bx/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'DiJetHighPtSim' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_QCDdiJet1st_mc/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'DiJetSecondPtSim' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_QCDdiJet2nd_mc/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'WplusJetsSim' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_WplusJets_mcPU156bx/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            # Data fake rates
+            'ppMuXData' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_PPmuX_data/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'DiJetHighPtdata' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_QCDdiJet1st_data/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'DiJetSecondPtdata' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_QCDdiJet2nd_data/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'WplusJetsdata' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_WplusJets_data/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'ZTTsim' : {
+                'is_eff' : True,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_Ztautau_mcPU156bx/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+        },
     }
 }
 
-PRODUCER = 'TaNCmedium'
+#PRODUCER = 'shrinkingCone'
+PRODUCER = 'hpsTancTaus'
 fake_rates_to_add = ['DiJetHighPtdata', 'DiJetSecondPtdata',
-                     'ZTTsim', 'WplusJetsdata', 'ppMuXData']
+                     'ZTTsim', 'WplusJetsdata', 'ppMuXData',
+                     # MC fake rates
+                     'DiJetHighPtSim', 'DiJetSecondPtSim',
+                     'WplusJetsSim', 'ppMuXSim',
+                    ]
 
 data_directory = os.path.join(os.environ['CMSSW_BASE'], 'src', 'TauAnalysis',
                               'BgEstimationTools', 'data')
@@ -81,7 +147,7 @@ def setupFakeRates(process, patProducer):
         fake_rate_config = fake_rates[producer]['fake_rates'][fake_rate]
         # Copy the db to the working area
         db_source_file = fake_rate_config['db']
-        local_db_file_name = fake_rate + os.path.basename(db_source_file)
+        local_db_file_name = producer + fake_rate + os.path.basename(db_source_file)
         local_db_copy_name = os.path.join(
             data_directory, local_db_file_name)
         if not os.path.exists(data_directory):

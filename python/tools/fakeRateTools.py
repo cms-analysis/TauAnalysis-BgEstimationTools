@@ -221,7 +221,7 @@ def getPSetAttributes(object):
     return attributes
 
 def getFakeRateConfigParameters(process):
-    
+
     frConfig = {}
 
     frTypes = getPSetAttributes(process.bgEstFakeRateJetWeights.frTypes)
@@ -294,7 +294,7 @@ def configureFakeRateWeightProduction(process, method = None, preselPFTauJetSour
 
     process.load("TauAnalysis.BgEstimationTools.fakeRateJetWeightProducer_cfi")
     # FIXME EK - don't update the preselected source
-    #process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag(preselPFTauJetSource)    
+    #process.bgEstFakeRateJetWeights.preselTauJetSource = cms.InputTag(preselPFTauJetSource)
     process.bgEstFakeRateJetWeights.method = method
     process.producePrePat += process.bgEstFakeRateJetWeights
 
@@ -303,9 +303,9 @@ def configureFakeRateWeightProduction(process, method = None, preselPFTauJetSour
         process.bgEstFakeRateJetWeightsSysTauIdEffUp = copy.deepcopy(process.bgEstFakeRateJetWeights)
         process.bgEstFakeRateJetWeightsSysTauIdEffUp.shiftTauIdEff = cms.double(+0.30)
         process.producePrePat += process.bgEstFakeRateJetWeightsSysTauIdEffUp
-        
+
         process.bgEstFakeRateJetWeightsSysTauIdEffDown = copy.deepcopy(process.bgEstFakeRateJetWeights)
-        process.bgEstFakeRateJetWeightsSysTauIdEffDown.shiftTauIdEff = cms.double(+0.30)
+        process.bgEstFakeRateJetWeightsSysTauIdEffDown.shiftTauIdEff = cms.double(-0.30)
         process.producePrePat += process.bgEstFakeRateJetWeightsSysTauIdEffDown
 
     process.tausForFakeRateEventWeights = cms.EDFilter("PATTauSelector",
@@ -406,7 +406,7 @@ def enableFakeRatesImpl(process, method=None, analyzers=None, tau_ids=None,
         print "FR method: Adding unweighted sequence"
         bgEstFakeRateAnalysisSequence = \
           addGenAnalyzerModule(process, analyzer_sequence,
-                               "frUnweighted", None, bgEstFakeRateAnalysisSequence)
+                               "frUnweighted", bgEstFakeRateAnalysisSequence)
         # if method is "simple", add one more analysis sequence:
         #  1.) with tau id. discriminators not applied
         #  2.) events weighted by tau id. efficiency
@@ -492,6 +492,7 @@ _FAKE_RATE_CONFIGS = {
 }
 
 def enableFakeRates(process, channel, method = None):
+    print channel
     enableFakeRatesImpl(process, method, **_FAKE_RATE_CONFIGS[channel])
 
 def enableFakeRates_runZtoMuTau_old(process, method = None):
