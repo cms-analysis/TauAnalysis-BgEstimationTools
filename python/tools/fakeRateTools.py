@@ -331,6 +331,8 @@ def configureFakeRateWeightProduction(process, method = None, preselPFTauJetSour
             frEventWeightProducerModuleName = "bgEstFakeRateEventWeights" + shift
             setattr(process, frEventWeightProducerModuleName, frEventWeightProducerModule)
 
+	    process.produceFakeRateEventWeights += frEventWeightProducerModule
+
     # add fake-rates to pat::Tau
     frConfigParameters = getFakeRateConfigParameters(process)
     for frType, frConfig in frConfigParameters.items():
