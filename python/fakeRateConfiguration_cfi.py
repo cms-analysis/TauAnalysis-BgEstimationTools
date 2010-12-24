@@ -78,7 +78,9 @@ fake_rates = {
             'DiJetSecondPtSim' : {
                 'is_eff' : False,
                 'cut' : 'ByEWKTauID',
-                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_QCDdiJet2nd_mc/fakeRate.db',
+                # EK FIXME - replacing this by generic KNN that should have uniform 50% fake rate
+                #'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_QCDdiJet2nd_mc/fakeRate.db',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/sanitycheck.db',
                 'tag' : 'FakeRate',
             },
             'WplusJetsSim' : {
