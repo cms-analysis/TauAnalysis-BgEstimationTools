@@ -125,6 +125,8 @@ def addFakeRateGenAnalyzerModule(process, genAnalyzerModule, frType, frConfig, b
                              "diTauCandidateZmumuHypothesisHistManagerForMuTau", "lepton2WeightSource", srcFakeRateJetWeight)
         setAnalyzerParameter(bgEstFakeRateAnalyzer,
                              "diTauCandidateHistManagerForMuTau", "diTauLeg2WeightSource", srcFakeRateJetWeight)
+        setAnalyzerParameter(bgEstFakeRateAnalyzer,
+                             "diTauCandidateSVfitHistManagerForMuTau", "diTauLeg2WeightSource", srcFakeRateJetWeight)
 
     # add module to sequence
     if bgEstFakeRateAnalysisSequence is None:
