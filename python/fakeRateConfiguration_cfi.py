@@ -121,11 +121,103 @@ fake_rates = {
                 'tag' : 'FakeRate',
             },
         },
+    },
+    'hpsTancTausLoose' : {
+        'producer_name' : 'hpsTancTaus',
+        'fake_rates' : {
+            # MC fake rates
+            'ppMuXSim' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_HPSloose_PPmuX_mcPU156bx/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'DiJetHighPtSim' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_HPSloose_QCDdiJet1st_mc/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'DiJetSecondPtSim' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                # EK FIXME - replacing this by generic KNN that should have uniform 50% fake rate
+                #'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_ewkTauId_QCDdiJet2nd_mc/fakeRate.db',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/sanitycheck.db',
+                'tag' : 'FakeRate',
+            },
+            'WplusJetsSim' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_HPSloose_WplusJets_mcPU156bx/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            # Data fake rates
+            'ppMuXData' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_HPSloose_PPmuX_data/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'DiJetHighPtdata' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_HPSloose_QCDdiJet1st_data/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'DiJetSecondPtdata' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_HPSloose_QCDdiJet2nd_data/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'WplusJetsdata' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_HPSloose_WplusJets_data/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'ZTTsim' : {
+                'is_eff' : True,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_HPSloose_Ztautau_mcPU156bx/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+        },
+    },
+    'backgroundEstimation' : {
+        'producer_name' : 'hpsTancTaus',
+        'fake_rates' : {
+            'WplusJetsSim' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_BgEst_WplusJets_mcPU156bx/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'WplusJetsSimNoPU' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_BgEst_WplusJets_mc/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'WplusJetsSimNoPU' : {
+                'is_eff' : False,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_BgEst_WplusJets_data/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+            'ZTTsim' : {
+                'is_eff' : True,
+                'cut' : 'ByEWKTauID',
+                'db' : '/afs/cern.ch/user/f/friis/scratch0/fakerates/fakerate_HPSloose_Ztautau_mcPU156bx/fakeRate.db',
+                'tag' : 'FakeRate',
+            },
+        },
     }
 }
 
 #PRODUCER = 'shrinkingCone'
-PRODUCER = 'hpsTancTaus'
+PRODUCER = 'hpsTancTausLoose'
 fake_rates_to_add = ['DiJetHighPtdata', 'DiJetSecondPtdata',
                      'ZTTsim', 'WplusJetsdata', 'ppMuXData',
                      # MC fake rates
