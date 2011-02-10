@@ -22,10 +22,10 @@ electronsBgEstZeeEnrichedId = copy.deepcopy(selectedPatElectronsForElecTauId)
 electronsBgEstZeeEnrichedAntiCrackCut = copy.deepcopy(selectedPatElectronsForElecTauAntiCrackCut)
 
 # require electron candidate to be within geometric acceptance of electron trigger
-electronsBgEstZeeEnrichedEta = copy.deepcopy(selectedPatElectronsForElecTauEta21)
+electronsBgEstZeeEnrichedEta = copy.deepcopy(selectedPatElectronsForElecTauEta)
 
 # require electron candidate to have transverse momentum above threshold
-electronsBgEstZeeEnrichedPt = copy.deepcopy(selectedPatElectronsForElecTauPt15)
+electronsBgEstZeeEnrichedPt = copy.deepcopy(selectedPatElectronsForElecTauPt)
 electronsBgEstZeeEnrichedPt.cut = cms.string('pt > 30.')
 
 # require electron candidate to be isolated
@@ -77,10 +77,10 @@ tausBgEstZeeEnrichedAntiOverlapWithElectronsVeto = cms.EDFilter("PATTauAntiOverl
 )
 
 # require tau candidate to be within geometric acceptance of Pixel + SiTracker detectors
-tausBgEstZeeEnrichedEta = copy.deepcopy(selectedPatTausForElecTauEta21)
+tausBgEstZeeEnrichedEta = copy.deepcopy(selectedPatTausForElecTauEta)
 
 # require tau candidate to have transverse energy above threshold
-tausBgEstZeeEnrichedPt = copy.deepcopy(selectedPatTausForElecTauPt20)
+tausBgEstZeeEnrichedPt = copy.deepcopy(selectedPatTausForElecTauPt)
 
 # require tau candidate to have a leading track
 # (track of Pt > 1. GeV within matching cone of size dR = 0.2 around jet-axis)
@@ -356,7 +356,7 @@ evtSelConfiguratorBgEstZeeEnriched = eventSelFlagProdConfigurator(
       cfgDiTauCandidateForElecTauPzetaDiffCutBgEstZeeEnriched,
       cfgDiTauCandidateForElecTauZeroChargeCutBgEstZeeEnriched,
 	  #cfgElecTauPairZeeHypothesisVetoBgEstZeeEnriched ],
-      cfgDiElecPairZeeHypothesisVetoByLooseElectronIsolationBgEstZeeEnriched ],
+      cfgDiElecPairZeeHypothesisVetoByLooseIsolationBgEstZeeEnriched ],
     boolEventSelFlagProducer = "BoolEventSelFlagProducer",
     pyModuleName = __name__
 )
