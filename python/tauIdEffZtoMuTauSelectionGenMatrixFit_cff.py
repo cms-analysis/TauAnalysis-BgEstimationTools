@@ -141,6 +141,7 @@ muTauPairsTauIdEffZtoMuTauGenMatrixFit = allMuTauPairs.clone(
 #--------------------------------------------------------------------------------
 
 from TauAnalysis.Configuration.analyzeZtoMuTau_cfi import *
+from TauAnalysis.BgEstimationTools.selectZtoMuTauEventVertex_cff import *
 
 muonHistManagerTauIdEffZtoMuTauGenMatrixFit = copy.deepcopy(muonHistManager)
 muonHistManagerTauIdEffZtoMuTauGenMatrixFit.pluginName = 'muonHistManagerTauIdEffZtoMuTauGenMatrixFit'

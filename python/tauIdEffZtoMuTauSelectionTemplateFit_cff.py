@@ -186,6 +186,7 @@ selectMuTauPairsTauIdEffZtoMuTauTemplateFit = muTauPairConfiguratorTauIdEffZtoMu
 #--------------------------------------------------------------------------------
 
 from TauAnalysis.Configuration.analyzeZtoMuTau_cfi import *
+from TauAnalysis.BgEstimationTools.selectZtoMuTauEventVertex_cff import *
 
 muonHistManagerTauIdEffZtoMuTauTemplateFit = copy.deepcopy(muonHistManager)
 muonHistManagerTauIdEffZtoMuTauTemplateFit.pluginName = 'muonHistManagerTauIdEffZtoMuTauTemplateFit'
